@@ -1,0 +1,15 @@
+{
+  "name": "whatsgood",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kerem Kazan",
+  "license": "ISC",
+  "devDependencies": {
+    "lerna": "3.22.1"
+  }
+}
