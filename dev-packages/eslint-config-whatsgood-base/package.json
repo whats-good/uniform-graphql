@@ -1,5 +1,5 @@
 {
-  "name": "@whatsgood/linting",
+  "name": "eslint-config-whatsgood-base",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
