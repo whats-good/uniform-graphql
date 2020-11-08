@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import * as TE from 'fp-ts/lib/TaskEither';
+import * as t from 'io-ts';
 import got from 'got';
 import { flow, pipe } from 'fp-ts/lib/function';
 import Parser from 'rss-parser';
@@ -8,8 +9,17 @@ import { map } from 'fp-ts/lib/ReadonlyRecord';
 
 const parser = new Parser();
 
-const get = TE.tryCatchK((url: string) => got.get(url), TE.left); // TODO: better error handling
-const parse = TE.tryCatchK(parser.parseString, TE.left); // TODO: better error handling
+const get = TE.tryCatchK(
+  (url: string) => got.get(url),
+  (error) => ({ error, also: 'get error' }),
+); // TODO: better error handling
+const parse = TE.tryCatchK(
+  (xml: string) => parser.parseString(xml),
+  (error) => ({
+    error,
+    also: 'parse error',
+  }),
+); // TODO: better error handling
 
 const f = flow(
   get,
@@ -26,7 +36,12 @@ const websites = {
     'http://localhost:4002/?action=display&bridge=Twitter&context=By+username&u=elonmusk&format=Atom',
   lukeBlog: 'https://lukesmith.xyz/rss.xml',
   lukeYoutube:
-    'http://localhost:4002/?action=display&bridge=Youtube&context=By+channel+id&c=UC2eYFnH61tmytImy1mTYvhA&duration_min=&duration_max=&format=Json',
+    'http://localhost:4002/?action=display&bridge=Youtube&context=By+channel+id&c=UC2eYFnH61tmytImy1mTYvhA&duration_min=&duration_max=&format=Atom',
 } as const;
 
-const promise = pipe(websites, map(f), sequenceS(TE.taskEither));
+const task = pipe(websites, map(f), sequenceS(TE.taskEither));
+
+task().then((values) => {
+  // TODO: allow partial failure.
+  console.log({ values });
+});
