@@ -4,5 +4,7 @@
     "dev-packages/*"
   ],
   "version": "0.0.0",
-  "hoist": true
+  "hoist": [
+    "@typescript-eslint/eslint-plugin"
+  ]
 }
