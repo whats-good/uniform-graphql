@@ -1,1 +1,3 @@
-console.log("asdf");
+import 'reflect-metadata';
+
+console.log('asdf');

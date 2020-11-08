@@ -5,10 +5,16 @@
   "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint '*/**/*.{js,ts,tsx}'"
+    "lint": "eslint '*/**/*.{ts,tsx}'",
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "dependencies": {
+    "reflect-metadata": "file:../../node_modules/reflect-metadata"
   },
   "devDependencies": {
-    "eslint": "file:../../node_modules/eslint"
+    "eslint": "file:../../node_modules/eslint",
+    "tsc": "file:../../node_modules/tsc",
+    "typescript": "file:../../node_modules/typescript"
   },
   "author": "Kerem Kazan",
   "license": "ISC"
