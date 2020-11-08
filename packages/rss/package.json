@@ -6,15 +6,18 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint '*/**/*.{ts,tsx}'",
-    "build": "tsc -p ./tsconfig.json"
+    "build": "tsc -p ./tsconfig.json",
+    "start": "ts-node ./src/index.ts"
   },
   "dependencies": {
-    "reflect-metadata": "file:../../node_modules/reflect-metadata"
+    "reflect-metadata": "file:../../node_modules/reflect-metadata",
+    "got": "11.8.0"
   },
   "devDependencies": {
     "eslint": "file:../../node_modules/eslint",
     "tsc": "file:../../node_modules/tsc",
-    "typescript": "file:../../node_modules/typescript"
+    "typescript": "file:../../node_modules/typescript",
+    "ts-node": "file:../../node_modules/ts-node"
   },
   "author": "Kerem Kazan",
   "license": "ISC"
