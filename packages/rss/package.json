@@ -17,7 +17,9 @@
     "eslint": "file:../../node_modules/eslint",
     "tsc": "file:../../node_modules/tsc",
     "typescript": "file:../../node_modules/typescript",
-    "ts-node": "file:../../node_modules/ts-node"
+    "ts-node": "file:../../node_modules/ts-node",
+    "fp-ts": "2.8.3",
+    "io-ts": "2.2.10"
   },
   "author": "Kerem Kazan",
   "license": "ISC"
