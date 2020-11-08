@@ -5,3 +5,4 @@
 
 - install and setup the `eslint-plugin-import` rules.
 - eventually handle the absolute imports in tsconfig.
+- understand the differences between IncomingMessage and Passthrough for nodejs streams.
