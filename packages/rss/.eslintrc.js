@@ -1,4 +1,3 @@
 module.exports = {
-  // extends: ["eslint-config-whatsgood-base"].map(require.resolve),
-  rules: {},
+  extends: ["@whatsgood/eslint-config-base"],
 };
