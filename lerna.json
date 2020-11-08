@@ -1,10 +1,6 @@
 {
   "packages": [
-    "packages/*",
-    "dev-packages/*"
+    "packages/*"
   ],
-  "version": "0.0.0",
-  "hoist": [
-    "@typescript-eslint/eslint-plugin"
-  ]
+  "version": "0.0.0"
 }
