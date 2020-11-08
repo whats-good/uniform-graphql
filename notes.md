@@ -8,3 +8,5 @@
 - understand the differences between IncomingMessage and Passthrough for nodejs streams.
 - understand TE.alt
 - understand TE.bracket
+- consider using "https://github.com/monstasat/fp-fetch" for data fetching.
+- learn how to do partial failures on sequenceS calls
