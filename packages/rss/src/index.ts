@@ -1,6 +1,8 @@
 import 'reflect-metadata';
+import * as nodeHtmlParser from 'node-html-parser';
 import * as TE from 'fp-ts/lib/TaskEither';
 import * as E from 'fp-ts/lib/Either';
+import * as O from 'fp-ts/lib/Option';
 import * as T from 'fp-ts/lib/Task';
 import * as t from 'io-ts';
 import got from 'got';
@@ -12,11 +14,11 @@ import { head } from 'fp-ts/lib/Array';
 
 const parser = new Parser();
 
-const toError = (from: string) =>
-  flow(E.toError, (error) => ({
-    from,
-    error,
-  }));
+// const toError = (from: string) =>
+//   flow(E.toError, (error) => ({
+//     from,
+//     error,
+//   }));
 
 const get = TE.tryCatchK(
   (url: string) => got.get(url),
@@ -36,6 +38,42 @@ const fetchParse = flow(
   TE.chain(parse),
 );
 
+const parseHtml = TE.tryCatchK(
+  (html: string) => {
+    // TODO: how can i combine the errors and avoid nesting?
+    const { valid, ...rest } = nodeHtmlParser.parse(html);
+    const result = pipe(
+      rest,
+      E.fromPredicate(
+        () => valid,
+        () => 'invalid html parsing',
+      ),
+    );
+    return TE.fromEither(result)();
+  },
+  (error) => ({
+    error: E.toError(error),
+    also: 'html parsing error',
+  }),
+);
+
+// const parseHtml = TE.tryCatchK(
+//   (html: string) =>
+//     new Promise((resolve, reject) => {
+//       const parsed = nodeHtmlParser.parse(html);
+//       // TODO: see if there's a better way of doing this part.
+//       if (parsed.valid) {
+//         resolve(parsed);
+//       } else {
+//         reject('invalid html');
+//       }
+//     }),
+//   (error) => ({
+//     error: E.toError(error),
+//     also: 'html parser error',
+//   }),
+// );
+
 const redditCodec = t.type({
   feedUrl: t.string,
   lastBuildDate: t.string,
@@ -50,7 +88,7 @@ const redditCodec = t.type({
       isoDate: t.string,
       link: t.string,
       pubDate: t.string,
-      title: t.number,
+      title: t.string,
     }),
   ),
 });
@@ -68,9 +106,30 @@ const decodeReddit = flow(
 );
 
 const fReddit = flow(fetchParse, TE.map(decodeReddit));
-fReddit('https://reddit.com/.rss')().then((value) => {
-  value;
-});
+fReddit('https://reddit.com/.rss')()
+  .then((value) => {
+    if (E.isRight(value)) {
+      if (E.isRight(value.right)) {
+        return value.right.right.firstItem;
+      }
+    }
+    return O.none;
+  })
+  .then((firstItem) => {
+    if (O.isSome(firstItem)) {
+      return pipe(
+        firstItem.value.link,
+        get,
+        TE.map((response) => response.body),
+        TE.chain(parseHtml),
+        TE.map((html) => {
+          // TODO: here
+          // return html.childNodes.;
+        }),
+      )();
+    }
+    return null;
+  });
 
 const websites = {
   reddit: 'https://reddit.com/.rss',

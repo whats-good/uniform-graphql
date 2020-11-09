@@ -2,6 +2,7 @@
 - using the "file:../../" trick in package.json helps a lot in monorepose to share very specific package versions.
 - when getting the first element of an array, always use head(array), not array[0]. This gives an option<item>
 - Either.toError() is a function that parses an unkown error into the Error type. It's very useful for taskEither fallbacks.
+- E.fromPredicate is how we create conditional Either types.
 
 # TODOS
 

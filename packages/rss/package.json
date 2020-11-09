@@ -14,7 +14,8 @@
     "got": "11.8.0",
     "fp-ts": "2.8.3",
     "io-ts": "2.2.10",
-    "rss-parser": "3.9.0"
+    "rss-parser": "3.9.0",
+    "node-html-parser": "1.4.9"
   },
   "devDependencies": {
     "eslint": "file:../../node_modules/eslint",
