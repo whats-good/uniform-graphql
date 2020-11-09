@@ -1,31 +1,76 @@
 import 'reflect-metadata';
 import * as TE from 'fp-ts/lib/TaskEither';
+import * as E from 'fp-ts/lib/Either';
+import * as T from 'fp-ts/lib/Task';
 import * as t from 'io-ts';
 import got from 'got';
 import { flow, pipe } from 'fp-ts/lib/function';
 import Parser from 'rss-parser';
 import { sequenceS } from 'fp-ts/lib/Apply';
 import { map } from 'fp-ts/lib/ReadonlyRecord';
+import { head } from 'fp-ts/lib/Array';
 
 const parser = new Parser();
 
+const toError = (from: string) =>
+  flow(E.toError, (error) => ({
+    from,
+    error,
+  }));
+
 const get = TE.tryCatchK(
   (url: string) => got.get(url),
-  (error) => ({ error, also: 'get error' }),
+  (error) => ({ error: E.toError(error), also: 'get error' }),
 ); // TODO: better error handling
 const parse = TE.tryCatchK(
   (xml: string) => parser.parseString(xml),
   (error) => ({
-    error,
+    error: E.toError(error),
     also: 'parse error',
   }),
 ); // TODO: better error handling
 
-const f = flow(
+const fetchParse = flow(
   get,
   TE.map((response) => response.body),
   TE.chain(parse),
 );
+
+const redditCodec = t.type({
+  feedUrl: t.string,
+  lastBuildDate: t.string,
+  link: t.string,
+  title: t.string,
+  items: t.array(
+    t.type({
+      author: t.string,
+      content: t.string,
+      contentSnippet: t.string,
+      id: t.string,
+      isoDate: t.string,
+      link: t.string,
+      pubDate: t.string,
+      title: t.number,
+    }),
+  ),
+});
+
+const decodeReddit = flow(
+  redditCodec.decode,
+  E.map((redditFeed) => {
+    return {
+      feedTitle: redditFeed.title,
+      feedLength: redditFeed.items.length,
+      firstItem: head(redditFeed.items),
+    };
+  }),
+  // E.mapLeft(toError('decodingError')),
+);
+
+const fReddit = flow(fetchParse, TE.map(decodeReddit));
+fReddit('https://reddit.com/.rss')().then((value) => {
+  value;
+});
 
 const websites = {
   reddit: 'https://reddit.com/.rss',
@@ -39,9 +84,9 @@ const websites = {
     'http://localhost:4002/?action=display&bridge=Youtube&context=By+channel+id&c=UC2eYFnH61tmytImy1mTYvhA&duration_min=&duration_max=&format=Atom',
 } as const;
 
-const task = pipe(websites, map(f), sequenceS(TE.taskEither));
+// const task = pipe(websites, map(f), sequenceS(TE.taskEither));
 
-task().then((values) => {
-  // TODO: allow partial failure.
-  console.log({ values });
-});
+// task().then((values) => {
+//   // TODO: allow partial failure.
+//   console.log({ values });
+// });
