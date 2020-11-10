@@ -1,14 +1,12 @@
-let changeColor = document.getElementById('changeColor');
-
-chrome.storage.sync.get('color', function (data) {
-  changeColor.style.backgroundColor = data.color;
-  changeColor.setAttribute('value', data.color);
-  changeColor.onclick = function (element) {
-    let color = element.target.value;
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      chrome.tabs.executeScript(tabs[0].id, {
-        code: 'document.body.style.backgroundColor = "' + color + '";',
-      });
-    });
-  };
+chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+  const currentUrl = new URL(tabs[0].url);
+  const currentPathname = currentUrl.pathname;
+  const splitPaths = currentPathname.split('/');
+  if (splitPaths.length >= 3 && splitPaths[1] === 'channel') {
+    const channelId = splitPaths[2];
+    const newUrl = new URL(
+      `http://localhost:4002/?action=display&bridge=Youtube&context=By+channel+id&c=${channelId}&duration_min=&duration_max=&format=Atom`,
+    );
+    chrome.tabs.create({ url: newUrl.toString() });
+  }
 });

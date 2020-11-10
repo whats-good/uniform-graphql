@@ -7,7 +7,7 @@ chrome.runtime.onInstalled.addListener(function () {
       {
         conditions: [
           new chrome.declarativeContent.PageStateMatcher({
-            pageUrl: { hostEquals: 'developer.chrome.com' },
+            pageUrl: { hostEquals: 'www.youtube.com' },
           }),
         ],
         actions: [new chrome.declarativeContent.ShowPageAction()],
@@ -15,3 +15,7 @@ chrome.runtime.onInstalled.addListener(function () {
     ]);
   });
 });
+
+// https://developer.chrome.com/extensions/declarativeContent
+// https://developer.chrome.com/extensions/pageAction
+// https://chromium.googlesource.com/chromium/src/+/master/chrome/common/extensions/docs/examples/api/pageAction/pageaction_by_url/background.js

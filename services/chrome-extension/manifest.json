@@ -1,7 +1,7 @@
 {
-  "name": "Getting Started Example",
+  "name": "Whatsgood.dog",
   "version": "1.0",
-  "description": "Build an Extension!",
+  "description": "Here's your RSS feed fam",
   "manifest_version": 2,
   "background": {
     "scripts": [
@@ -17,6 +17,7 @@
   "options_page": "options.html",
   "page_action": {
     "default_popup": "popup.html",
+    "default_title": "Whatsgood RSS",
     "default_icon": {
       "16": "images/get_started16.png",
       "32": "images/get_started32.png",
