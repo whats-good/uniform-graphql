@@ -6,7 +6,9 @@ import * as O from 'fp-ts/lib/Option';
 import got from 'got';
 import { flow, pipe } from 'fp-ts/lib/function';
 import Parser from 'rss-parser';
-import { filterMap, map } from 'fp-ts/lib/Array';
+import { filterMap, flatten, map } from 'fp-ts/lib/Array';
+import { sequenceS, sequenceT } from 'fp-ts/lib/Apply';
+import { concat } from 'fp-ts/lib/NonEmptyArray';
 
 const parser = new Parser();
 
@@ -55,17 +57,19 @@ export const parseMetaTags = flow(
         const contentAttribute = O.fromNullable(cur.attribs['content']);
         const propertyAttribute = O.fromNullable(cur.attribs['property']);
         const nameAttribute = O.fromNullable(cur.attribs['name']);
-        return O.isSome(propertyAttribute) && O.isSome(contentAttribute)
-          ? O.some({
-              key: propertyAttribute.value,
-              value: contentAttribute.value,
-            })
-          : O.isSome(nameAttribute) && O.isSome(contentAttribute)
-          ? O.some({
-              key: nameAttribute.value,
-              value: contentAttribute.value,
-            })
-          : O.none;
+
+        const propertyPair = sequenceS(O.option)({
+          key: propertyAttribute,
+          value: contentAttribute,
+        });
+        const namePair = sequenceS(O.option)({
+          key: nameAttribute,
+          value: contentAttribute,
+        });
+        return pipe(
+          propertyPair,
+          O.alt(() => namePair),
+        );
       }),
       (allMetaAttributes) => {
         //
