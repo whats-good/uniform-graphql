@@ -3,6 +3,9 @@
 - when getting the first element of an array, always use head(array), not array[0]. This gives an option<item>
 - Either.toError() is a function that parses an unkown error into the Error type. It's very useful for taskEither fallbacks.
 - E.fromPredicate is how we create conditional Either types.
+- Be careful while using O.of, because it'll always create an Option.some, even if the internal object is undefined. When you think the inner object is nullable, use O.fromNullable
+- filterMap is useful for creating arrays that have guaranteed item fields. It only required an option constructor that takes in an item in the array.
+- scan is the method that collects the results of each iteration.
 
 # TODOS
 
