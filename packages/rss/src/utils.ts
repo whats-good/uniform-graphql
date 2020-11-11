@@ -6,24 +6,23 @@ import * as O from 'fp-ts/lib/Option';
 import got from 'got';
 import { flow, pipe } from 'fp-ts/lib/function';
 import Parser from 'rss-parser';
-import { filterMap, flatten, map } from 'fp-ts/lib/Array';
-import { sequenceS, sequenceT } from 'fp-ts/lib/Apply';
-import { concat } from 'fp-ts/lib/NonEmptyArray';
+import { filterMap, map } from 'fp-ts/lib/Array';
+import { sequenceS } from 'fp-ts/lib/Apply';
+import { toBaseError } from './BaseError';
 
 const parser = new Parser();
 
+// TODO: figure out a better error construction method.
+
 export const get = TE.tryCatchK(
   (url: string) => got.get(url),
-  (error) => ({ error: E.toError(error), also: 'get error' }),
-); // TODO: better error handling
+  toBaseError('get error'),
+);
 
 const parse = TE.tryCatchK(
   (xml: string) => parser.parseString(xml),
-  (error) => ({
-    error: E.toError(error),
-    also: 'parse error',
-  }),
-); // TODO: better error handling
+  toBaseError('parse error'),
+);
 
 export const fetchParse = flow(
   get,
@@ -32,15 +31,9 @@ export const fetchParse = flow(
 );
 
 const parseHtml = (html: string) =>
-  E.tryCatch(
-    () => {
-      return cheerio.load(html);
-    },
-    (e) => ({
-      error: E.toError(e),
-      also: 'html parsing error',
-    }),
-  );
+  E.tryCatch(() => {
+    return cheerio.load(html);
+  }, toBaseError('html parsing error'));
 
 export const parseMetaTags = flow(
   parseHtml,
