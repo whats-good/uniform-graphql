@@ -6,6 +6,8 @@
 - Be careful while using O.of, because it'll always create an Option.some, even if the internal object is undefined. When you think the inner object is nullable, use O.fromNullable
 - filterMap is useful for creating arrays that have guaranteed item fields. It only required an option constructor that takes in an item in the array.
 - scan is the method that collects the results of each iteration.
+- if you want to run tasks in parallel but don't stop when 1 or more fails, use sequence(T.task) instead of sequence(TE.taskEither)
+- TE.chain requires the left types to always match, which is a pain.
 
 # TODOS
 
