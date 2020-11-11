@@ -5,7 +5,7 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
   if (splitPaths.length >= 3 && splitPaths[1] === 'channel') {
     const channelId = splitPaths[2];
     const newUrl = new URL(
-      `http://localhost:4002/?action=display&bridge=Youtube&context=By+channel+id&c=${channelId}&duration_min=&duration_max=&format=Atom`,
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
     );
     chrome.tabs.create({ url: newUrl.toString() });
   }
