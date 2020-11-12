@@ -1,16 +1,27 @@
 import * as E from 'fp-ts/lib/Either';
+import { CustomError, customErrorFactory } from 'ts-custom-error';
 
-interface IBaseError extends Error {
-  tag: string;
+class BaseError extends CustomError {
+  public readonly payload: any;
+  // TODO: find a way to put in custom payload in these errors!
+  constructor(message?: string, payload?: any) {
+    super(message);
+    this.payload = payload;
+  }
 }
 
-// TODO: see if there's a way to do this without mutation.
-export const toBaseError = (tag: string) => (from: unknown): IBaseError => {
-  // TODO: see if there are better ways to parse out the error
-  const error = from instanceof Error ? from : E.toError(from);
-  const baseError = error as IBaseError;
-  if (!baseError.tag) {
-    baseError.tag = tag;
-  }
+const fromError = (message?: string) => (error: Error) => {
+  const baseError = new BaseError(message);
+  baseError.stack = error.stack;
   return baseError;
+};
+
+export const toBaseError = (message?: string) => (from: unknown): BaseError => {
+  if (from instanceof BaseError) {
+    return from;
+  } else if (from instanceof Error) {
+    return fromError(message)(from);
+  } else {
+    return new BaseError(message, from);
+  }
 };
