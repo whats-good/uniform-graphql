@@ -1,7 +1,5 @@
 import * as t from 'io-ts';
-import * as E from 'fp-ts/lib/Either';
-import { flow } from 'fp-ts/lib/function';
-import { toBaseError } from '../BaseError';
+import { decode } from '../utils';
 
 const redditCodec = t.type({
   feedUrl: t.string,
@@ -21,11 +19,5 @@ const redditCodec = t.type({
     }),
   ),
 });
-
-const decode = <B extends t.Props>(codec: t.TypeC<B>) =>
-  flow(
-    codec.decode,
-    E.mapLeft((errors) => toBaseError('validation error')(errors[0])),
-  );
 
 export const decodeReddit = decode(redditCodec);

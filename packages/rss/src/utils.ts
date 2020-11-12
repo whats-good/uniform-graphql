@@ -1,5 +1,6 @@
 // import * as nodeHtmlParser from 'node-html-parser';
 import cheerio from 'cheerio';
+import * as t from 'io-ts';
 import * as TE from 'fp-ts/lib/TaskEither';
 import * as E from 'fp-ts/lib/Either';
 import * as O from 'fp-ts/lib/Option';
@@ -14,16 +15,24 @@ import pmap from 'p-map';
 
 const parser = new Parser();
 
-// TODO: figure out a better error construction method.
+export const decode = <B extends t.Props>(codec: t.TypeC<B>) =>
+  flow(
+    codec.decode,
+    E.mapLeft((errors) => {
+      // TODO: how can we access the initial argument before the previous function 'codec.decode' failed?
+      const validationMessage = `Codec validation failed. First error: ${errors[0].message}`;
+      return toBaseError(validationMessage)(errors);
+    }),
+  );
 
 export const get = TE.tryCatchK(
   (url: string) => got.get(url),
-  toBaseError('get error'),
+  toBaseError('http get failed'),
 );
 
 const parse = TE.tryCatchK(
   (xml: string) => parser.parseString(xml),
-  toBaseError('parse error'),
+  toBaseError('parsing failed'),
 );
 
 export const fetchParse = flow(
