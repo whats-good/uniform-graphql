@@ -56,18 +56,12 @@ const decodeReddit = flow(
   E.mapLeft((errors) => toBaseError('validation error')(errors[0])),
 );
 
-// TODO: how can i create a TaskEither<Error, Either<A, C>> from Either<A, B>
-// start with Either<'no first item found', { link: asdfasdf }>
-// end with TaskEither<IBaseError, Either<'no first item found', SOMEHTML>>
-
 const fetchParseMetaTags = flow(
   get,
   TE.map((response) => response.body),
   TE.chain(flow(parseMetaTags, TE.fromEither)),
 );
 
-// const urls: string[] = ['https://reddit.com'];
-// pipe(urls, A.map(fetchParseMetaTags));
 const metaTagsFromUrls = flow(
   A.map(fetchParseMetaTags),
   parallelTaskEithers(10), // TODO: how should we optimize this number?
@@ -75,68 +69,15 @@ const metaTagsFromUrls = flow(
 
 const fReddit = flow(
   fetchParse,
-  TE.chain((a) => {
-    const b = decodeReddit(a);
-    return TE.fromEither(b);
-  }),
+  TE.chain(flow(decodeReddit, TE.fromEither)),
   TE.map((feedItem) => feedItem.items.map(({ link }) => link)),
-  // TE.chain((urls) => {
-  //   const taskOfArray = metaTagsFromUrls(urls);
-  // }),
   T.chain(
     flow(
       E.map(flow(A.takeLeft(2), metaTagsFromUrls)), // TODO: undo the take here
       E.either.sequence(T.task),
     ),
   ),
-  // TODO: how to we get from Task<Either<X, Y>> to TaskEither<X, Y>?
-  // T.map((eitherErrorOrUrls) => {
-  //   const a = pipe(
-  //     eitherErrorOrUrls,
-  //     E.map(metaTagsFromUrls),
-  //     TE.fromEither,
-  //     TE.chain((a) => TE.rightTask(a)), // TODO: WTF????????
-  //   );
-  //   const b = pipe(eitherErrorOrUrls, E.map(metaTagsFromUrls), (a) => {
-  //     const c = E.either.sequence(T.task)(a);
-  //     return c;
-  //     //
-  //   });
-  //   return b;
-  // }),
-  // T.chain((urlsOrError) => {
-  //   return T.of(1);
-  // }),
-
-  // TE.chain((urls) => {
-  //   const newTasks = urls.map(fetchParseMetaTags);
-  //   // TODO: what does the concurrency limit even do here?
-  //   const p = parallelTaskEithers(newTasks, 1);
-  //   const e = TE.leftTask(p);
-  // }),
-  // ()
-  // TE.map(({ firstItem }) => firstItem),
-  // TE.map(
-  //   O.fold(
-  //     () => [],
-  //     (a) => [a],
-  //   ),
-  // ),
-  //   const links = items.map((item) => item.link);
-  //   const gets = A.map(get)(links);
-  //   const b = sequenceT(TE.taskEither)(gets);
-  // }),
-  // TE.map(E.fromOption(() => 'no first item found' as const)),
 );
-
-// const promise = fReddit('https://reddit.com/.rss')().then((firstItem) => {
-//   if (E.isRight(firstItem)) {
-//     if (O.isSome(firstItem.right)) {
-//       return pipe(firstItem.right.value.link, fetchParseMetaTags)();
-//     }
-//   }
-//   return null;
-// });
 
 const a = fReddit('https://reddit.com/.rss')().then((a) => {
   //
