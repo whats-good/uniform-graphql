@@ -25,3 +25,4 @@
 - look into partitionmap from fp-ts
 - study the p-map library
 - study all the sindresorhus p-x libraries
+- study: `Traversable`: "Traversable represents data structures which can be traversed accumulating results and effects in some Applicative functor."
