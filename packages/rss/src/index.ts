@@ -83,13 +83,12 @@ const fReddit = flow(
   // TE.chain((urls) => {
   //   const taskOfArray = metaTagsFromUrls(urls);
   // }),
-  T.chain((eitherErrorOrUrls) => {
-    return pipe(
-      eitherErrorOrUrls,
+  T.chain(
+    flow(
       E.map(flow(A.takeLeft(2), metaTagsFromUrls)), // TODO: undo the take here
       E.either.sequence(T.task),
-    );
-  }),
+    ),
+  ),
   // TODO: how to we get from Task<Either<X, Y>> to TaskEither<X, Y>?
   // T.map((eitherErrorOrUrls) => {
   //   const a = pipe(

@@ -8,6 +8,7 @@
 - scan is the method that collects the results of each iteration.
 - if you want to run tasks in parallel but don't stop when 1 or more fails, use sequence(T.task) instead of sequence(TE.taskEither)
 - TE.chain requires the left types to always match, which is a pain.
+- `E.either.sequence(T.task)` is your best friend. It will let you convert `Either<A, B>` into `Task<Either<A, B>>`
 
 # TODOS
 
