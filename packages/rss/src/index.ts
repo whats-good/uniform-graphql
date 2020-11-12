@@ -44,11 +44,17 @@ const metaTagsFromUrls = flow(
   parallelTaskEithers(10), // TODO: how should we optimize this number?
 );
 
+// TODO: is there a more elegant way for this?
+const taskOfEitherToTaskEither = <A, B>(
+  a: T.Task<E.Either<A, B>>,
+): TE.TaskEither<A, B> => a;
+
 const fReddit = flow(
   fetchParse,
   TE.chain(flow(decodeReddit, TE.fromEither)),
   TE.map((feedItem) => feedItem.items.map(({ link }) => link)),
   T.chain(flow(E.map(metaTagsFromUrls), E.either.sequence(T.task))),
+  taskOfEitherToTaskEither,
 );
 
 const a = fReddit('https://reddit.com/.rss')().then((a) => {
