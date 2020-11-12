@@ -37,6 +37,15 @@ const parseHtml = (html: string) =>
     return cheerio.load(html);
   }, toBaseError('html parsing error'));
 
+const htmlToLinkTags = flow(
+  (root: cheerio.Root) => Object.entries(root('link')),
+  map(([key, value]) => ({ key, value })),
+  map(({ key, value }) => ({
+    key,
+    value: value.attribs,
+  })),
+);
+
 const htmlToMetaTags = flow(
   (root: cheerio.Root) => Object.entries(root('meta')),
   map(([key, value]) => ({ key, value })),
@@ -78,3 +87,4 @@ export const parallelTaskEithers = <E, A>(limit: number) => (
   pmap(tasks, (t) => t(), { concurrency: limit });
 
 export const parseMetaTags = flow(parseHtml, E.map(htmlToMetaTags));
+export const parseLinkTags = flow(parseHtml, E.map(htmlToLinkTags));
