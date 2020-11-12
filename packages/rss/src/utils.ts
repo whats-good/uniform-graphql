@@ -38,31 +38,31 @@ const parseHtml = (html: string) =>
 
 export const parseMetaTags = flow(
   parseHtml,
-  E.map((root) => Object.entries(root('meta'))),
-  E.map(map(([key, value]) => ({ key, value }))),
   E.map(
-    filterMap((cur) =>
-      cur.value.attribs
-        ? O.some({ key: cur.key, attribs: cur.value.attribs })
-        : O.none,
-    ),
-  ),
-  E.map(
-    filterMap((cur) => {
-      const contentAttribute = O.fromNullable(cur.attribs['content']);
-      const propertyAttribute = O.fromNullable(cur.attribs['property']);
-      const nameAttribute = O.fromNullable(cur.attribs['name']);
+    flow(
+      (root) => Object.entries(root('meta')),
+      map(([key, value]) => ({ key, value })),
+      filterMap((cur) =>
+        cur.value.attribs
+          ? O.some({ key: cur.key, attribs: cur.value.attribs })
+          : O.none,
+      ),
+      filterMap((cur) => {
+        const contentAttribute = O.fromNullable(cur.attribs['content']);
+        const propertyAttribute = O.fromNullable(cur.attribs['property']);
+        const nameAttribute = O.fromNullable(cur.attribs['name']);
 
-      const propertyPair = sequenceS(O.option)({
-        key: propertyAttribute,
-        value: contentAttribute,
-      });
-      const namePair = sequenceS(O.option)({
-        key: nameAttribute,
-        value: contentAttribute,
-      });
-      return O.alt(() => namePair)(propertyPair);
-    }),
+        const propertyPair = sequenceS(O.option)({
+          key: propertyAttribute,
+          value: contentAttribute,
+        });
+        const namePair = sequenceS(O.option)({
+          key: nameAttribute,
+          value: contentAttribute,
+        });
+        return O.alt(() => namePair)(propertyPair);
+      }),
+    ),
   ),
   E.map((allMetaAttributes) => {
     //
