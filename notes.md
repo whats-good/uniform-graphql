@@ -10,6 +10,7 @@
 - TE.chain requires the left types to always match, which is a pain.
 - `E.either.sequence(T.task)` is your best friend. It will let you convert `Either<A, B>` into `Task<Either<A, B>>`
 - `sequence` in general is your best friend. it will let you jiggle and swap out types and behavior in very useful and important ways. if you're stuck, trying to create one type out of another, the answer is probably `sequence`
+- typescript is hard to have custom errors in, also javascript. using a 3rd party library seems to be a good call.
 
 # TODOS
 
@@ -26,3 +27,6 @@
 - study the p-map library
 - study all the sindresorhus p-x libraries
 - study: `Traversable`: "Traversable represents data structures which can be traversed accumulating results and effects in some Applicative functor."
+- how do we go from `Either<E1, Either<E2, A>>` to `Either<Either<E1, E2>, A>`. Could it be fromLeft fromRight etc?
+- is there a way to see a few steps back in the pipeline?
+- how can we see the stack history when doing error management in fp-ts?
