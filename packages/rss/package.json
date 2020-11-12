@@ -15,7 +15,8 @@
     "fp-ts": "2.8.3",
     "io-ts": "2.2.10",
     "rss-parser": "3.9.0",
-    "cheerio": "1.0.0-rc.3"
+    "cheerio": "1.0.0-rc.3",
+    "pmap": "2.0.0"
   },
   "devDependencies": {
     "eslint": "file:../../node_modules/eslint",

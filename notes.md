@@ -20,3 +20,6 @@
 - learn how to do partial failures on sequenceS calls
 - E.toError may not be that great.
 - I might have accidentally let another git repo get mixed up in this one. How can I carry my commits and leave everything else behind?
+- look into partitionmap from fp-ts
+- study the p-map library
+- study all the sindresorhus p-x libraries

@@ -9,6 +9,8 @@ import Parser from 'rss-parser';
 import { filterMap, map } from 'fp-ts/lib/Array';
 import { sequenceS } from 'fp-ts/lib/Apply';
 import { toBaseError } from './BaseError';
+import { Task } from 'fp-ts/lib/Task';
+import pmap from 'p-map';
 
 const parser = new Parser();
 
@@ -60,10 +62,19 @@ const htmlToMetaTags = flow(
   }),
 );
 
-export const parseMetaTags = flow(
-  parseHtml,
-  E.map(htmlToMetaTags),
-  E.map((allMetaAttributes) => {
-    //
-  }),
-);
+// TODO: concurrentcy limit?
+export function parallelTasks<A>(
+  tasks: Array<Task<A>>,
+  limit: number,
+): Task<Array<A>> {
+  return () => pmap(tasks, (t) => t(), { concurrency: limit });
+}
+
+// TODO: concurrency limit?
+// TODO: pmap will still reject if any single promise rejects, which isn't what we want.
+export const parallelTaskEithers = <E, A>(limit: number) => (
+  tasks: Array<TE.TaskEither<E, A>>,
+): Task<Array<E.Either<E, A>>> => () =>
+  pmap(tasks, (t) => t(), { concurrency: limit });
+
+export const parseMetaTags = flow(parseHtml, E.map(htmlToMetaTags));
