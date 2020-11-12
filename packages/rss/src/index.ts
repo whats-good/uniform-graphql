@@ -48,12 +48,7 @@ const fReddit = flow(
   fetchParse,
   TE.chain(flow(decodeReddit, TE.fromEither)),
   TE.map((feedItem) => feedItem.items.map(({ link }) => link)),
-  T.chain(
-    flow(
-      E.map(flow(A.takeLeft(2), metaTagsFromUrls)), // TODO: undo the take here
-      E.either.sequence(T.task),
-    ),
-  ),
+  T.chain(flow(E.map(metaTagsFromUrls), E.either.sequence(T.task))),
 );
 
 const a = fReddit('https://reddit.com/.rss')().then((a) => {
