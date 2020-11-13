@@ -20,11 +20,14 @@ const metaTagsFromFeedItem = <T extends GenericRssFeedItem>(item: T) =>
   pipe(item, (item) => item.link, fetchParseMetaTags);
 
 // TODO: find better function name
-const collectedM = <T extends GenericRssFeedItem>(item: T) =>
-  sequenceS(T.task)({
-    item: T.of(item),
-    metaTags: metaTagsFromFeedItem(item),
-  });
+const collectedM = <T extends GenericRssFeedItem>(item: T) => {
+  return pipe(
+    T.of<GenericRssFeedItem>(item),
+    T.bindTo('feedItem'),
+    T.bind('metaTags', ({ feedItem }) => metaTagsFromFeedItem(feedItem)),
+    T.bind('applicableMetaTags', ({ metaTags }) => T.of(metaTags)), // TODO: actually implement
+  );
+};
 
 const f = flow(
   fetchParse,
