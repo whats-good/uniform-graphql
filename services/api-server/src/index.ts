@@ -1,17 +1,24 @@
 import { ApolloServer, gql } from 'apollo-server-express';
+import { GraphQLJSON } from 'graphql-type-json';
 import express from 'express';
+import { data } from './cached/data';
+// import { GraphQLObjectType } from 'graphql';
 
 const typeDefs = gql`
   type Query {
     "A simgle type for getting started!"
     hello: String!
+    data: JSON!
   }
+  scalar JSON
 `;
 
 const resolvers = {
   Query: {
     hello: () => 'world',
+    data: () => data,
   },
+  JSON: GraphQLJSON,
 };
 
 const apolloServer = new ApolloServer({

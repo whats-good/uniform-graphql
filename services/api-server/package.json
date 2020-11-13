@@ -11,14 +11,15 @@
     "debug": "ts-node ./src/index.ts"
   },
   "dependencies": {
+    "graphql": "file:../../node_modules/graphql",
     "reflect-metadata": "file:../../node_modules/reflect-metadata",
+    "@whatsgood/rss": "1.0.0",
     "fp-ts": "2.8.3",
     "io-ts": "2.2.10",
-    "@whatsgood/rss": "1.0.0",
     "apollo-server-express": "2.19.0",
     "express": "4.17.1",
     "body-parser": "1.19.0",
-    "graphql": "file:../../node_modules/graphql"
+    "graphql-type-json": "0.3.2"
   },
   "devDependencies": {
     "eslint": "file:../../node_modules/eslint",
