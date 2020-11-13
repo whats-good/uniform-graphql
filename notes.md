@@ -30,3 +30,5 @@
 - how do we go from `Either<E1, Either<E2, A>>` to `Either<Either<E1, E2>, A>`. Could it be fromLeft fromRight etc?
 - is there a way to see a few steps back in the pipeline?
 - how can we see the stack history when doing error management in fp-ts?
+- take a look at `p-queue` to see if we can benefit from an internal queueing mechanism.
+- should i be using IO and IOEither instead of Task and TaskEither for these functions?
