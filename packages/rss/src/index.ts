@@ -3,9 +3,12 @@ import * as A from 'fp-ts/lib/Array';
 import * as TE from 'fp-ts/lib/TaskEither';
 import * as T from 'fp-ts/lib/Task';
 import * as E from 'fp-ts/lib/Either';
-import { flow } from 'fp-ts/lib/function';
-import { fetchParse, get, parseMetaTags, parallelTaskEithers } from './utils';
-import { decodeReddit } from './codecs/reddit';
+import { flow, pipe } from 'fp-ts/lib/function';
+import { fetchParse, get, parseMetaTags, parallelTasks } from './utils';
+import { decodeGeneric, GenericRssFeedItem } from './codecs/generic';
+import { websites } from './data';
+import { sequenceS } from 'fp-ts/lib/Apply';
+import * as R from 'fp-ts/lib/Record';
 
 const fetchParseMetaTags = flow(
   get,
@@ -13,33 +16,31 @@ const fetchParseMetaTags = flow(
   TE.chain(flow(parseMetaTags, TE.fromEither)),
 );
 
-// const fetchParseLinkTags = flow(
-//   get,
-//   TE.map((response) => response.body),
-//   TE.chain(flow(parseLinkTags, TE.fromEither)),
-// );
+const metaTagsFromFeedItem = <T extends GenericRssFeedItem>(item: T) =>
+  pipe(item, (item) => item.link, fetchParseMetaTags);
 
-// const linkTagsFromUrls = flow(
-//   A.map(fetchParseLinkTags),
-//   parallelTaskEithers(10),
-// );
+// TODO: find better function name
+const collectedM = <T extends GenericRssFeedItem>(item: T) =>
+  sequenceS(T.task)({
+    item: T.of(item),
+    metaTags: metaTagsFromFeedItem(item),
+  });
 
-const metaTagsFromUrls = flow(
-  A.map(fetchParseMetaTags),
-  parallelTaskEithers(10), // TODO: how should we optimize this number?
-);
-
-// TODO: how do we functionize these fetchparse functions?
-
-const fReddit = flow(
+const f = flow(
   fetchParse,
-  TE.chain(flow(decodeReddit, TE.fromEither)),
-  TE.map((feedItem) => feedItem.items.map(({ link }) => link)),
-  T.chain(flow(E.map(metaTagsFromUrls), E.either.sequence(T.task))),
-  // T.chain(flow(E.map(linkTagsFromUrls), E.either.sequence(T.task))),
+  TE.chain(flow(decodeGeneric, TE.fromEither)),
+  T.chain(
+    flow(
+      E.map(({ items }) => items),
+      E.map(flow(A.map(collectedM), parallelTasks(10))), // TODO: how do we optimize this number?
+      E.either.sequence(T.task),
+    ),
+  ),
 );
 
-const a = fReddit('https://reddit.com/.rss')().then((a) => {
+const main = pipe(websites, R.map(f), sequenceS(T.task));
+
+const a = main().then((a) => {
   //
   a;
 });
