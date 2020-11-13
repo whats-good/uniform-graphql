@@ -14,7 +14,9 @@
     "reflect-metadata": "file:../../node_modules/reflect-metadata",
     "fp-ts": "2.8.3",
     "io-ts": "2.2.10",
-    "@whatsgood/rss": "1.0.0"
+    "@whatsgood/rss": "1.0.0",
+    "apollo-server": "2.19.0",
+    "graphql": "file:../../node_modules/graphql"
   },
   "devDependencies": {
     "eslint": "file:../../node_modules/eslint",

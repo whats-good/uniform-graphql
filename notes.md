@@ -33,3 +33,4 @@
 - how can we see the stack history when doing error management in fp-ts?
 - take a look at `p-queue` to see if we can benefit from an internal queueing mechanism.
 - should i be using IO and IOEither instead of Task and TaskEither for these functions?
+- should i use webpack for typescript to js conversion?: https://medium.com/free-code-camp/build-an-apollo-graphql-server-with-typescript-and-webpack-hot-module-replacement-hmr-3c339d05184f
