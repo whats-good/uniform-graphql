@@ -31,6 +31,7 @@ const codec1 = t.type({
     kazan: t.type({
       someOtherBs: t.string,
       isTrue: t.boolean,
+      someInt: t.Int,
     }),
   }),
 });
@@ -74,6 +75,11 @@ const f = (codec: t.Mixed): any => {
   for (const [codecClass, gqlScalar] of scalars.entries()) {
     if (codec instanceof codecClass) {
       return gqlScalar;
+    }
+  }
+  if (codec instanceof t.RefinementType) {
+    if (codec.name === 'Int') {
+      return GraphQLInt;
     }
   }
   // TODO: handle error outputs.
