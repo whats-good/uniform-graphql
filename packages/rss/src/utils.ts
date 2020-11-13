@@ -81,12 +81,11 @@ const htmlToMetaTags = flow(
 );
 
 // TODO: concurrentcy limit?
-export function parallelTasks<A>(
+export const parallelTasks = <A>(limit: number) => (
   tasks: Array<Task<A>>,
-  limit: number,
-): Task<Array<A>> {
+): Task<Array<A>> => {
   return () => pmap(tasks, (t) => t(), { concurrency: limit });
-}
+};
 
 // TODO: concurrency limit?
 // TODO: pmap will still reject if any single promise rejects, which isn't what we want.
