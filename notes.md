@@ -35,3 +35,4 @@
 - should i be using IO and IOEither instead of Task and TaskEither for these functions?
 - should i use webpack for typescript to js conversion?: https://medium.com/free-code-camp/build-an-apollo-graphql-server-with-typescript-and-webpack-hot-module-replacement-hmr-3c339d05184f
 - add either nodemon or webpack hot reloading.
+- consider using the apollo-explorer instead of playground.

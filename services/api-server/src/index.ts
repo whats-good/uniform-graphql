@@ -13,10 +13,13 @@ import {
   GraphQLString,
   GraphQLInt,
   GraphQLOutputType,
+  GraphQLNonNull,
+  GraphQLFloat,
 } from 'graphql';
 import { pipe } from 'fp-ts/lib/function';
 
 // TODO: how do we distinguish between different kinds of numbers?
+// TODO: handle non-nullability somehow.
 
 const codec1 = t.type({
   link: t.string,
@@ -36,15 +39,14 @@ const codec1 = t.type({
 // TODO: how do we handle dates?
 const scalars = new Map<any, GraphQLOutputType>([
   [t.StringType, GraphQLString],
-  [t.NumberType, GraphQLInt],
   [t.BooleanType, GraphQLBoolean],
+  [t.NumberType, GraphQLFloat],
 ]);
 
 // TODO: what if there are no subfields?
-// TODO: handle recursion.
 // TODO: find a way out of the any here.
 // TODO: find a way to get the user to provide the name.
-const f = (codec: unknown): any => {
+const f = (codec: t.Mixed): any => {
   //
   if (codec instanceof t.InterfaceType) {
     const mappedOut = R.map(f)(codec.props);
@@ -69,17 +71,13 @@ const f = (codec: unknown): any => {
 
     return objectType;
   }
-  for (const [codecScalar, gqlScalar] of scalars.entries()) {
-    if (codec instanceof codecScalar) {
+  for (const [codecClass, gqlScalar] of scalars.entries()) {
+    if (codec instanceof codecClass) {
       return gqlScalar;
-    } else {
-      //
     }
-    codec;
-    // TODO: handle error outputs.
-    // TODO: why doesn't it find the numberType instance?
-    return undefined;
   }
+  // TODO: handle error outputs.
+  return undefined;
 };
 
 const gqlCodec = f(codec1);
@@ -112,15 +110,6 @@ const rootQuery = new GraphQLObjectType({
     },
   },
 });
-
-// type: new GraphQLObjectType({
-//   name: 'something',
-//   fields: () => ({
-//     first: {
-//       type: GraphQLString,
-//     },
-//   }),
-// }),
 
 const schema = new GraphQLSchema({
   query: rootQuery,
