@@ -4,7 +4,8 @@ import * as TE from 'fp-ts/lib/TaskEither';
 import * as T from 'fp-ts/lib/Task';
 import * as E from 'fp-ts/lib/Either';
 import { flow, pipe } from 'fp-ts/lib/function';
-import { fetchParse, get, parseMetaTags, parallelTasks } from './utils';
+import { fetchParseRss, get, parseMetaTags, parallelTasks } from './utils';
+import { BaseError } from './BaseError';
 import { decodeGeneric, GenericRssFeedItem } from './codecs/generic';
 import { websites } from './data';
 import { sequenceS } from 'fp-ts/lib/Apply';
@@ -30,7 +31,7 @@ const collectedM = <T extends GenericRssFeedItem>(item: T) => {
 };
 
 const f = flow(
-  fetchParse,
+  fetchParseRss,
   TE.chain(flow(decodeGeneric, TE.fromEither)),
   T.chain(
     flow(

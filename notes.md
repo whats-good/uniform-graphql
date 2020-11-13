@@ -11,7 +11,7 @@
 - `E.either.sequence(T.task)` is your best friend. It will let you convert `Either<A, B>` into `Task<Either<A, B>>`
 - `sequence` in general is your best friend. it will let you jiggle and swap out types and behavior in very useful and important ways. if you're stuck, trying to create one type out of another, the answer is probably `sequence`
 - typescript is hard to have custom errors in, also javascript. using a 3rd party library seems to be a good call.
-- `TE.bind` is an excellent way to accumulate results in
+- `TE.bind` is an excellent way to accumulate results in tasks
 
 # TODOS
 

@@ -30,15 +30,15 @@ export const get = TE.tryCatchK(
   toBaseError('http get failed'),
 );
 
-const parse = TE.tryCatchK(
+const parseRss = TE.tryCatchK(
   (xml: string) => parser.parseString(xml),
   toBaseError('parsing failed'),
 );
 
-export const fetchParse = flow(
+export const fetchParseRss = flow(
   get,
   TE.map((response) => response.body),
-  TE.chain(parse),
+  TE.chain(parseRss),
 );
 
 const parseHtml = (html: string) =>
