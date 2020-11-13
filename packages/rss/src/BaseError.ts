@@ -1,7 +1,7 @@
 import * as E from 'fp-ts/lib/Either';
 import { CustomError, customErrorFactory } from 'ts-custom-error';
 
-class BaseError extends CustomError {
+export class BaseError extends CustomError {
   public readonly payload: any;
   // TODO: find a way to put in custom payload in these errors!
   constructor(message?: string, payload?: any) {
