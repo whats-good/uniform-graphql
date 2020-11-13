@@ -25,21 +25,24 @@ export const decode = <B extends t.Props>(codec: t.TypeC<B>) =>
     }),
   );
 
-export const get = TE.tryCatchK(
+const get = TE.tryCatchK(
   (url: string) => got.get(url),
   toBaseError('http get failed'),
 );
+
+const getBody = flow(
+  get,
+  TE.map(({ body }) => body),
+);
+
+export const http = { get, getBody };
 
 const parseRss = TE.tryCatchK(
   (xml: string) => parser.parseString(xml),
   toBaseError('parsing failed'),
 );
 
-export const fetchParseRss = flow(
-  get,
-  TE.map((response) => response.body),
-  TE.chain(parseRss),
-);
+export const fetchParseRss = flow(http.getBody, TE.chain(parseRss));
 
 const parseHtml = (html: string) =>
   E.tryCatch(() => {

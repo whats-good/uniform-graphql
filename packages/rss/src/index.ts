@@ -4,8 +4,7 @@ import * as TE from 'fp-ts/lib/TaskEither';
 import * as T from 'fp-ts/lib/Task';
 import * as E from 'fp-ts/lib/Either';
 import { flow, pipe } from 'fp-ts/lib/function';
-import { fetchParseRss, get, parseMetaTags, parallelTasks } from './utils';
-import { BaseError } from './BaseError';
+import { fetchParseRss, http, parseMetaTags, parallelTasks } from './utils';
 import { decodeGeneric, GenericRssFeedItem } from './codecs/generic';
 import { websites } from './data';
 import { sequenceS } from 'fp-ts/lib/Apply';
@@ -15,8 +14,7 @@ const pickLink = <T extends GenericRssFeedItem>(item: T) => item.link;
 
 const metaTagsFromFeedItem = flow(
   pickLink,
-  get,
-  TE.map((response) => response.body),
+  http.getBody,
   TE.chain(flow(parseMetaTags, TE.fromEither)),
 );
 
