@@ -1,27 +1,88 @@
 import { ApolloServer, gql } from 'apollo-server-express';
 import { GraphQLJSON } from 'graphql-type-json';
+import * as R from 'fp-ts/lib/Record';
+import * as A from 'fp-ts/lib/Array';
 import express from 'express';
 import { data } from './cached/data';
 import * as t from 'io-ts';
 import {
+  GraphQLBoolean,
   GraphQLID,
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
+  GraphQLInt,
+  GraphQLOutputType,
 } from 'graphql';
+import { pipe } from 'fp-ts/lib/function';
 
-const codec = t.type({
+// TODO: how do we distinguish between different kinds of numbers?
+
+const codec1 = t.type({
   link: t.string,
   title: t.string,
-});
-
-const codecObject = new GraphQLObjectType({
-  name: 'my object!',
-  fields: () => ({
-    link: { type: GraphQLString },
-    title: { type: GraphQLString },
+  number: t.number,
+  kerem: t.type({
+    name: t.string,
+    number2: t.number,
+    kazan: t.type({
+      someOtherBs: t.string,
+      isTrue: t.boolean,
+    }),
   }),
 });
+
+// TODO: replace the left ANY with a better type
+// TODO: how do we handle dates?
+const scalars = new Map<any, GraphQLOutputType>([
+  [t.StringType, GraphQLString],
+  [t.NumberType, GraphQLInt],
+  [t.BooleanType, GraphQLBoolean],
+]);
+
+// TODO: what if there are no subfields?
+// TODO: handle recursion.
+// TODO: find a way out of the any here.
+// TODO: find a way to get the user to provide the name.
+const f = (codec: unknown): any => {
+  //
+  if (codec instanceof t.InterfaceType) {
+    const mappedOut = R.map(f)(codec.props);
+    const better = pipe(
+      mappedOut,
+      R.filter((a) => {
+        // TODO: find a better way to eliminate bad ones.
+        return !!a;
+      }),
+      R.map((a) => ({
+        type: a,
+      })),
+    );
+
+    const objectType = new GraphQLObjectType({
+      name: `type` + String(Number.parseInt(String(Math.random() * 100000))),
+      fields: () => better,
+    });
+
+    objectType;
+    // debugger;
+
+    return objectType;
+  }
+  for (const [codecScalar, gqlScalar] of scalars.entries()) {
+    if (codec instanceof codecScalar) {
+      return gqlScalar;
+    } else {
+      //
+    }
+    codec;
+    // TODO: handle error outputs.
+    // TODO: why doesn't it find the numberType instance?
+    return undefined;
+  }
+};
+
+const gqlCodec = f(codec1);
 
 const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
@@ -39,8 +100,27 @@ const rootQuery = new GraphQLObjectType({
         return 'YO';
       },
     },
+    myCodec: {
+      type: gqlCodec,
+      // type: codecOject,
+      resolve: (parent, args) => {
+        return {
+          link: 'my link',
+          title: 'my title',
+        };
+      },
+    },
   },
 });
+
+// type: new GraphQLObjectType({
+//   name: 'something',
+//   fields: () => ({
+//     first: {
+//       type: GraphQLString,
+//     },
+//   }),
+// }),
 
 const schema = new GraphQLSchema({
   query: rootQuery,
