@@ -11,14 +11,14 @@ import { websites } from './data';
 import { sequenceS } from 'fp-ts/lib/Apply';
 import * as R from 'fp-ts/lib/Record';
 
-const fetchParseMetaTags = flow(
+const pickLink = <T extends GenericRssFeedItem>(item: T) => item.link;
+
+const metaTagsFromFeedItem = flow(
+  pickLink,
   get,
   TE.map((response) => response.body),
   TE.chain(flow(parseMetaTags, TE.fromEither)),
 );
-
-const metaTagsFromFeedItem = <T extends GenericRssFeedItem>(item: T) =>
-  pipe(item, (item) => item.link, fetchParseMetaTags);
 
 // TODO: find better function name
 const collectedM = <T extends GenericRssFeedItem>(item: T) => {
