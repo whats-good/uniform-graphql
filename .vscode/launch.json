@@ -9,15 +9,34 @@
       "type": "node",
       "request": "launch",
       "name": "Debug Rss/index.ts",
-      // "program": "./build/index.js",
-      // "preLaunchTask": "build api-server",
-      // "outFiles": ["./build/**/*.js"],
       "runtimeExecutable": "npm",
-      "args": ["run", "start"],
+      "args": [
+        "run",
+        "start"
+      ],
       "sourceMaps": true,
       "smartStep": true,
       "internalConsoleOptions": "openOnSessionStart",
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "cwd": "${workspaceFolder}/services/api-server",
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Api Server",
+      "runtimeExecutable": "npm",
+      "args": [
+        "run",
+        "debug"
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
     }
   ]
 }
