@@ -17,6 +17,7 @@ const metaTagsFromFeedItem = flow(
 );
 
 // TODO: find better function name
+// TODO: find a better way than (x) => pipe(x,...)
 const collectedM = <T extends GenericRssFeedItem>(item: T) => {
   return pipe(
     T.of<GenericRssFeedItem>(item),
