@@ -5,6 +5,7 @@ import * as A from 'fp-ts/lib/Array';
 import express from 'express';
 import { data } from './cached/data';
 import * as t from 'io-ts';
+import { Lens } from 'monocle-ts';
 import {
   GraphQLBoolean,
   GraphQLID,
@@ -17,30 +18,10 @@ import {
   GraphQLFloat,
   GraphQLScalarType,
 } from 'graphql';
-import { flow, pipe } from 'fp-ts/lib/function';
+import { flip, flow, pipe } from 'fp-ts/lib/function';
 
 // TODO: how do we distinguish between different kinds of numbers?
 // TODO: handle non-nullability somehow.
-
-type WScalarCodec<A, B, C extends GraphQLScalarType> = {
-  codec: t.Decoder<A, B>;
-  gql: C;
-};
-
-const string = {
-  codec: t.string,
-  gql: GraphQLString,
-};
-
-const g = () => <A, B, C extends GraphQLScalarType>(
-  scalarCodec: WScalarCodec<A, B, C>,
-) => {
-  return {
-    type: scalarCodec.gql,
-  };
-};
-
-const gg = g()(string);
 
 // TODO: how do we handle ID?
 const primitives = {
@@ -61,47 +42,6 @@ const primitives = {
     gql: GraphQLFloat,
   },
 };
-
-// const type = flow();
-
-const b = (name: string) =>
-  pipe(
-    {
-      link: primitives.string,
-      upvotes: primitives.number,
-    },
-    (liftedCodecs) => ({
-      name,
-      codec: t.type({
-        link: liftedCodecs.link.codec,
-        upvotes: liftedCodecs.upvotes.codec,
-      }),
-      gql: new GraphQLObjectType({
-        name,
-        fields: () => ({
-          link: { type: g()(liftedCodecs.link).type },
-          upvotes: { type: g()(liftedCodecs.upvotes).type },
-        }),
-      }),
-    }),
-  );
-
-const d = b('myTypeName');
-
-const codec1 = t.type({
-  link: t.string,
-  title: t.string,
-  number: t.number,
-  kerem: t.type({
-    name: t.string,
-    number2: t.number,
-    kazan: t.type({
-      someOtherBs: t.string,
-      isTrue: t.boolean,
-      someInt: t.Int,
-    }),
-  }),
-});
 
 // TODO: replace the left ANY with a better type
 // TODO: how do we handle dates?
@@ -130,7 +70,9 @@ const f = (codec: t.Mixed): any => {
     );
 
     const objectType = new GraphQLObjectType({
-      name: `type` + String(Number.parseInt(String(Math.random() * 100000))),
+      name:
+        codec.name ||
+        `type` + String(Number.parseInt(String(Math.random() * 100000))),
       fields: () => better,
     });
 
@@ -153,36 +95,36 @@ const f = (codec: t.Mixed): any => {
   return undefined;
 };
 
-const gqlCodec = f(codec1);
+const abcd = t.type(
+  {
+    a: primitives.string.codec,
+    b: primitives.boolean.codec,
+    c: primitives.number.codec,
+  },
+  'initialType',
+);
+
+const myCodec = pipe(abcd, (c) => ({
+  name: 'Some_name',
+  codec: c,
+}));
+
+const myCodec2 = {
+  name: 'someOtherName',
+  codec: t.type(
+    {
+      nested: myCodec.codec,
+      other: t.string,
+    },
+    'someOtherName',
+  ),
+};
 
 const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
-    hello: {
-      type: GraphQLString,
-      args: {
-        id: {
-          type: GraphQLID,
-        },
-      },
-      // TODO: how can we get id from above?
-      // TODO: and how can we get the return type from above?
-      resolve: (parent, args) => {
-        return 'YO';
-      },
-    },
-    myCodec: {
-      type: gqlCodec,
-      // type: codecOject,
-      resolve: (parent, args) => {
-        return {
-          link: 'my link',
-          title: 'my title',
-        };
-      },
-    },
-    otherCodec: {
-      type: d.gql,
+    yetAnotherCodec: {
+      type: f(myCodec2.codec),
     },
   },
 });
