@@ -22,6 +22,7 @@ import {
 } from 'graphql';
 import { flow, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
+import _ from 'lodash';
 
 // TODO: how do we distinguish between different kinds of numbers?
 // TODO: handle non-nullability somehow.
@@ -46,7 +47,25 @@ interface GPropsTagged {
   [key: string]: GMixedWithNullability;
 }
 
-const x = t.string;
+type Wrapped<T, I extends string> = { [K in keyof T]: { [key in I]: T[K] } };
+
+// TODO: implement without lodash.
+const unwrap = <T, I extends string>(key: I) => (x: Wrapped<T, I>): T => {
+  return _.mapValues(x as any, (z) => z[key]);
+};
+
+const d = {
+  k: { to: 'kerem' as const },
+  l: { to: 134 },
+};
+
+const e = pipe(d, unwrap('to'));
+
+type Taskified<T> = {
+  [P in keyof T]: T.Task<T[P]>;
+};
+
+// const originalProps = unproxify(proxyProps);
 
 // TODO: dont have nulls or undefineds. only options.
 
@@ -120,8 +139,6 @@ const n = {
   Int: nullable(core.Int),
 };
 
-type FieldResolver<A extends GMixedWithNullability> = T.Task<t.TypeOf<A>>;
-
 const type = <P extends GPropsTagged>(name: string, props: P) => {
   const codec = t.type(props, name);
   const fields = () =>
@@ -163,13 +180,6 @@ const myTypeName = type('myTypeName', {
   lastName: n.string,
 });
 
-// myTypeName.encode({
-//   title: 'yo',
-//   id: 'yeah',
-// });
-
-type D = t.TypeOf<typeof user>;
-
 // TODO: root should always take in a taskified record.
 
 /**
@@ -179,12 +189,12 @@ type D = t.TypeOf<typeof user>;
  * their type information?
  */
 
-const resolverOf = <A extends GMixed, B extends t.TypeOf<A>>(x: A) => (
-  p: Partial<B>,
+const resolverOf = <A extends GMixed, B extends t.TypeOf<A>>(from: A) => (
+  p: Partial<Taskified<B>>,
 ) => null;
 
 const abc = resolverOf(user)({
-  id: 'yoyoyo',
+  id: T.of('yoyoyo'),
 });
 
 const myNestedType = type('myNestedType', {
