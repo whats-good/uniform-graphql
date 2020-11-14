@@ -1,4 +1,4 @@
-import { ApolloServer, gql } from 'apollo-server-express';
+import { ApolloServer, gql, UserInputError } from 'apollo-server-express';
 import { GraphQLJSON } from 'graphql-type-json';
 import * as R from 'fp-ts/lib/Record';
 import * as T from 'fp-ts/lib/Task';
@@ -171,7 +171,7 @@ const person = type('Person', {
 const user = type('User', {
   id: r.id,
   firstFriend: notNullable(person),
-  secondFriend: nullable(person),
+  // secondFriend: nullable(person),
 });
 
 const myTypeName = type('myTypeName', {
@@ -182,20 +182,26 @@ const myTypeName = type('myTypeName', {
 
 // TODO: root should always take in a taskified record.
 
-/**
- * TODO: CRUX here: how do we map from an object with
- * different key-value pairs into another object with
- * same keys and derived values where derived values keep
- * their type information?
- */
+// TODO: how can i make it return a PartialTaskified, and not just a Taskified?
+// type resolverOf<A extends GMixed> = <B extends t.TypeOf<A>>(
+//   from: A,
+// ) => (root: Taskified<B>) => Taskified<B>;
+
+// type userResolver = resolverOf<typeof user>;
+
+// TODO: should we use `T.map` language here, or is it good that we're utilizing normal tasks?
+// TODO: would it be better to hide the taskified root from the end developer? Would probably be better
+// if we just use T.map or T.chain behind the scenes and allowed the end user to act as if the data is already there.
 
 const resolverOf = <A extends GMixed, B extends t.TypeOf<A>>(from: A) => (
-  p: Partial<Taskified<B>>,
-) => null;
+  resolverFn: (root: Taskified<B>) => Partial<Taskified<B>>,
+) => (root: Taskified<B>) => resolverFn(root);
 
-const abc = resolverOf(user)({
-  id: T.of('yoyoyo'),
-});
+// TODO: how do we retain GraphqlObject name etc info here?
+const userResolver = resolverOf(user)((root) => ({
+  id: T.of('some string to replace the original'),
+  firstFriend: root.firstFriend,
+}));
 
 const myNestedType = type('myNestedType', {
   nestedNullable: nullable(myTypeName),
@@ -220,6 +226,8 @@ myNestedType.encode({
 
 type a = t.TypeOf<typeof myNestedType>;
 
+// TODO: we should make sure only those that have __nullability fields can be passed as a type here.
+// TODO: find out a way to give extensibility to grpahql field resolvers.
 const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
@@ -228,6 +236,12 @@ const rootQuery = new GraphQLObjectType({
     },
     here2: {
       type: myNestedType.gql,
+    },
+    user: {
+      type: user.gql,
+      resolve: (root, args, context) => ({
+        id: 'here is an id!',
+      }),
     },
   },
 });
