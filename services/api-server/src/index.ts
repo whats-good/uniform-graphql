@@ -39,40 +39,34 @@ const x = t.string;
 // TODO: dont have nulls or undefineds. only options.
 
 // TODO: should we return or accept Option<A, B> etc types?
-const nullable = flow((x: GMixed) => t.union([x, t.null, t.undefined]));
 
 // TODO: can we stop using Object.assign?
 const core = {
+  // TODO: ids should be non-empty strings
   id: Object.assign({}, t.union([t.string, t.Int]), { gql: GraphQLID }),
   string: Object.assign({}, t.string, { gql: GraphQLString }),
   number: Object.assign({}, t.number, { gql: GraphQLFloat }),
   Int: Object.assign({}, t.Int, { gql: GraphQLInt }),
 };
 
+const makeRequired = <T extends GMixed>(x: T) =>
+  Object.assign({}, x, { gql: new GraphQLNonNull(x.gql) });
+
+const makeNullable = <T extends GMixed>(x: T) =>
+  Object.assign({}, x, t.union([x, t.null, t.undefined]));
+
 const required = {
-  id: Object.assign({}, core.id, { gql: new GraphQLNonNull(core.id.gql) }),
-  string: Object.assign({}, t.string, {
-    gql: new GraphQLNonNull(core.string.gql),
-  }),
-  number: Object.assign({}, t.number, {
-    gql: new GraphQLNonNull(core.number.gql),
-  }),
-  Int: Object.assign({}, t.Int, { gql: new GraphQLNonNull(core.Int.gql) }),
+  id: makeRequired(core.id),
+  string: makeRequired(core.string),
+  number: makeRequired(core.number),
+  Int: makeRequired(core.Int),
 };
 
-const nullables = {
-  id: Object.assign({}, core.id, t.union([core.id, t.null, t.undefined])),
-  string: Object.assign(
-    {},
-    core.string,
-    t.union([core.id, t.null, t.undefined]),
-  ),
-  number: Object.assign(
-    {},
-    core.string,
-    t.union([core.id, t.null, t.undefined]),
-  ),
-  Int: Object.assign({}, t.Int, t.union([core.id, t.null, t.undefined])),
+const nullable = {
+  id: makeNullable(core.id),
+  string: makeNullable(core.string),
+  number: makeNullable(core.number),
+  Int: makeNullable(core.Int),
 };
 
 const type = <P extends GProps>(name: string, props: P) => {
@@ -94,7 +88,7 @@ const type = <P extends GProps>(name: string, props: P) => {
 const myTypeName = type('myTypeName', {
   title: required.string,
   id: required.id,
-  someOtherProp: nullables.id,
+  someOtherProp: nullable.Int,
 });
 
 const myNestedType = type('myNestedType', {
