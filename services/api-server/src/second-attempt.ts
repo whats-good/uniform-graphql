@@ -28,13 +28,14 @@ interface SemiScalar<A, O, G extends GraphQLOutputType = GraphQLScalarType> {
   name: string;
   gql: G;
   codec: Codec<A, O>;
+  __nullability: 'pending';
 }
 
 interface Scalar<A, O> extends SemiScalar<A, O> {
   __nullability: 'nullable' | 'notNullable';
 }
 
-// TODO: how do we make the codec still visible through the typechecker even after the modification?
+// TODO: how do i make this one return a Scalar from the SemiScalar, rather than the type that typescript auto infers?
 const nullable = <A, O>(x: SemiScalar<A, O>) => {
   return {
     __nullability: 'nullable' as const,
@@ -57,26 +58,31 @@ const id = {
   codec: t.union([t.string, t.number]),
   gql: GraphQLID,
   name: 'ID' as const,
+  __nullability: 'pending' as const,
 };
 const string = {
   codec: t.string,
   gql: GraphQLString,
   name: 'String' as const,
+  __nullability: 'pending' as const,
 };
 const float = {
   codec: t.number,
   gql: GraphQLFloat,
   name: 'Float' as const,
+  __nullability: 'pending' as const,
 };
 const int = {
   codec: t.Int,
   gql: GraphQLInt,
   name: 'Int' as const,
+  __nullability: 'pending' as const,
 };
 const boolean = {
   codec: t.boolean,
   gql: GraphQLBoolean,
   name: 'Boolean' as const,
+  __nullability: 'pending' as const,
 };
 
 const core = {
