@@ -15,29 +15,51 @@ import {
   GraphQLOutputType,
   GraphQLNonNull,
   GraphQLFloat,
+  GraphQLScalarType,
 } from 'graphql';
 import { flow, pipe } from 'fp-ts/lib/function';
 
 // TODO: how do we distinguish between different kinds of numbers?
 // TODO: handle non-nullability somehow.
 
+type WScalarCodec<A, B, C extends GraphQLScalarType> = {
+  codec: t.Decoder<A, B>;
+  gql: C;
+};
+
+const string = {
+  codec: t.string,
+  gql: GraphQLString,
+};
+
+const g = () => <A, B, C extends GraphQLScalarType>(
+  scalarCodec: WScalarCodec<A, B, C>,
+) => {
+  return {
+    type: scalarCodec.gql,
+  };
+};
+
+const gg = g()(string);
+
+// TODO: how do we handle ID?
 const primitives = {
-  string: () => ({
+  string: {
     codec: t.string,
-    gql: { type: GraphQLString },
-  }),
-  boolean: () => ({
+    gql: GraphQLString,
+  },
+  boolean: {
     codec: t.boolean,
-    gql: { type: GraphQLBoolean },
-  }),
-  Int: () => ({
+    gql: GraphQLBoolean,
+  },
+  Int: {
     codec: t.Int,
-    gql: { type: GraphQLInt },
-  }),
-  number: () => ({
+    gql: GraphQLInt,
+  },
+  number: {
     codec: t.number,
-    gql: { type: GraphQLFloat },
-  }),
+    gql: GraphQLFloat,
+  },
 };
 
 // const type = flow();
@@ -51,20 +73,20 @@ const b = (name: string) =>
     (liftedCodecs) => ({
       name,
       codec: t.type({
-        link: liftedCodecs.link().codec,
-        upvotes: liftedCodecs.link().codec,
+        link: liftedCodecs.link.codec,
+        upvotes: liftedCodecs.upvotes.codec,
       }),
       gql: new GraphQLObjectType({
         name,
         fields: () => ({
-          link: liftedCodecs.link().gql,
-          upvotes: liftedCodecs.upvotes().gql,
+          link: { type: g()(liftedCodecs.link).type },
+          upvotes: { type: g()(liftedCodecs.upvotes).type },
         }),
       }),
     }),
   );
 
-const otherCodec = b('myTypeName');
+const d = b('myTypeName');
 
 const codec1 = t.type({
   link: t.string,
@@ -160,7 +182,7 @@ const rootQuery = new GraphQLObjectType({
       },
     },
     otherCodec: {
-      type: otherCodec.gql,
+      type: d.gql,
     },
   },
 });
