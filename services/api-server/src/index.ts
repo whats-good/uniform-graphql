@@ -18,29 +18,36 @@ import {
   GraphQLFloat,
   GraphQLScalarType,
 } from 'graphql';
-import { pipe } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 
 // TODO: how do we distinguish between different kinds of numbers?
 // TODO: handle non-nullability somehow.
 
 // TODO: how do we handle ID?
 
-interface GCodec extends t.Type<any, any, unknown> {
+interface GMixed extends t.Type<any, any, unknown> {
   gql: GraphQLOutputType;
   name: string;
 }
-interface MyProps {
-  [key: string]: GCodec;
+interface GProps {
+  [key: string]: GMixed;
 }
 
-const g = {
-  id: Object.assign({}, t.union([t.string, t.number]), { gql: GraphQLID }),
+const x = t.string;
+
+// TODO: dont have nulls or undefineds. only options.
+
+// TODO: should we return or accept Option<A, B> etc types?
+const nullable = flow((x: GMixed) => t.union([x, t.null, t.undefined]));
+
+const required = {
+  id: Object.assign({}, t.union([t.string, t.Int]), { gql: GraphQLID }),
   string: Object.assign({}, t.string, { gql: GraphQLString }),
   number: Object.assign({}, t.number, { gql: GraphQLFloat }),
   Int: Object.assign({}, t.Int, { gql: GraphQLInt }),
 };
 
-const type = <P extends MyProps>(name: string, props: P) => {
+const type = <P extends GProps>(name: string, props: P) => {
   const codec = t.type(props, name);
   const fields = () =>
     pipe(
@@ -57,13 +64,18 @@ const type = <P extends MyProps>(name: string, props: P) => {
 };
 
 const myTypeName = type('myTypeName', {
-  title: g.string,
-  id: g.Int,
+  title: required.string,
+  id: required.id,
+});
+
+myTypeName.encode({
+  title: 'kerem',
+  id: '1',
 });
 
 const myNestedType = type('myNestedType', {
   nested: myTypeName,
-  notNested: g.number,
+  notNested: required.number,
 });
 
 const rootQuery = new GraphQLObjectType({
