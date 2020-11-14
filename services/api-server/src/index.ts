@@ -1,6 +1,7 @@
 import { ApolloServer, gql } from 'apollo-server-express';
 import { GraphQLJSON } from 'graphql-type-json';
 import * as R from 'fp-ts/lib/Record';
+import * as T from 'fp-ts/lib/Task';
 import * as A from 'fp-ts/lib/Array';
 import * as O from 'fp-ts/lib/Option';
 import express from 'express';
@@ -20,6 +21,7 @@ import {
   GraphQLScalarType,
 } from 'graphql';
 import { flow, pipe } from 'fp-ts/lib/function';
+import { isLeft } from 'fp-ts/lib/Either';
 
 // TODO: how do we distinguish between different kinds of numbers?
 // TODO: handle non-nullability somehow.
@@ -29,18 +31,19 @@ import { flow, pipe } from 'fp-ts/lib/function';
 interface GMixed extends t.Type<any, any, unknown> {
   gql: GraphQLOutputType;
   name: string;
+  __subFieldsChecked: 'subFieldsChecked';
 }
 
-interface GProps {
-  [key: string]: GMixed;
-}
+// interface GProps {
+//   [key: string]: GMixed;
+// }
 
-interface GMixedTagged extends GMixed {
+interface GMixedWithNullability extends GMixed {
   __nullability: 'nullable' | 'notNullable';
 }
 
 interface GPropsTagged {
-  [key: string]: GMixedTagged;
+  [key: string]: GMixedWithNullability;
 }
 
 const x = t.string;
@@ -52,12 +55,37 @@ const x = t.string;
 // TODO: find a way to actually take in Option<A, B> etc for nullable ones
 
 // TODO: can we stop using Object.assign?
+
+// TODO: how can I create recursive types?
+
+// TODO: how do I create arrays?
+
 const core = {
   // TODO: ids should be non-empty strings
-  id: Object.assign({}, t.union([t.string, t.Int]), { gql: GraphQLID }),
-  string: Object.assign({}, t.string, { gql: GraphQLString }),
-  number: Object.assign({}, t.number, { gql: GraphQLFloat }),
-  Int: Object.assign({}, t.Int, { gql: GraphQLInt }),
+  id: Object.assign(
+    {},
+    t.union([t.string, t.Int]),
+    { gql: GraphQLID },
+    { __subFieldsChecked: 'subFieldsChecked' as const },
+  ),
+  string: Object.assign(
+    {},
+    t.string,
+    { gql: GraphQLString },
+    { __subFieldsChecked: 'subFieldsChecked' as const },
+  ),
+  number: Object.assign(
+    {},
+    t.number,
+    { gql: GraphQLFloat },
+    { __subFieldsChecked: 'subFieldsChecked' as const },
+  ),
+  Int: Object.assign(
+    {},
+    t.Int,
+    { gql: GraphQLInt },
+    { __subFieldsChecked: 'subFieldsChecked' as const },
+  ),
 };
 
 const notNullable = <T extends GMixed>(x: T) =>
@@ -71,11 +99,13 @@ const notNullable = <T extends GMixed>(x: T) =>
 const nullable = <T extends GMixed>(x: T) =>
   Object.assign(
     {},
+    x,
     t.union([x, t.null, t.undefined]),
     { gql: x.gql },
     { __nullability: 'nullable' as const },
   );
 
+// TODO: how can i create r & n directly from core by something akin to R.map(nullable)?
 const r = {
   id: notNullable(core.id),
   string: notNullable(core.string),
@@ -90,6 +120,8 @@ const n = {
   Int: nullable(core.Int),
 };
 
+type FieldResolver<A extends GMixedWithNullability> = T.Task<t.TypeOf<A>>;
+
 const type = <P extends GPropsTagged>(name: string, props: P) => {
   const codec = t.type(props, name);
   const fields = () =>
@@ -103,19 +135,57 @@ const type = <P extends GPropsTagged>(name: string, props: P) => {
     fields,
   });
 
-  return Object.assign({}, codec, { gql });
+  return Object.assign(
+    {},
+    codec,
+    { gql },
+    { __subFieldsChecked: 'subFieldsChecked' as const },
+  );
 };
+
+const person = type('Person', {
+  ssn: r.id,
+  firstName: r.string,
+  lastName: r.string,
+  favoriteAnimal: n.string,
+  favoriteNumber: n.number,
+});
+
+const user = type('User', {
+  id: r.id,
+  firstFriend: notNullable(person),
+  secondFriend: nullable(person),
+});
 
 const myTypeName = type('myTypeName', {
   title: r.string,
   id: r.id,
-  // someOtherProp: n.Int,
+  lastName: n.string,
 });
 
 // myTypeName.encode({
 //   title: 'yo',
 //   id: 'yeah',
 // });
+
+type D = t.TypeOf<typeof user>;
+
+// TODO: root should always take in a taskified record.
+
+/**
+ * TODO: CRUX here: how do we map from an object with
+ * different key-value pairs into another object with
+ * same keys and derived values where derived values keep
+ * their type information?
+ */
+
+const resolverOf = <A extends GMixed, B extends t.TypeOf<A>>(x: A) => (
+  p: Partial<B>,
+) => null;
+
+const abc = resolverOf(user)({
+  id: 'yoyoyo',
+});
 
 const myNestedType = type('myNestedType', {
   nestedNullable: nullable(myTypeName),
@@ -133,6 +203,7 @@ myNestedType.encode({
   nestedRequired: {
     id: 'yeah',
     title: 'yoh',
+    lastName: 'yo',
   },
   notNested: 1,
 });
