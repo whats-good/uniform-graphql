@@ -30,8 +30,17 @@ interface GMixed extends t.Type<any, any, unknown> {
   gql: GraphQLOutputType;
   name: string;
 }
+
 interface GProps {
   [key: string]: GMixed;
+}
+
+interface GMixedTagged extends GMixed {
+  __nullability: 'nullable' | 'notNullable';
+}
+
+interface GPropsTagged {
+  [key: string]: GMixedTagged;
 }
 
 const x = t.string;
@@ -39,6 +48,8 @@ const x = t.string;
 // TODO: dont have nulls or undefineds. only options.
 
 // TODO: should we return or accept Option<A, B> etc types?
+
+// TODO: find a way to actually take in Option<A, B> etc for nullable ones
 
 // TODO: can we stop using Object.assign?
 const core = {
@@ -49,27 +60,37 @@ const core = {
   Int: Object.assign({}, t.Int, { gql: GraphQLInt }),
 };
 
-const makeRequired = <T extends GMixed>(x: T) =>
-  Object.assign({}, x, { gql: new GraphQLNonNull(x.gql) });
+const notNullable = <T extends GMixed>(x: T) =>
+  Object.assign(
+    {},
+    x,
+    { gql: new GraphQLNonNull(x.gql) },
+    { __nullability: 'notNullable' as const },
+  );
 
-const makeNullable = <T extends GMixed>(x: T) =>
-  Object.assign({}, t.union([x, t.null, t.undefined]), { gql: x.gql });
+const nullable = <T extends GMixed>(x: T) =>
+  Object.assign(
+    {},
+    t.union([x, t.null, t.undefined]),
+    { gql: x.gql },
+    { __nullability: 'nullable' as const },
+  );
 
-const required = {
-  id: makeRequired(core.id),
-  string: makeRequired(core.string),
-  number: makeRequired(core.number),
-  Int: makeRequired(core.Int),
+const r = {
+  id: notNullable(core.id),
+  string: notNullable(core.string),
+  number: notNullable(core.number),
+  Int: notNullable(core.Int),
 };
 
-const nullable = {
-  id: makeNullable(core.id),
-  string: makeNullable(core.string),
-  number: makeNullable(core.number),
-  Int: makeNullable(core.Int),
+const n = {
+  id: nullable(core.id),
+  string: nullable(core.string),
+  number: nullable(core.number),
+  Int: nullable(core.Int),
 };
 
-const type = <P extends GProps>(name: string, props: P) => {
+const type = <P extends GPropsTagged>(name: string, props: P) => {
   const codec = t.type(props, name);
   const fields = () =>
     pipe(
@@ -86,9 +107,9 @@ const type = <P extends GProps>(name: string, props: P) => {
 };
 
 const myTypeName = type('myTypeName', {
-  title: required.string,
-  id: required.id,
-  someOtherProp: nullable.Int,
+  title: r.string,
+  id: r.id,
+  // someOtherProp: n.Int,
 });
 
 // myTypeName.encode({
@@ -97,9 +118,26 @@ const myTypeName = type('myTypeName', {
 // });
 
 const myNestedType = type('myNestedType', {
-  nested: myTypeName,
-  notNested: required.number,
+  nestedNullable: nullable(myTypeName),
+  nestedRequired: notNullable(myTypeName),
+  notNested: r.number,
 });
+
+// TODO: is it possible to just not even provide the nullable ones?
+myNestedType.encode({
+  // nestedNullable: {
+  //   id: 'yo',
+  //   title: 'yeah',
+  // },
+  nestedNullable: undefined,
+  nestedRequired: {
+    id: 'yeah',
+    title: 'yoh',
+  },
+  notNested: 1,
+});
+
+type a = t.TypeOf<typeof myNestedType>;
 
 const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
