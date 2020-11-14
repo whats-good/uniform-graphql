@@ -24,24 +24,18 @@ import { isLeft } from 'fp-ts/lib/Either';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
-type Scalar<A, O> = {
+interface SemiScalar<A, O, G extends GraphQLOutputType = GraphQLScalarType> {
   name: string;
-  gql: GraphQLScalarType;
+  gql: G;
   codec: Codec<A, O>;
-};
+}
 
-type Lifted<T, B> = T & B;
-type NullabilityChecked = {
+interface Scalar<A, O> extends SemiScalar<A, O> {
   __nullability: 'nullable' | 'notNullable';
-};
-
-type NullabilityCheckedScalar<T extends Scalar<any, any>> = Lifted<
-  T,
-  NullabilityChecked
->;
+}
 
 // TODO: how do we make the codec still visible through the typechecker even after the modification?
-const nullable = <A, O>(x: Scalar<A, O>) => {
+const nullable = <A, O>(x: SemiScalar<A, O>) => {
   return {
     __nullability: 'nullable' as const,
     name: x.name,
@@ -50,7 +44,7 @@ const nullable = <A, O>(x: Scalar<A, O>) => {
   };
 };
 
-const notNullable = <A, O>(x: Scalar<A, O>) => {
+const notNullable = <A, O>(x: SemiScalar<A, O>) => {
   return {
     __nullability: 'notNullable' as const,
     name: x.name,
