@@ -76,9 +76,6 @@ const f = (codec: t.Mixed): any => {
       fields: () => better,
     });
 
-    objectType;
-    // debugger;
-
     return objectType;
   }
   for (const [codecClass, gqlScalar] of scalars.entries()) {
@@ -103,6 +100,68 @@ const abcd = t.type(
   },
   'initialType',
 );
+//
+
+interface MyMixed extends t.Type<any, any, unknown> {}
+interface MyProps {
+  [key: string]: MyMixed;
+}
+
+const kerem = <P extends MyProps>(props: P, name: string) => {
+  const codec = t.type(props, name);
+  return {
+    codec,
+    name,
+  };
+};
+
+const b = kerem(
+  {
+    yo: t.string,
+  },
+  'and the name',
+);
+
+// class MyBetterCodec<P extends t.Props> {
+//   constructor(props: MyProps) {
+//     const codec = t.type(props.innerCodec);
+//   }
+// }
+
+//
+///
+
+type MyCodec<A, B, C> = {
+  name: string;
+  codec: t.Type<A, B, C>;
+  gql: () => GraphQLOutputType;
+};
+
+const string: MyCodec<string, unknown, unknown> = {
+  name: 'string',
+  codec: t.string,
+  gql: () => GraphQLString,
+};
+
+const liftedPrimitives = {
+  string,
+};
+
+const complexCodec = {
+  name: 'someComplexCodec',
+  codec: () =>
+    t.type({
+      a: liftedPrimitives.string.codec,
+    }),
+};
+
+type t = t.Props;
+
+// class ComplexCodec {
+//   constructor() {
+
+//   }
+// }
 
 const myCodec = pipe(abcd, (c) => ({
   name: 'Some_name',
