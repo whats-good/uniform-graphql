@@ -24,19 +24,19 @@ import { isLeft } from 'fp-ts/lib/Either';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
-interface SemiScalar<A, O, G extends GraphQLOutputType = GraphQLScalarType> {
+interface SemiBrick<A, O, G extends GraphQLOutputType = GraphQLScalarType> {
   name: string;
   gql: G;
   codec: Codec<A, O>;
   __nullability: 'pending';
 }
 
-interface Scalar<A, O> extends SemiScalar<A, O> {
+interface Brick<A, O> extends SemiBrick<A, O> {
   __nullability: 'nullable' | 'notNullable';
 }
 
 // TODO: how do i make this one return a Scalar from the SemiScalar, rather than the type that typescript auto infers?
-const nullable = <A, O>(x: SemiScalar<A, O>) => {
+const nullable = <A, O>(x: SemiBrick<A, O>) => {
   return {
     __nullability: 'nullable' as const,
     name: x.name,
@@ -45,7 +45,7 @@ const nullable = <A, O>(x: SemiScalar<A, O>) => {
   };
 };
 
-const notNullable = <A, O>(x: SemiScalar<A, O>) => {
+const notNullable = <A, O>(x: SemiBrick<A, O>) => {
   return {
     __nullability: 'notNullable' as const,
     name: x.name,
@@ -108,3 +108,5 @@ const n = {
   int: nullable(core.int),
   boolean: nullable(core.boolean),
 };
+
+// TODO: find a way to map from the core object into these.
