@@ -19,15 +19,15 @@ import {
   GraphQLFloat,
   GraphQLScalarType,
 } from 'graphql';
-import { flow, pipe } from 'fp-ts/lib/function';
+import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
 
-type Codec<A, O = A, I = unknown> = t.Type<A, O, I>;
+type Codec<A, O> = t.Type<A, O, unknown>;
 
-type Scalar<N extends string, C extends t.Mixed> = {
-  name: N;
+type Scalar<A, O> = {
+  name: string;
   gql: GraphQLScalarType;
-  codec: C;
+  codec: Codec<A, O>;
 };
 
 type Lifted<T, B> = T & B;
@@ -41,21 +41,21 @@ type NullabilityCheckedScalar<T extends Scalar<any, any>> = Lifted<
 >;
 
 // TODO: how do we make the codec still visible through the typechecker even after the modification?
-const nulled = <C extends t.Mixed, T extends Scalar<any, C>>(x: T) => {
+const nullable = <A, O>(x: Scalar<A, O>) => {
   return {
     __nullability: 'nullable' as const,
     name: x.name,
-    codec,
     gql: x.gql,
+    codec: t.union([t.undefined, t.null, x.codec]),
   };
 };
 
-const notNullable = <C extends t.Mixed, T extends Scalar<any, C>>(x: T) => {
+const notNullable = <A, O>(x: Scalar<A, O>) => {
   return {
     __nullability: 'notNullable' as const,
     name: x.name,
-    codec: x.codec,
     gql: new GraphQLNonNull(x.gql),
+    codec: x.codec,
   };
 };
 
@@ -85,14 +85,26 @@ const boolean = {
   name: 'Boolean' as const,
 };
 
-const core = id.codec.encode('yo');
-const notNullE = notNullable(id).codec.encode();
+const core = {
+  id,
+  string,
+  float,
+  int,
+  boolean,
+};
 
-const b = nulled(id);
-const bEncoded = b.codec.encode(true);
-const c = notNullable(id);
-const cEncoded = c.codec.encode('no');
+const r = {
+  id: notNullable(core.id),
+  string: notNullable(core.string),
+  float: notNullable(core.float),
+  int: notNullable(core.int),
+  boolean: notNullable(core.boolean),
+};
 
-const toX = <T extends Scalar>(scalar: T): NullabilityCheckedScalar<T> => {
-  return Object.assign({}, scalar, { __nullability: 'nullable' as const });
+const n = {
+  id: nullable(core.id),
+  string: nullable(core.string),
+  float: nullable(core.float),
+  int: nullable(core.int),
+  boolean: nullable(core.boolean),
 };
