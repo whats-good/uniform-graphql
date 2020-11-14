@@ -2,6 +2,7 @@ import { ApolloServer, gql } from 'apollo-server-express';
 import { GraphQLJSON } from 'graphql-type-json';
 import * as R from 'fp-ts/lib/Record';
 import * as A from 'fp-ts/lib/Array';
+import * as O from 'fp-ts/lib/Option';
 import express from 'express';
 import { data } from './cached/data';
 import * as t from 'io-ts';
@@ -40,11 +41,38 @@ const x = t.string;
 // TODO: should we return or accept Option<A, B> etc types?
 const nullable = flow((x: GMixed) => t.union([x, t.null, t.undefined]));
 
-const required = {
+// TODO: can we stop using Object.assign?
+const core = {
   id: Object.assign({}, t.union([t.string, t.Int]), { gql: GraphQLID }),
   string: Object.assign({}, t.string, { gql: GraphQLString }),
   number: Object.assign({}, t.number, { gql: GraphQLFloat }),
   Int: Object.assign({}, t.Int, { gql: GraphQLInt }),
+};
+
+const required = {
+  id: Object.assign({}, core.id, { gql: new GraphQLNonNull(core.id.gql) }),
+  string: Object.assign({}, t.string, {
+    gql: new GraphQLNonNull(core.string.gql),
+  }),
+  number: Object.assign({}, t.number, {
+    gql: new GraphQLNonNull(core.number.gql),
+  }),
+  Int: Object.assign({}, t.Int, { gql: new GraphQLNonNull(core.Int.gql) }),
+};
+
+const nullables = {
+  id: Object.assign({}, core.id, t.union([core.id, t.null, t.undefined])),
+  string: Object.assign(
+    {},
+    core.string,
+    t.union([core.id, t.null, t.undefined]),
+  ),
+  number: Object.assign(
+    {},
+    core.string,
+    t.union([core.id, t.null, t.undefined]),
+  ),
+  Int: Object.assign({}, t.Int, t.union([core.id, t.null, t.undefined])),
 };
 
 const type = <P extends GProps>(name: string, props: P) => {
@@ -66,11 +94,7 @@ const type = <P extends GProps>(name: string, props: P) => {
 const myTypeName = type('myTypeName', {
   title: required.string,
   id: required.id,
-});
-
-myTypeName.encode({
-  title: 'kerem',
-  id: '1',
+  someOtherProp: nullables.id,
 });
 
 const myNestedType = type('myNestedType', {
