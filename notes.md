@@ -13,6 +13,7 @@
 - typescript is hard to have custom errors in, also javascript. using a 3rd party library seems to be a good call.
 - `TE.bind` is an excellent way to accumulate results in tasks
 - `[P in keyof T]: T[P]` is a good method to create a mapped type.
+- Mapped types dont allow you to add extra properties. For that, you can use intersection types.
 
 # TODOS
 
@@ -38,3 +39,5 @@
 - add either nodemon or webpack hot reloading.
 - consider using the apollo-explorer instead of playground.
 - understand how `unique symbol` works.
+- maybe i should use graphql-typdefs and codegen to have my types, instead of this elaborate fp system
+- watch this 40 minute tutorial: https://www.youtube.com/watch?v=wqm5ibtCSf0

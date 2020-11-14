@@ -42,6 +42,7 @@ const ex6: Record1<string, SomeEnum> = {
   firstKey: SomeEnum.first,
   someOtherKey: SomeEnum.third,
 };
+// Note: keyof any -> resolves to "string | number | symbol"
 const ex7: Record1<number, SomeEnum> = {
   [1]: SomeEnum.first,
 };
@@ -69,20 +70,20 @@ const divEx2 = divide(10, 0 as const);
  * whereas Records can have many union types as their keys.
  */
 
-type Maybified<T> = {
+type Partial1<T> = {
   [P in keyof T]?: T[P];
 };
-type M1 = Maybified<{ kerem: string; kazan: number }>;
+
+type M1 = Partial1<{ kerem: string; kazan: number }>;
 const exm1: M1 = {};
 
-type Record2<K extends keyof any, T> = {
-  [P in K]: T;
-};
-type MaybifiedRecord<K extends keyof any, T> = Maybified<Record2<K, T>>;
+type PartialRecord<K extends keyof any, T> = Partial1<Record1<K, T>>;
 
-const maybifiedExample1: MaybifiedRecord<SomeEnum, string> = {
+const maybifiedExample1: PartialRecord<SomeEnum, string> = {
   [SomeEnum.first]: 'yo',
   [SomeEnum.second]: 'yo',
 };
 
-// Note: keyof any -> resolves to "string | number | symbol"
+//
+
+type Maybe<T> = null | undefined | T;
