@@ -16,10 +16,55 @@ import {
   GraphQLNonNull,
   GraphQLFloat,
 } from 'graphql';
-import { pipe } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 
 // TODO: how do we distinguish between different kinds of numbers?
 // TODO: handle non-nullability somehow.
+
+const primitives = {
+  string: () => ({
+    codec: t.string,
+    gql: { type: GraphQLString },
+  }),
+  boolean: () => ({
+    codec: t.boolean,
+    gql: { type: GraphQLBoolean },
+  }),
+  Int: () => ({
+    codec: t.Int,
+    gql: { type: GraphQLInt },
+  }),
+  number: () => ({
+    codec: t.number,
+    gql: { type: GraphQLFloat },
+  }),
+};
+
+// const type = flow();
+
+const b = (name: string) =>
+  pipe(
+    {
+      link: primitives.string,
+      upvotes: primitives.number,
+    },
+    (liftedCodecs) => ({
+      name,
+      codec: t.type({
+        link: liftedCodecs.link().codec,
+        upvotes: liftedCodecs.link().codec,
+      }),
+      gql: new GraphQLObjectType({
+        name,
+        fields: () => ({
+          link: liftedCodecs.link().gql,
+          upvotes: liftedCodecs.upvotes().gql,
+        }),
+      }),
+    }),
+  );
+
+const otherCodec = b('myTypeName');
 
 const codec1 = t.type({
   link: t.string,
@@ -113,6 +158,9 @@ const rootQuery = new GraphQLObjectType({
           title: 'my title',
         };
       },
+    },
+    otherCodec: {
+      type: otherCodec.gql,
     },
   },
 });
