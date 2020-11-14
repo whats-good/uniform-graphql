@@ -53,7 +53,7 @@ const makeRequired = <T extends GMixed>(x: T) =>
   Object.assign({}, x, { gql: new GraphQLNonNull(x.gql) });
 
 const makeNullable = <T extends GMixed>(x: T) =>
-  Object.assign({}, x, t.union([x, t.null, t.undefined]));
+  Object.assign({}, t.union([x, t.null, t.undefined]), { gql: x.gql });
 
 const required = {
   id: makeRequired(core.id),
@@ -90,6 +90,11 @@ const myTypeName = type('myTypeName', {
   id: required.id,
   someOtherProp: nullable.Int,
 });
+
+// myTypeName.encode({
+//   title: 'yo',
+//   id: 'yeah',
+// });
 
 const myNestedType = type('myNestedType', {
   nested: myTypeName,
