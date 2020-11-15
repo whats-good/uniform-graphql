@@ -12,18 +12,15 @@ import {
   GraphQLBoolean,
   GraphQLID,
   GraphQLObjectType,
-  GraphQLSchema,
   GraphQLString,
   GraphQLInt,
-  GraphQLOutputType as GraphqlType,
   GraphQLNonNull,
   GraphQLFloat,
-  GraphQLScalarType,
-  ValidationContext,
   GraphQLList,
   GraphQLEnumType,
   GraphQLUnionType,
   GraphQLOutputType,
+  GraphQLInputObjectType,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
@@ -41,7 +38,7 @@ type Shape = 'struct' | 'scalar' | 'array' | 'enum' | 'union';
 interface AbstractBrick<
   A,
   O,
-  G extends GraphqlType,
+  G extends GraphQLOutputType,
   N extends 'pending' | Nullability,
   S extends Shape
 > {
@@ -51,7 +48,7 @@ interface AbstractBrick<
   __nullability: N;
   __shape: S;
 }
-interface SemiBrick<A, O, G extends GraphqlType, S extends Shape>
+interface SemiBrick<A, O, G extends GraphQLOutputType, S extends Shape>
   extends AbstractBrick<A, O, G, 'pending', S> {}
 
 type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C, infer D>
@@ -61,7 +58,7 @@ type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C, infer D>
 interface Brick<
   A,
   O,
-  G extends GraphqlType,
+  G extends GraphQLOutputType,
   N extends Nullability,
   S extends Shape
 > extends AbstractBrick<A, O, G, N, S> {}
@@ -76,7 +73,7 @@ type Brickified<T> = T extends Brick<
   ? Brick<A, B, C, D, E>
   : never;
 
-const nullable = <A, O, G extends GraphqlType, S extends Shape>(
+const nullable = <A, O, G extends GraphQLOutputType, S extends Shape>(
   x: SemiBrick<A, O, G, S>,
 ) => {
   const toReturn = {
@@ -89,7 +86,7 @@ const nullable = <A, O, G extends GraphqlType, S extends Shape>(
   return <Brickified<typeof toReturn>>toReturn;
 };
 
-const notNullable = <A, O, G extends GraphqlType, S extends Shape>(
+const notNullable = <A, O, G extends GraphQLOutputType, S extends Shape>(
   x: SemiBrick<A, O, G, S>,
 ) => {
   const toReturn = {
@@ -106,7 +103,7 @@ const notNullable = <A, O, G extends GraphqlType, S extends Shape>(
 const array = <
   A,
   O,
-  G extends GraphqlType,
+  G extends GraphQLOutputType,
   N extends Nullability,
   S extends Shape
 >(
@@ -410,12 +407,29 @@ type BasicResolverOf<B extends AnyResolvableBrick, A extends any> = (
 ) => OutputOf<B>;
 
 // TODO: find a better name for this.
+// TODO: find a way to better shape the arguments
 const resolverize = <T extends AnyResolvableBrick, A extends any>(params: {
   brick: T;
   resolve: BasicResolverOf<T, A>;
+  args?: A;
 }) => ({
   type: params.brick.gql,
   resolve: params.resolve, // TODO: maybe we should embed the resolving inside the bricks? but probably not...
+  args: params.args,
+});
+
+// TODO: is there a way to store structs as simple structs and then later make them usable for input object types?
+// TODO: how do we even handle `is` checks here?
+const myIdInput = new GraphQLInputObjectType({
+  name: 'SomeInputArgName',
+  fields: {
+    id: {
+      type: n.id.gql,
+    },
+    name: {
+      type: n.string.gql,
+    },
+  },
 });
 
 const personFieldResolver = resolverize({
@@ -427,28 +441,15 @@ const personFieldResolver = resolverize({
       ssn: null,
     };
   },
+  args: {
+    id: {
+      type: n.id.gql,
+    },
+    others: {
+      type: myIdInput,
+    },
+  },
 });
-
-// export const queryResolver = {
-//   person: personFieldResolver,
-//   user: resolverize(notNullable(user), (root, args, context) => {
-//     return {
-//       id: 'my id',
-//       membership: 'free' as const, // TODO: this might get old. is there a way around this "as const" thing?
-//       unitedField: {
-//         owner: 'owner name',
-//       },
-//       person: null,
-//       friends: [
-//         {
-//           firstName: 'first friend name',
-//           lastName: 'first friend last name',
-//           ssn: null,
-//         },
-//       ],
-//     };
-//   }),
-// };
 
 export const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
@@ -457,11 +458,7 @@ export const rootQuery = new GraphQLObjectType({
     person: {
       type: personFieldResolver.type,
       resolve: personFieldResolver.resolve,
-      args: {
-        id: {
-          type: GraphQLString,
-        },
-      },
+      args: personFieldResolver.args,
     },
   },
 });
