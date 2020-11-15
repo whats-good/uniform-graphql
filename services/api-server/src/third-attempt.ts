@@ -42,35 +42,35 @@ type Shape =
   | 'inputobject'
   | 'list';
 
-interface IType {
+interface IShape {
   shape: Shape;
 }
 
-interface IScalar extends IType {
+interface IScalar extends IShape {
   shape: 'scalar';
 }
 
-interface IObject extends IType {
+interface IObject extends IShape {
   shape: 'object';
 }
 
-interface IInterface extends IType {
+interface IInterface extends IShape {
   shape: 'interface';
 }
 
-interface IUnion extends IType {
+interface IUnion extends IShape {
   shape: 'union';
 }
 
-interface IEnum extends IType {
+interface IEnum extends IShape {
   shape: 'enum';
 }
 
-interface IInputObject extends IType {
+interface IInputObject extends IShape {
   shape: 'inputobject';
 }
 
-interface IList extends IType {
+interface IList extends IShape {
   shape: 'list';
 }
 
@@ -86,28 +86,32 @@ interface IList extends IType {
 
 /** */
 
-interface ISemiBrick extends IType {
+interface IAbstractBrick extends IShape {
   name: string;
+}
+interface ISemiBrick<A, O> extends IAbstractBrick {
   unrealisedGraphQLType: GraphQLNullableType;
-  unrealisedCodec: Codec<any, any>;
+  unrealisedCodec: Codec<A, O>;
 }
 
 type Nullability = 'nullable' | 'notNullable';
 
-interface IBrick extends ISemiBrick {
+// TODO: looks like we need to go back to generics...
+// TODO: it also looks like we should start putting the nullability and the shape into the generics...
+interface IBrick<A, O> extends IAbstractBrick {
   nullability: Nullability;
   realisedGraphQLType: GraphQLType;
-  realisedCodec: Codec<any, any>;
+  realisedCodec: Codec<A, O>;
 }
 
 /** */
 
-interface IScalarSemiBrick extends ISemiBrick {
+interface IScalarSemiBrick<A, O> extends ISemiBrick<A, O> {
   shape: 'scalar';
   unrealisedGraphQLType: GraphQLScalarType;
 }
 
-interface IScalarBrick extends IBrick {
+interface IScalarBrick<A, O> extends IBrick<A, O> {
   shape: 'scalar';
   realisedGraphQLType: GraphQLScalarType | GraphQLNonNull<GraphQLScalarType>;
 }
@@ -149,16 +153,8 @@ const boolean = {
   unrealisedGraphQLType: GraphQLBoolean,
 };
 
-const core = {
-  id,
-  string,
-  float,
-  int,
-  boolean,
-};
-
 // TODO: still not able to carry codec information...
-const makeNullable = <T extends ISemiBrick>(sb: T) => {
+const makeNullable = <A, O>(sb: ISemiBrick<A, O>) => {
   return {
     ...sb,
     nullability: 'nullable' as const,
@@ -167,7 +163,7 @@ const makeNullable = <T extends ISemiBrick>(sb: T) => {
   };
 };
 
-const makeNotNullable = <T extends ISemiBrick>(sb: T) => {
+const makeNotNullable = <A, O>(sb: ISemiBrick<A, O>) => {
   return {
     // TODO: shoule we point back to the semibrick from the main brick?
     ...sb,
@@ -177,14 +173,21 @@ const makeNotNullable = <T extends ISemiBrick>(sb: T) => {
   };
 };
 
-const lift = <T extends ISemiBrick>(sb: T) => {
+const lift = <A, O>(sb: ISemiBrick<A, O>) => {
+  makeNullable(sb);
   return {
     ...makeNotNullable(sb),
     nullable: makeNullable(sb),
   };
 };
 
-const liftedId = lift(id);
+const scalars = {
+  id: lift(id),
+  string: lift(string),
+  float: lift(float),
+  int: lift(int),
+  boolean: lift(boolean),
+};
 
 // nullable.id.realisedCodec.encode(undefined);
 
