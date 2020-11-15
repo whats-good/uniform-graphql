@@ -204,10 +204,6 @@ const n = {
   boolean: nullable(core.boolean),
 };
 
-// TODO: find a way to map from the core object into these.
-
-// const type = (props: )
-
 type BrickStruct<T> = {
   [P in keyof T]: T[P] extends Brick<
     infer A,
@@ -278,7 +274,7 @@ const person = struct({
 });
 
 const membership = enumerate({
-  name: 'membership',
+  name: 'Membership',
   props: {
     free: null,
     paid: null,
