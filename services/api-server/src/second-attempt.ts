@@ -119,22 +119,30 @@ const array = <
 };
 
 // TODO: find a better name
-const enumerate = (name: string) =>
-  pipe({ kerem: null, kazan: null, keremkazan: null }, t.keyof, (codec) => {
-    const toReturn = {
-      __nullability: 'pending' as const,
-      __shape: 'enum' as const,
-      name,
-      codec,
-      gql: new GraphQLEnumType({
-        name,
-        values: {
-          K: { value: undefined },
-        },
-      }),
-    };
-    return <SemiBrickified<typeof toReturn>>toReturn;
-  });
+// TODO: how can we be more granular with the actual gql types that are sent over?
+// TODO: find a way to pass down the names to io-ts codecs.
+// TODO: could we make sure that there is at least one item in the givem params.props?
+// TODO: make sure the enums get their values exactly replicated from their keys
+function enumerate<T, P extends { [key: string]: unknown }>(params: {
+  name: string;
+  props: P;
+}) {
+  const codec = t.keyof(params.props, params.name);
+  const toReturn = {
+    __nullability: 'pending' as const,
+    __shape: 'enum' as const,
+    name: params.name,
+    codec,
+    gql: new GraphQLEnumType({
+      // TODO: actually pass the values down here.
+      name: params.name,
+      values: {
+        K: { value: undefined },
+      },
+    }),
+  };
+  return <SemiBrickified<typeof toReturn>>toReturn;
+}
 
 const id = {
   codec: t.union([t.string, t.number]),
@@ -269,12 +277,22 @@ const person = struct({
   },
 });
 
-const user = struct({
+const membership = enumerate({
+  name: 'membership',
+  props: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
+
+export const user = struct({
   name: 'User' as const, // TODO: find a way to infer the names later.
   fields: {
     person: nullable(person),
     id: r.id,
     friends: nullable(array(nullable(person))),
+    membership: notNullable(membership),
   },
 });
 
@@ -286,6 +304,7 @@ user.codec.encode({
     ssn: null,
   },
   friends: null, // TODO: is there a way to let the user completely skip the nullable fields?
+  membership: 'paid',
 });
 
 type OutType<T> = T extends AbstractBrick<
