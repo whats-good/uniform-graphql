@@ -218,37 +218,45 @@ type GQLStruct<T> = {
     : never;
 };
 
-// TODO: make this take in the name of the type.
-const type = <T, B extends BrickStruct<T>>(brickStruct: B) => {
-  const codecs = <CodecStruct<typeof brickStruct>>(
-    _.mapValues(brickStruct, (x) => x.codec)
+const struct = <T, B extends BrickStruct<T>>(params: {
+  name: string;
+  fields: B;
+}) => {
+  const codecs = <CodecStruct<typeof params.fields>>(
+    _.mapValues(params.fields, (x) => x.codec)
   );
-  const gqls = <GQLStruct<typeof brickStruct>>(
-    _.mapValues(brickStruct, (x) => ({ type: x.gql }))
+  const gqls = <GQLStruct<typeof params.fields>>(
+    _.mapValues(params.fields, (x) => ({ type: x.gql }))
   );
   const x = {
     __nullability: 'pending' as const,
     __shape: 'struct' as const,
-    name: 'Some struct name',
+    name: params.name,
     codec: t.type(codecs),
     gql: new GraphQLObjectType({
-      name: 'someStructName',
+      name: params.name,
       fields: gqls,
     }),
   };
   return <SemiBrickified<typeof x>>x;
 };
 
-const person = type({
-  firstName: r.string,
-  lastName: r.string,
-  ssn: n.int,
+const person = struct({
+  name: 'Person' as const,
+  fields: {
+    firstName: r.string,
+    lastName: r.string,
+    ssn: n.int,
+  },
 });
 
-const user = type({
-  person: nullable(person),
-  id: r.id,
-  friends: nullable(array(nullable(person))),
+const user = struct({
+  name: 'User' as const, // TODO: find a way to infer the names later.
+  fields: {
+    person: nullable(person),
+    id: r.id,
+    friends: nullable(array(nullable(person))),
+  },
 });
 
 user.codec.encode({
