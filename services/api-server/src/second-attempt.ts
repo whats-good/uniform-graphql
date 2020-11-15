@@ -22,6 +22,7 @@ import {
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
 import _ from 'lodash';
+import { Category } from 'fp-ts/lib/Reader';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
@@ -45,7 +46,6 @@ type Brickified<T> = T extends Brick<infer A, infer B, infer C, infer D>
   ? Brick<A, B, C, D>
   : never;
 
-// TODO: how do i make this one return a Scalar from the SemiScalar, rather than the type that typescript auto infers?
 const nullable = <A, O, G extends GraphQLOutputType>(x: SemiBrick<A, O, G>) => {
   const toReturn = {
     __nullability: 'nullable' as const,
@@ -106,30 +106,6 @@ const core = {
   int,
   boolean,
 };
-
-// type InnerGenericType<T> = T extends SemiBrick<infer A, infer O, infer G>
-
-// type Wrapped<T, I extends string> = { [K in keyof T]: { [key in I]: T[K] } };
-interface MyGenericClass<T> {
-  someField: T;
-  someOtherField: Promise<T>;
-}
-
-type InnerGenericType<T> = T extends MyGenericClass<infer U> ? U : never;
-
-type Foo<T> = T extends { a: infer U; b: infer U } ? U : never;
-type T10 = Foo<{ a: string; b: string }>; // string
-type T11 = Foo<{ a: string; b: number }>; // string | number
-
-type MyMappedType<T> = {
-  [P in keyof T]: T[P] extends SemiBrick<infer A, infer O, infer G>
-    ? SemiBrick<A, O, G>
-    : never;
-};
-
-type MyBetterType = MyMappedType<typeof core>;
-
-const betterCore: MyBetterType = core;
 
 const r = {
   id: notNullable(core.id),
