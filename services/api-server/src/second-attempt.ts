@@ -308,6 +308,7 @@ export interface UnionC<
 
 // TODO: find a way to make the GQL types also inferrable here.
 // TODO: record the fact that things were united, and what those things were, so that you can undo them later.
+// TODO: fix this union error: "Abstract type \"SomeUnion\" must resolve to an Object type at runtime for field \"User.unitedField\". Either the \"SomeUnion\" type should provide a \"resolveType\" function or each possible type should provide an \"isTypeOf\" function.",
 export const union = <
   BS extends [AnyUnionableBrick, AnyUnionableBrick, ...AnyUnionableBrick[]]
 >(params: {
@@ -408,15 +409,38 @@ type BasicResolverOf<T extends AnyResolvableBrick> = (
   context: any,
 ) => OutputOf<T>;
 
-const b = {
-  user: pipe(person, nullable, (brick) => {
-    const f: BasicResolverOf<typeof brick> = (root, args, context) => {
-      return {
-        firstName: 'some first name',
-        lastName: 'some last name',
-        ssn: null,
-      };
+// TODO: find a better name for this.
+const resolverize = <T extends AnyResolvableBrick>(
+  brick: T,
+  basicResolver: BasicResolverOf<T>,
+) => ({
+  type: brick.gql,
+  resolve: basicResolver, // TODO: maybe we should embed the resolving inside the bricks? but probably not...
+});
+
+export const queryResolver = {
+  person: resolverize(nullable(person), (root, args, context) => {
+    return {
+      firstName: 'some first name',
+      lastName: 'some last name',
+      ssn: null,
     };
-    return f;
+  }),
+  user: resolverize(notNullable(user), (root, args, context) => {
+    return {
+      id: 'my id',
+      membership: 'free' as const, // TODO: this might get old. is there a way around this "as const" thing?
+      unitedField: {
+        owner: 'owner name',
+      },
+      person: null,
+      friends: [
+        {
+          firstName: 'first friend name',
+          lastName: 'first friend last name',
+          ssn: null,
+        },
+      ],
+    };
   }),
 };

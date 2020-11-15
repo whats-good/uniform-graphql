@@ -23,18 +23,11 @@ import {
 import { flow, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
 import _ from 'lodash';
-import { user } from './second-attempt';
+import { user, queryResolver } from './second-attempt';
 
 const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
-  fields: {
-    user: {
-      type: user.gql,
-      resolve: (root, args, context) => ({
-        id: 'here is an id!',
-      }),
-    },
-  },
+  fields: queryResolver, // TODO: look into the field configs to find ways to insert arguments.
 });
 
 const schema = new GraphQLSchema({
