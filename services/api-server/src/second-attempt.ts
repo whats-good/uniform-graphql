@@ -22,6 +22,7 @@ import {
   ValidationContext,
   GraphQLList,
   GraphQLEnumType,
+  GraphQLUnionType,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
@@ -295,20 +296,43 @@ type TypeOf<B extends AnyBrick> = B['codec']['_A'];
 // TODO: only enable STRUCT bricks here.
 // TODO: handle the anies here.
 
-export interface UnionC<CS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]>
+export interface UnionC<BS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]>
   extends AbstractBrick<
-    TypeOf<CS[number]>,
-    OutputOf<CS[number]>,
+    TypeOf<BS[number]>,
+    OutputOf<BS[number]>,
     GraphqlType,
     'pending',
     'union'
   > {}
 
-export declare const union: <CS extends [AnyBrick, AnyBrick, ...AnyBrick[]]>(
-  bricks: CS,
-) => UnionC<CS>;
+// TODO: make sure only struct and pending codecs can be sent in.
+// TODO: find a way to make the GQL types also inferrable here.
+// TODO: record the fact that things were united, and what those things were, so that you can undo them later.
+export const union = <BS extends [AnyBrick, AnyBrick, ...AnyBrick[]]>(params: {
+  name: string;
+  bricks: BS;
+}): UnionC<BS> => {
+  const [first, second, ...rest] = params.bricks;
+  const restOfTheCodecs = rest.map(({ codec }) => codec);
+  const gqlObjectTypes = params.bricks.map(({ gql }) => gql);
+  const toReturn: UnionC<BS> = {
+    name: params.name,
+    __nullability: 'pending',
+    __shape: 'union',
+    codec: t.union([first.codec, second.codec, ...restOfTheCodecs]),
+    gql: new GraphQLUnionType({
+      name: params.name,
+      types: () => gqlObjectTypes,
+    }),
+    // bricks: params.bricks, // TODO: find a way to store the bricks here.
+  };
+  return toReturn;
+};
 
-const someUnion = union([animal, person]);
+const someUnion = union({
+  name: 'SomeUnion',
+  bricks: [animal, person, building],
+});
 
 const membership = enumerate({
   name: 'Membership',
@@ -326,6 +350,7 @@ export const user = struct({
     id: r.id,
     friends: nullable(array(nullable(person))),
     membership: notNullable(membership),
+    unitedField: nullable(someUnion),
   },
 });
 
@@ -338,6 +363,7 @@ const a = user.codec.encode({
   },
   friends: null, // TODO: is there a way to let the user completely skip the nullable fields?
   membership: 'paid',
+  unitedField: null,
 });
 
 type Taskified<T> = T extends AbstractBrick<

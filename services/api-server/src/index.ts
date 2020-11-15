@@ -41,47 +41,47 @@ const schema = new GraphQLSchema({
   query: rootQuery,
 });
 
-// const apolloServer = new ApolloServer({
-//   schema,
-// });
-
-const typeDefs = gql`
-  type Person {
-    id: ID!
-  }
-
-  type User1 {
-    f: String!
-  }
-
-  type User2 {
-    d: String!
-  }
-
-  type User3 {
-    g: String!
-  }
-
-  enum Membership {
-    free
-    paid
-    enterprise
-  }
-
-  union Result = User1 | User2 | User3
-
-  type Query {
-    person: Person!
-    ui: Result
-  }
-`;
-
 const apolloServer = new ApolloServer({
-  typeDefs,
-  resolvers: {
-    Query: () => {},
-  },
+  schema,
 });
+
+// const typeDefs = gql`
+//   type Person {
+//     id: ID!
+//   }
+
+//   type User1 {
+//     f: String!
+//   }
+
+//   type User2 {
+//     d: String!
+//   }
+
+//   type User3 {
+//     g: String!
+//   }
+
+//   enum Membership {
+//     free
+//     paid
+//     enterprise
+//   }
+
+//   union Result = User1 | User2 | User3
+
+//   type Query {
+//     person: Person!
+//     ui: Result
+//   }
+// `;
+
+// const apolloServer = new ApolloServer({
+//   typeDefs,
+//   resolvers: {
+//     Query: () => {},
+//   },
+// });
 
 const PORT = 4001;
 
