@@ -27,40 +27,55 @@ import { Category } from 'fp-ts/lib/Reader';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
+type Nullability = 'nullable' | 'notNullable';
+type Shape = 'struct' | 'scalar';
+
 // TODO: find a new way to make the Bricks more extensible without having to create a universe of generics.
 /* eslint @typescript-eslint/no-empty-interface: 0 */
 interface AbstractBrick<
   A,
   O,
   G extends GraphQLOutputType,
-  N extends 'pending' | 'nullable' | 'notNullable'
+  N extends 'pending' | Nullability,
+  S extends Shape
 > {
   name: string;
   gql: G;
   codec: Codec<A, O>;
   __nullability: N;
+  __shape: S;
 }
-interface SemiBrick<A, O, G extends GraphQLOutputType>
-  extends AbstractBrick<A, O, G, 'pending'> {}
+interface SemiBrick<A, O, G extends GraphQLOutputType, S extends Shape>
+  extends AbstractBrick<A, O, G, 'pending', S> {}
 
-type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C>
-  ? SemiBrick<A, B, C>
+type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C, infer D>
+  ? SemiBrick<A, B, C, D>
   : never;
 
 interface Brick<
   A,
   O,
   G extends GraphQLOutputType,
-  N extends 'nullable' | 'notNullable'
-> extends AbstractBrick<A, O, G, N> {}
+  N extends Nullability,
+  S extends Shape
+> extends AbstractBrick<A, O, G, N, S> {}
 
-type Brickified<T> = T extends Brick<infer A, infer B, infer C, infer D>
-  ? Brick<A, B, C, D>
+type Brickified<T> = T extends Brick<
+  infer A,
+  infer B,
+  infer C,
+  infer D,
+  infer E
+>
+  ? Brick<A, B, C, D, E>
   : never;
 
-const nullable = <A, O, G extends GraphQLOutputType>(x: SemiBrick<A, O, G>) => {
+const nullable = <A, O, G extends GraphQLOutputType, S extends Shape>(
+  x: AbstractBrick<A, O, G, 'pending', S>,
+) => {
   const toReturn = {
     __nullability: 'nullable' as const,
+    __shape: x.__shape,
     name: x.name,
     gql: x.gql,
     codec: t.union([t.undefined, t.null, x.codec]),
@@ -68,11 +83,12 @@ const nullable = <A, O, G extends GraphQLOutputType>(x: SemiBrick<A, O, G>) => {
   return <Brickified<typeof toReturn>>toReturn;
 };
 
-const notNullable = <A, O, G extends GraphQLOutputType>(
-  x: SemiBrick<A, O, G>,
+const notNullable = <A, O, G extends GraphQLOutputType, S extends Shape>(
+  x: AbstractBrick<A, O, G, 'pending', S>,
 ) => {
   const toReturn = {
     __nullability: 'notNullable' as const,
+    __shape: x.__shape,
     name: x.name,
     gql: new GraphQLNonNull(x.gql),
     codec: x.codec,
@@ -85,30 +101,35 @@ const id = {
   gql: GraphQLID,
   name: 'ID' as const,
   __nullability: 'pending' as const,
+  __shape: 'scalar' as const,
 };
 const string = {
   codec: t.string,
   gql: GraphQLString,
   name: 'String' as const,
   __nullability: 'pending' as const,
+  __shape: 'scalar' as const,
 };
 const float = {
   codec: t.number,
   gql: GraphQLFloat,
   name: 'Float' as const,
   __nullability: 'pending' as const,
+  __shape: 'scalar' as const,
 };
 const int = {
   codec: t.Int,
   gql: GraphQLInt,
   name: 'Int' as const,
   __nullability: 'pending' as const,
+  __shape: 'scalar' as const,
 };
 const boolean = {
   codec: t.boolean,
   gql: GraphQLBoolean,
   name: 'Boolean' as const,
   __nullability: 'pending' as const,
+  __shape: 'scalar' as const,
 };
 
 const core = {
@@ -140,20 +161,38 @@ const n = {
 // const type = (props: )
 
 type BrickMap<T> = {
-  [P in keyof T]: T[P] extends Brick<infer A, infer B, infer C, infer D>
-    ? Brick<A, B, C, D>
+  [P in keyof T]: T[P] extends Brick<
+    infer A,
+    infer B,
+    infer C,
+    infer D,
+    infer E
+  >
+    ? Brick<A, B, C, D, E>
     : never;
 };
 
 type CodecsOfBrickMap<T> = {
-  [P in keyof T]: T[P] extends Brick<infer A, infer B, infer C, infer D>
+  [P in keyof T]: T[P] extends Brick<
+    infer A,
+    infer B,
+    infer C,
+    infer D,
+    infer E
+  >
     ? Codec<A, B>
     : never;
 };
 
 // TODO: shutdown warnings for unused inferred generics
 type GraphqlTypesOfBrickMap<T> = {
-  [P in keyof T]: T[P] extends Brick<infer A, infer B, infer C, infer D>
+  [P in keyof T]: T[P] extends Brick<
+    infer A,
+    infer B,
+    infer C,
+    infer D,
+    infer E
+  >
     ? { type: C }
     : never;
 };
@@ -165,6 +204,7 @@ const type = <T, B extends BrickMap<T>>(s: B) => {
   );
   const x = {
     __nullability: 'pending' as const,
+    __shape: 'struct' as const,
     name: 'Some struct name',
     codec: t.type(codecs),
     gql: new GraphQLObjectType({
@@ -173,6 +213,7 @@ const type = <T, B extends BrickMap<T>>(s: B) => {
     }),
   };
   return <SemiBrickified<typeof x>>x;
+  return x;
 };
 
 const person = type({
@@ -197,11 +238,23 @@ user.codec.encode({
 
 // TODO: do we need a higher class that sits in the middle of Brick and SemiBrick which both inherit from?
 
-type OutType<T> = T extends AbstractBrick<infer A, infer B, infer C, infer D>
+type OutType<T> = T extends AbstractBrick<
+  infer A,
+  infer B,
+  infer C,
+  infer D,
+  infer E
+>
   ? A
   : never;
 
-type Taskified<T> = T extends AbstractBrick<infer A, infer B, infer C, infer D>
+type Taskified<T> = T extends AbstractBrick<
+  infer A,
+  infer B,
+  infer C,
+  infer D,
+  infer E
+>
   ? T.Task<A>
   : never;
 
@@ -209,7 +262,8 @@ type FieldResolver<T> = T extends AbstractBrick<
   infer A,
   infer B,
   infer C,
-  infer D
+  infer D,
+  'struct'
 >
   ? (root: Taskified<T>) => Partial<Taskified<T>>
   : never;
