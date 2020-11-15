@@ -20,6 +20,7 @@ import {
   GraphQLScalarType,
   ValidationContext,
   GraphQLList,
+  GraphQLEnumType,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
@@ -29,7 +30,7 @@ import { Category } from 'fp-ts/lib/Reader';
 type Codec<A, O> = t.Type<A, O, unknown>;
 
 type Nullability = 'nullable' | 'notNullable';
-type Shape = 'struct' | 'scalar' | 'array';
+type Shape = 'struct' | 'scalar' | 'array' | 'enum' | 'union';
 
 // TODO: find a new way to make the Bricks more extensible without having to create a universe of generics.
 /* eslint @typescript-eslint/no-empty-interface: 0 */
@@ -116,6 +117,24 @@ const array = <
   };
   return <SemiBrickified<typeof toReturn>>toReturn;
 };
+
+// TODO: find a better name
+const enumerate = (name: string) =>
+  pipe({ kerem: null, kazan: null, keremkazan: null }, t.keyof, (codec) => {
+    const toReturn = {
+      __nullability: 'pending' as const,
+      __shape: 'enum' as const,
+      name,
+      codec,
+      gql: new GraphQLEnumType({
+        name,
+        values: {
+          K: { value: undefined },
+        },
+      }),
+    };
+    return <SemiBrickified<typeof toReturn>>toReturn;
+  });
 
 const id = {
   codec: t.union([t.string, t.number]),
@@ -268,8 +287,6 @@ user.codec.encode({
   },
   friends: null, // TODO: is there a way to let the user completely skip the nullable fields?
 });
-
-// TODO: do we need a higher class that sits in the middle of Brick and SemiBrick which both inherit from?
 
 type OutType<T> = T extends AbstractBrick<
   infer A,
