@@ -3,6 +3,7 @@ import { StringType } from 'io-ts';
 
 /* eslint @typescript-eslint/no-unused-vars: 0 */
 /* eslint @typescript-eslint/no-explicit-any: 0 */
+/* eslint @typescript-eslint/no-empty-interface: 0 */
 
 type Properties = 'propA' | 'propB';
 type MyMappedType<Props extends string | number | symbol> = {

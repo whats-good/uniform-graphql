@@ -28,16 +28,20 @@ import { Category } from 'fp-ts/lib/Reader';
 type Codec<A, O> = t.Type<A, O, unknown>;
 
 // TODO: find a new way to make the Bricks more extensible without having to create a universe of generics.
-interface AbstractBrick<A, O, G extends GraphQLOutputType> {
+/* eslint @typescript-eslint/no-empty-interface: 0 */
+interface AbstractBrick<
+  A,
+  O,
+  G extends GraphQLOutputType,
+  N extends 'pending' | 'nullable' | 'notNullable'
+> {
   name: string;
   gql: G;
   codec: Codec<A, O>;
-  __nullability: 'pending' | 'nullable' | 'notNullable';
+  __nullability: N;
 }
 interface SemiBrick<A, O, G extends GraphQLOutputType>
-  extends AbstractBrick<A, O, G> {
-  __nullability: 'pending';
-}
+  extends AbstractBrick<A, O, G, 'pending'> {}
 
 type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C>
   ? SemiBrick<A, B, C>
@@ -48,9 +52,7 @@ interface Brick<
   O,
   G extends GraphQLOutputType,
   N extends 'nullable' | 'notNullable'
-> extends AbstractBrick<A, O, G> {
-  __nullability: N;
-}
+> extends AbstractBrick<A, O, G, N> {}
 
 type Brickified<T> = T extends Brick<infer A, infer B, infer C, infer D>
   ? Brick<A, B, C, D>
@@ -195,15 +197,20 @@ user.codec.encode({
 
 // TODO: do we need a higher class that sits in the middle of Brick and SemiBrick which both inherit from?
 
-type OutType<T> = T extends AbstractBrick<infer A, infer B, infer C>
+type OutType<T> = T extends AbstractBrick<infer A, infer B, infer C, infer D>
   ? A
   : never;
 
-type Taskified<T> = T extends AbstractBrick<infer A, infer B, infer C>
+type Taskified<T> = T extends AbstractBrick<infer A, infer B, infer C, infer D>
   ? T.Task<A>
   : never;
 
-type FieldResolver<T> = T extends AbstractBrick<infer A, infer B, infer C>
+type FieldResolver<T> = T extends AbstractBrick<
+  infer A,
+  infer B,
+  infer C,
+  infer D
+>
   ? (root: Taskified<T>) => Partial<Taskified<T>>
   : never;
 
