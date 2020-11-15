@@ -18,6 +18,7 @@ import {
   GraphQLNonNull,
   GraphQLFloat,
   GraphQLScalarType,
+  ValidationContext,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
@@ -26,11 +27,16 @@ import { Category } from 'fp-ts/lib/Reader';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
-interface SemiBrick<A, O, G extends GraphQLOutputType> {
+// TODO: find a new way to make the Bricks more extensible without having to create a universe of generics.
+interface AbstractBrick<A, O, G extends GraphQLOutputType> {
   name: string;
   gql: G;
   codec: Codec<A, O>;
   __nullability: 'pending' | 'nullable' | 'notNullable';
+}
+interface SemiBrick<A, O, G extends GraphQLOutputType>
+  extends AbstractBrick<A, O, G> {
+  __nullability: 'pending';
 }
 
 type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C>
@@ -42,7 +48,7 @@ interface Brick<
   O,
   G extends GraphQLOutputType,
   N extends 'nullable' | 'notNullable'
-> extends SemiBrick<A, O, G> {
+> extends AbstractBrick<A, O, G> {
   __nullability: N;
 }
 
@@ -186,3 +192,19 @@ user.codec.encode({
     ssn: null,
   },
 });
+
+// TODO: do we need a higher class that sits in the middle of Brick and SemiBrick which both inherit from?
+
+type OutType<T> = T extends AbstractBrick<infer A, infer B, infer C>
+  ? A
+  : never;
+
+type Taskified<T> = T extends AbstractBrick<infer A, infer B, infer C>
+  ? T.Task<A>
+  : never;
+
+type FieldResolver<T> = T extends AbstractBrick<infer A, infer B, infer C>
+  ? (root: Taskified<T>) => Partial<Taskified<T>>
+  : never;
+
+// TODO: only struct bricks should be allowed to have their own field resolvers.
