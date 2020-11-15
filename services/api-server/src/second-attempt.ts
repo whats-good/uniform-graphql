@@ -14,11 +14,12 @@ import {
   GraphQLSchema,
   GraphQLString,
   GraphQLInt,
-  GraphQLOutputType,
+  GraphQLOutputType as GraphqlType,
   GraphQLNonNull,
   GraphQLFloat,
   GraphQLScalarType,
   ValidationContext,
+  GraphQLList,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
@@ -28,14 +29,14 @@ import { Category } from 'fp-ts/lib/Reader';
 type Codec<A, O> = t.Type<A, O, unknown>;
 
 type Nullability = 'nullable' | 'notNullable';
-type Shape = 'struct' | 'scalar';
+type Shape = 'struct' | 'scalar' | 'array';
 
 // TODO: find a new way to make the Bricks more extensible without having to create a universe of generics.
 /* eslint @typescript-eslint/no-empty-interface: 0 */
 interface AbstractBrick<
   A,
   O,
-  G extends GraphQLOutputType,
+  G extends GraphqlType,
   N extends 'pending' | Nullability,
   S extends Shape
 > {
@@ -45,7 +46,7 @@ interface AbstractBrick<
   __nullability: N;
   __shape: S;
 }
-interface SemiBrick<A, O, G extends GraphQLOutputType, S extends Shape>
+interface SemiBrick<A, O, G extends GraphqlType, S extends Shape>
   extends AbstractBrick<A, O, G, 'pending', S> {}
 
 type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C, infer D>
@@ -55,7 +56,7 @@ type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C, infer D>
 interface Brick<
   A,
   O,
-  G extends GraphQLOutputType,
+  G extends GraphqlType,
   N extends Nullability,
   S extends Shape
 > extends AbstractBrick<A, O, G, N, S> {}
@@ -70,8 +71,8 @@ type Brickified<T> = T extends Brick<
   ? Brick<A, B, C, D, E>
   : never;
 
-const nullable = <A, O, G extends GraphQLOutputType, S extends Shape>(
-  x: AbstractBrick<A, O, G, 'pending', S>,
+const nullable = <A, O, G extends GraphqlType, S extends Shape>(
+  x: SemiBrick<A, O, G, S>,
 ) => {
   const toReturn = {
     __nullability: 'nullable' as const,
@@ -83,8 +84,8 @@ const nullable = <A, O, G extends GraphQLOutputType, S extends Shape>(
   return <Brickified<typeof toReturn>>toReturn;
 };
 
-const notNullable = <A, O, G extends GraphQLOutputType, S extends Shape>(
-  x: AbstractBrick<A, O, G, 'pending', S>,
+const notNullable = <A, O, G extends GraphqlType, S extends Shape>(
+  x: SemiBrick<A, O, G, S>,
 ) => {
   const toReturn = {
     __nullability: 'notNullable' as const,
@@ -94,6 +95,26 @@ const notNullable = <A, O, G extends GraphQLOutputType, S extends Shape>(
     codec: x.codec,
   };
   return <Brickified<typeof toReturn>>toReturn;
+};
+
+// TODO: is there a way to communicate to the client that the items within the array could be null?
+const array = <
+  A,
+  O,
+  G extends GraphqlType,
+  N extends Nullability,
+  S extends Shape
+>(
+  x: Brick<A, O, G, N, S>,
+) => {
+  const toReturn = {
+    __nullability: 'pending' as const,
+    __shape: 'array' as const,
+    name: `Array<${x.name}>`,
+    codec: t.array(x.codec),
+    gql: new GraphQLList(x.gql),
+  };
+  return <SemiBrickified<typeof toReturn>>toReturn;
 };
 
 const id = {
@@ -197,6 +218,7 @@ type GraphqlTypesOfBrickMap<T> = {
     : never;
 };
 
+// TODO: make this take in the name of the type.
 const type = <T, B extends BrickMap<T>>(s: B) => {
   const codecs = <CodecsOfBrickMap<typeof s>>_.mapValues(s, (x) => x.codec);
   const gqls = <GraphqlTypesOfBrickMap<typeof s>>(
@@ -213,7 +235,6 @@ const type = <T, B extends BrickMap<T>>(s: B) => {
     }),
   };
   return <SemiBrickified<typeof x>>x;
-  return x;
 };
 
 const person = type({
@@ -225,6 +246,7 @@ const person = type({
 const user = type({
   person: nullable(person),
   id: r.id,
+  friends: nullable(array(nullable(person))),
 });
 
 user.codec.encode({
@@ -234,6 +256,7 @@ user.codec.encode({
     lastName: 'my last',
     ssn: null,
   },
+  friends: null, // TODO: is there a way to let the user completely skip the nullable fields?
 });
 
 // TODO: do we need a higher class that sits in the middle of Brick and SemiBrick which both inherit from?
@@ -269,3 +292,4 @@ type FieldResolver<T> = T extends AbstractBrick<
   : never;
 
 // TODO: only struct bricks should be allowed to have their own field resolvers.
+// TODO: how do we add array?
