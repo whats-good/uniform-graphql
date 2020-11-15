@@ -57,9 +57,6 @@ type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C, infer D>
   ? SemiBrick<A, B, C, D>
   : never;
 
-interface AnyBrick extends AbstractBrick<any, any, any, any, any> {}
-type OutputOf<C extends AnyBrick> = C['codec']['_O'];
-
 interface Brick<
   A,
   O,
@@ -292,8 +289,26 @@ const building = struct({
   },
 });
 
+interface AnyBrick extends AbstractBrick<any, any, any, any, any> {}
+type OutputOf<B extends AnyBrick> = B['codec']['_O'];
+type TypeOf<B extends AnyBrick> = B['codec']['_A'];
 // TODO: only enable STRUCT bricks here.
 // TODO: handle the anies here.
+
+export interface UnionC<CS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]>
+  extends AbstractBrick<
+    TypeOf<CS[number]>,
+    OutputOf<CS[number]>,
+    GraphqlType,
+    'pending',
+    'union'
+  > {}
+
+export declare const union: <CS extends [AnyBrick, AnyBrick, ...AnyBrick[]]>(
+  bricks: CS,
+) => UnionC<CS>;
+
+const someUnion = union([animal, person]);
 
 const membership = enumerate({
   name: 'Membership',
