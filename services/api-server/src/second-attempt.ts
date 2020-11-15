@@ -21,31 +21,44 @@ import {
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
+import _ from 'lodash';
+import { Category } from 'fp-ts/lib/Reader';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
-interface SemiBrick<A, O, G extends GraphQLOutputType = GraphQLScalarType> {
+interface SemiBrick<A, O, G extends GraphQLOutputType> {
   name: string;
   gql: G;
   codec: Codec<A, O>;
-  __nullability: 'pending';
+  __nullability: 'pending' | 'nullable' | 'notNullable';
 }
 
-interface Brick<A, O> extends SemiBrick<A, O> {
-  __nullability: 'nullable' | 'notNullable';
+interface Brick<
+  A,
+  O,
+  G extends GraphQLOutputType,
+  N extends 'nullable' | 'notNullable'
+> extends SemiBrick<A, O, G> {
+  __nullability: N;
 }
 
 // TODO: how do i make this one return a Scalar from the SemiScalar, rather than the type that typescript auto infers?
-const nullable = <A, O>(x: SemiBrick<A, O>) => {
+function nullable<A, O, G extends GraphQLOutputType>(
+  x: SemiBrick<A, O, G>,
+): ReturnType<nullable> extends Brick<infer E, infer B, infer C, infer D>
+  ? Brick<E, B, C, D>
+  : never {
   return {
     __nullability: 'nullable' as const,
     name: x.name,
     gql: x.gql,
     codec: t.union([t.undefined, t.null, x.codec]),
   };
-};
+}
 
-const notNullable = <A, O>(x: SemiBrick<A, O>) => {
+const notNullable = <A, O, G extends GraphQLOutputType>(
+  x: SemiBrick<A, O, G>,
+) => {
   return {
     __nullability: 'notNullable' as const,
     name: x.name,
@@ -92,6 +105,38 @@ const core = {
   int,
   boolean,
 };
+
+// type InnerGenericType<T> = T extends SemiBrick<infer A, infer O, infer G>
+
+// type Wrapped<T, I extends string> = { [K in keyof T]: { [key in I]: T[K] } };
+interface MyGenericClass<T> {
+  someField: T;
+  someOtherField: Promise<T>;
+}
+
+type InnerGenericType<T> = T extends MyGenericClass<infer U> ? U : never;
+
+type Foo<T> = T extends { a: infer U; b: infer U } ? U : never;
+type T10 = Foo<{ a: string; b: string }>; // string
+type T11 = Foo<{ a: string; b: number }>; // string | number
+
+type MyMappedType<T> = {
+  [P in keyof T]: T[P] extends SemiBrick<infer A, infer O, infer G>
+    ? SemiBrick<A, O, G>
+    : never;
+};
+
+type MyBetterType = MyMappedType<typeof core>;
+
+// const f = <T>(
+//   x: T extends SemiBrick<infer A, infer O, infer G>
+//     ? SemiBrick<A, O, G>
+//     : never,
+// ): Brick<A, infer B, infer G, infer N> ? =>
+//   return x;
+//;
+
+const betterCore: MyBetterType = core;
 
 const r = {
   id: notNullable(core.id),

@@ -41,3 +41,4 @@
 - understand how `unique symbol` works.
 - maybe i should use graphql-typdefs and codegen to have my types, instead of this elaborate fp system
 - watch this 40 minute tutorial: https://www.youtube.com/watch?v=wqm5ibtCSf0
+- study the `infer` keyword.
