@@ -31,3 +31,27 @@ const yo = pipe(core, (cur) => {
   };
   return cur as SemiBrickMapped;
 });
+
+interface UnionableBrick<A, O, G extends GraphqlType>
+  extends AbstractBrick<A, O, G, 'pending', 'struct'> {}
+
+interface AnyUnionableBrick extends UnionableBrick<any, any, any> {}
+export interface UnionC<
+  CS extends [AnyUnionableBrick, AnyUnionableBrick, ...Array<AnyUnionableBrick>]
+> extends SemiBrick<
+    SemiBrick<CS[number], any, any, any>,
+    OutputOf<CS[number]>,
+    any,
+    'union'
+  > {}
+export declare const union: <CS extends [
+  AnyUnionableBrick,
+  AnyUnionableBrick,
+  // AnyUnionableBrick[],
+]>(
+  codecs: CS,
+  name?: string,
+) => UnionC<CS>;
+
+const d = union([person, animal]);
+type A2 = OutputOf<typeof person>;

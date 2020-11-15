@@ -36,6 +36,7 @@ type Shape = 'struct' | 'scalar' | 'array' | 'enum' | 'union';
 // TODO: find a way to pass down the names to io-ts codecs.
 
 // TODO: find a new way to make the Bricks more extensible without having to create a universe of generics.
+// TODO: is there a way to remove 'null' and 'undefined' from a union codec if they are wrapped with a "notNullable" codec?
 interface AbstractBrick<
   A,
   O,
@@ -55,6 +56,9 @@ interface SemiBrick<A, O, G extends GraphqlType, S extends Shape>
 type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C, infer D>
   ? SemiBrick<A, B, C, D>
   : never;
+
+interface AnyBrick extends AbstractBrick<any, any, any, any, any> {}
+type OutputOf<C extends AnyBrick> = C['codec']['_O'];
 
 interface Brick<
   A,
@@ -274,6 +278,23 @@ const person = struct({
   },
 });
 
+const animal = struct({
+  name: 'Animal' as const,
+  fields: {
+    owner: r.string,
+  },
+});
+
+const building = struct({
+  name: 'Building' as const,
+  fields: {
+    builtIn: r.float,
+  },
+});
+
+// TODO: only enable STRUCT bricks here.
+// TODO: handle the anies here.
+
 const membership = enumerate({
   name: 'Membership',
   props: {
@@ -303,16 +324,6 @@ const a = user.codec.encode({
   friends: null, // TODO: is there a way to let the user completely skip the nullable fields?
   membership: 'paid',
 });
-
-type OutType<T> = T extends AbstractBrick<
-  infer A,
-  infer B,
-  infer C,
-  infer D,
-  infer E
->
-  ? A
-  : never;
 
 type Taskified<T> = T extends AbstractBrick<
   infer A,
