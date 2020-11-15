@@ -85,55 +85,54 @@ interface IList extends IType {
 
 /** */
 
-interface ISemiBrick<G extends GraphQLNullableType = GraphQLNullableType> // TODO: mind the default here.
-  extends IType {
-  __unrealisedGraphQLType: G;
+interface ISemiBrick extends IType {
+  __unrealisedGraphQLType: GraphQLNullableType;
   __unrealisedCodec: Codec<any, any>;
 }
 
 type Nullability = 'nullable' | 'notNullable';
 
-interface IBrick<G extends GraphQLNullableType = GraphQLNullableType>
-  extends ISemiBrick<G> {
+interface IBrick extends ISemiBrick {
   __nullability: Nullability;
+  __realisedGraphQLType: GraphQLType;
   __realisedCodec: Codec<any, any>;
 }
 
 /** */
 
-interface IScalarSemiBrick extends ISemiBrick<GraphQLScalarType> {
+interface IScalarSemiBrick extends ISemiBrick {
   __shape: 'scalar';
+  __unrealisedGraphQLType: GraphQLScalarType;
 }
 
-interface IScalarBrick extends IBrick<GraphQLScalarType> {
+interface IScalarBrick extends IBrick {
   __shape: 'scalar';
-  realisedGraphQLType: GraphQLScalarType | GraphQLNonNull<GraphQLScalarType>;
+  __realisedGraphQLType: GraphQLScalarType | GraphQLNonNull<GraphQLScalarType>;
 }
 
-// const a: IScalarBrick = {
-//   __shape: 'scalar',
-// };
+// TODO: if we dont reuse the semiBrick within the brick, then what's the point? How can we keep them centralized?
 
-/** */
+const stringSemiBrick: IScalarSemiBrick = {
+  __shape: 'scalar' as const,
+  __unrealisedCodec: t.string,
+  __unrealisedGraphQLType: GraphQLString,
+};
 
-// // interface ScalarBrick<T extends GraphQLScalarType> extends IBrick {
-// //   __shape: 'scalar';
-// //   __unrealisedGraphQLType: T;
-// // }
+const nullableString = {
+  // __shape: 'scalar' as const,
+  // __unrealisedCodec: t.string,
+  // __unrealisedGraphQLType: GraphQLString,
+  ...stringSemiBrick,
+  __nullability: 'nullable' as const,
+  __realisedCodec: t.union([t.string, t.undefined, t.null]),
+  __realisedGraphQLType: GraphQLString,
+};
+
+const nBrick: IBrick = nullableString;
+
+type OutputOf<T> = T extends IBrick ? T['__realisedCodec']['_A'] : never;
+type a = OutputOf<typeof nullableString>;
 
 // // TODO: is there a way for ScalarBrick to implement IBrick and IScalar at the same time?
-// interface ScalarBrick extends IBrick<GraphQLScalarType, GraphQLNonNull<GraphQLScalarType>> {
-//   __shape: 'scalar';
-// }
-
 // // TODO: as things stand, there's no straightforward way to make sure that the scalars passed for realised & unrealised gql types will refer to the same gql object.
-// const requiredString: ScalarBrick = {
-//   __unrealisedGraphQLType: GraphQLString,
-//   __nullability: 'nullable',
-//   __unrealisedCodec: t.string,
-//   __realisedCodec: t.string,
-//   __realisedGraphqlType: ,
-//   __shape: 'scalar',
-// };
-
 // // TODO: how can we infer things now?
