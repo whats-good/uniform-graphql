@@ -1,13 +1,13 @@
 import * as t from 'io-ts';
 /* eslint @typescript-eslint/no-empty-interface: 0 */
-export declare interface Type<A, O = A, I = unknown>
-  extends t.Decoder<I, A>,
+export declare interface Codec<A, O = A>
+  extends t.Decoder<unknown, A>,
     t.Encoder<A, O> {
   _A: A;
   _O: O;
 }
-export interface Mixed extends Type<any, any, unknown> {}
-export interface Any extends Type<any, any, any> {}
+export interface Mixed extends Codec<any, any> {}
+export interface Any extends Codec<any, any> {}
 export declare interface UnionType<
   CS extends Array<Any>,
   A = any,
