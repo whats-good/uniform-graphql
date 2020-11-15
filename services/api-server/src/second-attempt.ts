@@ -131,12 +131,6 @@ const n = {
 
 // const type = (props: )
 
-const someStruct = {
-  id: r.id,
-  number: n.float,
-  firstName: n.string,
-};
-
 type BrickMap<T> = {
   [P in keyof T]: T[P] extends Brick<infer A, infer B, infer C, infer D>
     ? Brick<A, B, C, D>
@@ -144,18 +138,19 @@ type BrickMap<T> = {
 };
 
 type CodecsOfBrickMap<T> = {
-  [P in keyof T]: T[P] extends Brick<infer A, infer B, any, any>
+  [P in keyof T]: T[P] extends Brick<infer A, infer B, infer C, infer D>
     ? Codec<A, B>
     : never;
 };
 
+// TODO: shutdown warnings for unused inferred generics
 type GraphqlTypesOfBrickMap<T> = {
-  [P in keyof T]: T[P] extends Brick<any, any, infer C, any>
+  [P in keyof T]: T[P] extends Brick<infer A, infer B, infer C, infer D>
     ? { type: C }
     : never;
 };
 
-const b = pipe(someStruct, (s) => {
+const type = <T, B extends BrickMap<T>>(s: B) => {
   const codecs = <CodecsOfBrickMap<typeof s>>_.mapValues(s, (x) => x.codec);
   const gqls = <GraphqlTypesOfBrickMap<typeof s>>(
     _.mapValues(s, (x) => ({ type: x.gql }))
@@ -170,4 +165,24 @@ const b = pipe(someStruct, (s) => {
     }),
   };
   return <SemiBrickified<typeof x>>x;
+};
+
+const person = type({
+  firstName: r.string,
+  lastName: r.string,
+  ssn: n.int,
+});
+
+const user = type({
+  person: nullable(person),
+  id: r.id,
+});
+
+user.codec.encode({
+  id: 'yo',
+  person: {
+    firstName: 'my first',
+    lastName: 'my last',
+    ssn: null,
+  },
 });
