@@ -403,44 +403,65 @@ interface AnyStructBrick
 interface AnyResolvableBrick
   extends Brick<any, any, GraphQLOutputType, Nullability, any> {}
 
-type BasicResolverOf<T extends AnyResolvableBrick> = (
+type BasicResolverOf<B extends AnyResolvableBrick, A extends any> = (
   root: any,
   args: any,
   context: any,
-) => OutputOf<T>;
+) => OutputOf<B>;
 
 // TODO: find a better name for this.
-const resolverize = <T extends AnyResolvableBrick>(
-  brick: T,
-  basicResolver: BasicResolverOf<T>,
-) => ({
-  type: brick.gql,
-  resolve: basicResolver, // TODO: maybe we should embed the resolving inside the bricks? but probably not...
+const resolverize = <T extends AnyResolvableBrick, A extends any>(params: {
+  brick: T;
+  resolve: BasicResolverOf<T, A>;
+}) => ({
+  type: params.brick.gql,
+  resolve: params.resolve, // TODO: maybe we should embed the resolving inside the bricks? but probably not...
 });
 
-export const queryResolver = {
-  person: resolverize(nullable(person), (root, args, context) => {
+const personFieldResolver = resolverize({
+  brick: nullable(person),
+  resolve: (root, args, context) => {
     return {
       firstName: 'some first name',
       lastName: 'some last name',
       ssn: null,
     };
-  }),
-  user: resolverize(notNullable(user), (root, args, context) => {
-    return {
-      id: 'my id',
-      membership: 'free' as const, // TODO: this might get old. is there a way around this "as const" thing?
-      unitedField: {
-        owner: 'owner name',
-      },
-      person: null,
-      friends: [
-        {
-          firstName: 'first friend name',
-          lastName: 'first friend last name',
-          ssn: null,
+  },
+});
+
+// export const queryResolver = {
+//   person: personFieldResolver,
+//   user: resolverize(notNullable(user), (root, args, context) => {
+//     return {
+//       id: 'my id',
+//       membership: 'free' as const, // TODO: this might get old. is there a way around this "as const" thing?
+//       unitedField: {
+//         owner: 'owner name',
+//       },
+//       person: null,
+//       friends: [
+//         {
+//           firstName: 'first friend name',
+//           lastName: 'first friend last name',
+//           ssn: null,
+//         },
+//       ],
+//     };
+//   }),
+// };
+
+export const rootQuery = new GraphQLObjectType({
+  name: 'RootQueryType',
+  // fields: queryResolver, // TODO: look into the field configs to find ways to insert arguments.
+  fields: {
+    person: {
+      type: personFieldResolver.type,
+      resolve: personFieldResolver.resolve,
+      args: {
+        id: {
+          type: GraphQLString,
         },
-      ],
-    };
-  }),
-};
+      },
+    },
+  },
+});
