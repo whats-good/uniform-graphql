@@ -137,22 +137,36 @@ const someStruct = {
   firstName: n.string,
 };
 
+type BrickMap<T> = {
+  [P in keyof T]: T[P] extends Brick<infer A, infer B, infer C, infer D>
+    ? Brick<A, B, C, D>
+    : never;
+};
+
+type CodecsOfBrickMap<T> = {
+  [P in keyof T]: T[P] extends Brick<infer A, infer B, any, any>
+    ? Codec<A, B>
+    : never;
+};
+
+type GraphqlTypesOfBrickMap<T> = {
+  [P in keyof T]: T[P] extends Brick<any, any, infer C, any>
+    ? { type: C }
+    : never;
+};
+
 const b = pipe(someStruct, (s) => {
+  const codecs = <CodecsOfBrickMap<typeof s>>_.mapValues(s, (x) => x.codec);
+  const gqls = <GraphqlTypesOfBrickMap<typeof s>>(
+    _.mapValues(s, (x) => ({ type: x.gql }))
+  );
   const x = {
     __nullability: 'pending' as const,
     name: 'Some struct name',
-    codec: t.type({
-      id: s.id.codec,
-      number: s.number.codec,
-      firstName: s.firstName.codec,
-    }),
+    codec: t.type(codecs),
     gql: new GraphQLObjectType({
       name: 'someStructName',
-      fields: {
-        id: { type: s.id.gql },
-        number: { type: s.number.gql },
-        firstName: { type: s.firstName.gql },
-      },
+      fields: gqls,
     }),
   };
   return <SemiBrickified<typeof x>>x;
