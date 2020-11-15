@@ -181,7 +181,7 @@ const n = {
 
 // const type = (props: )
 
-type BrickMap<T> = {
+type BrickStruct<T> = {
   [P in keyof T]: T[P] extends Brick<
     infer A,
     infer B,
@@ -193,7 +193,7 @@ type BrickMap<T> = {
     : never;
 };
 
-type CodecsOfBrickMap<T> = {
+type CodecStruct<T> = {
   [P in keyof T]: T[P] extends Brick<
     infer A,
     infer B,
@@ -206,7 +206,7 @@ type CodecsOfBrickMap<T> = {
 };
 
 // TODO: shutdown warnings for unused inferred generics
-type GraphqlTypesOfBrickMap<T> = {
+type GQLStruct<T> = {
   [P in keyof T]: T[P] extends Brick<
     infer A,
     infer B,
@@ -219,10 +219,12 @@ type GraphqlTypesOfBrickMap<T> = {
 };
 
 // TODO: make this take in the name of the type.
-const type = <T, B extends BrickMap<T>>(s: B) => {
-  const codecs = <CodecsOfBrickMap<typeof s>>_.mapValues(s, (x) => x.codec);
-  const gqls = <GraphqlTypesOfBrickMap<typeof s>>(
-    _.mapValues(s, (x) => ({ type: x.gql }))
+const type = <T, B extends BrickStruct<T>>(brickStruct: B) => {
+  const codecs = <CodecStruct<typeof brickStruct>>(
+    _.mapValues(brickStruct, (x) => x.codec)
+  );
+  const gqls = <GQLStruct<typeof brickStruct>>(
+    _.mapValues(brickStruct, (x) => ({ type: x.gql }))
   );
   const x = {
     __nullability: 'pending' as const,
@@ -292,4 +294,3 @@ type FieldResolver<T> = T extends AbstractBrick<
   : never;
 
 // TODO: only struct bricks should be allowed to have their own field resolvers.
-// TODO: how do we add array?
