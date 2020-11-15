@@ -8,12 +8,10 @@ export declare interface Codec<A, O = A>
 }
 export interface Mixed extends Codec<any, any> {}
 export interface Any extends Codec<any, any> {}
-export declare interface UnionType<CS extends Array<Any>, A = any, O = A>
-  extends Codec<A, O> {}
 export declare type OutputOf<C extends Any> = C['_O'];
 export declare type TypeOf<C extends Any> = C['_A'];
 export interface UnionC<CS extends [Mixed, Mixed, ...Array<Mixed>]>
-  extends UnionType<CS, TypeOf<CS[number]>, OutputOf<CS[number]>> {}
+  extends Codec<TypeOf<CS[number]>, OutputOf<CS[number]>> {}
 export declare const union: <CS extends [Mixed, Mixed, ...Mixed[]]>(
   codecs: CS,
   name?: string,
