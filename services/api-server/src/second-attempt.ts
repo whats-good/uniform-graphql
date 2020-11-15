@@ -23,6 +23,7 @@ import {
   GraphQLList,
   GraphQLEnumType,
   GraphQLUnionType,
+  GraphQLOutputType,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
@@ -37,7 +38,6 @@ type Shape = 'struct' | 'scalar' | 'array' | 'enum' | 'union';
 // TODO: find a way to pass down the names to io-ts codecs.
 
 // TODO: find a new way to make the Bricks more extensible without having to create a universe of generics.
-// TODO: is there a way to remove 'null' and 'undefined' from a union codec if they are wrapped with a "notNullable" codec?
 interface AbstractBrick<
   A,
   O,
@@ -295,20 +295,22 @@ type OutputOf<B extends AnyBrick> = B['codec']['_O'];
 type TypeOf<B extends AnyBrick> = B['codec']['_A'];
 // TODO: only enable STRUCT bricks here.
 // TODO: handle the anies here.
-
-export interface UnionC<BS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]>
-  extends AbstractBrick<
+interface AnyUnionableBrick
+  extends SemiBrick<any, any, GraphQLObjectType, 'struct'> {}
+export interface UnionC<
+  BS extends [AnyUnionableBrick, AnyUnionableBrick, ...Array<AnyUnionableBrick>]
+> extends SemiBrick<
     TypeOf<BS[number]>,
     OutputOf<BS[number]>,
-    GraphqlType,
-    'pending',
+    GraphQLUnionType,
     'union'
   > {}
 
-// TODO: make sure only struct and pending codecs can be sent in.
 // TODO: find a way to make the GQL types also inferrable here.
 // TODO: record the fact that things were united, and what those things were, so that you can undo them later.
-export const union = <BS extends [AnyBrick, AnyBrick, ...AnyBrick[]]>(params: {
+export const union = <
+  BS extends [AnyUnionableBrick, AnyUnionableBrick, ...AnyUnionableBrick[]]
+>(params: {
   name: string;
   bricks: BS;
 }): UnionC<BS> => {
@@ -387,3 +389,34 @@ type FieldResolver<T> = T extends AbstractBrick<
   : never;
 
 // TODO: only struct bricks should be allowed to have their own field resolvers.
+
+/**
+ * Now the plan is allowing the addition of multiple different query resolvers and combining them into one.
+ */
+
+const resof = (a: any): any => null;
+
+interface AnyStructBrick
+  extends Brick<any, any, GraphQLObjectType, Nullability, 'struct'> {}
+
+interface AnyResolvableBrick
+  extends Brick<any, any, GraphQLOutputType, Nullability, any> {}
+
+type BasicResolverOf<T extends AnyResolvableBrick> = (
+  root: any,
+  args: any,
+  context: any,
+) => OutputOf<T>;
+
+const b = {
+  user: pipe(person, nullable, (brick) => {
+    const f: BasicResolverOf<typeof brick> = (root, args, context) => {
+      return {
+        firstName: 'some first name',
+        lastName: 'some last name',
+        ssn: null,
+      };
+    };
+    return f;
+  }),
+};
