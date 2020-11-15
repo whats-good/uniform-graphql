@@ -25,6 +25,7 @@ import {
   GraphQLScalarType,
   GraphQLNullableType,
   graphqlSync,
+  isInputObjectType,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
@@ -86,6 +87,7 @@ interface IList extends IType {
 /** */
 
 interface ISemiBrick extends IType {
+  name: string;
   unrealisedGraphQLType: GraphQLNullableType;
   unrealisedCodec: Codec<any, any>;
 }
@@ -112,25 +114,90 @@ interface IScalarBrick extends IBrick {
 
 // TODO: if we dont reuse the semiBrick within the brick, then what's the point? How can we keep them centralized?
 
-const stringSemiBrick: IScalarSemiBrick = {
+const id = {
+  name: 'ID' as const,
+  shape: 'scalar' as const,
+  unrealisedCodec: t.union([t.string, t.number]),
+  unrealisedGraphQLType: GraphQLID,
+};
+
+const string = {
+  name: 'String' as const,
   shape: 'scalar' as const,
   unrealisedCodec: t.string,
   unrealisedGraphQLType: GraphQLString,
 };
 
-const nullableString = {
-  ...stringSemiBrick,
-  nullability: 'nullable' as const,
-  realisedCodec: t.union([t.string, t.undefined, t.null]),
-  realisedGraphQLType: GraphQLString,
+const float = {
+  name: 'Float' as const,
+  shape: 'scalar' as const,
+  unrealisedCodec: t.number,
+  unrealisedGraphQLType: GraphQLFloat,
 };
 
-const nBrick: IBrick = nullableString;
+const int = {
+  name: 'Int' as const,
+  shape: 'scalar' as const,
+  unrealisedCodec: t.Int,
+  unrealisedGraphQLType: GraphQLInt,
+};
 
-type OutputOf<T> = T extends IBrick ? T['realisedCodec']['_A'] : never;
-type a = OutputOf<typeof nullableString>;
+const boolean = {
+  name: 'Boolean' as const,
+  shape: 'scalar' as const,
+  unrealisedCodec: t.boolean,
+  unrealisedGraphQLType: GraphQLBoolean,
+};
 
-const semiBricks = {};
+const core = {
+  id,
+  string,
+  float,
+  int,
+  boolean,
+};
+
+// TODO: still not able to carry codec information...
+const makeNullable = <T extends ISemiBrick>(sb: T) => {
+  return {
+    ...sb,
+    nullability: 'nullable' as const,
+    realisedCodec: t.union([sb.unrealisedCodec, t.undefined, t.null]),
+    realisedGraphQLType: sb.unrealisedGraphQLType,
+  };
+};
+
+const makeNotNullable = <T extends ISemiBrick>(sb: T) => {
+  return {
+    // TODO: shoule we point back to the semibrick from the main brick?
+    ...sb,
+    nullability: 'notNullable' as const,
+    realisedCodec: sb.unrealisedCodec,
+    realisedGraphQLType: new GraphQLNonNull(sb.unrealisedGraphQLType),
+  };
+};
+
+const lift = <T extends ISemiBrick>(sb: T) => {
+  return {
+    ...makeNotNullable(sb),
+    nullable: makeNullable(sb),
+  };
+};
+
+const liftedId = lift(id);
+
+// nullable.id.realisedCodec.encode(undefined);
+
+// const nullableString = {
+//   ...stringSemiBrick,
+// };
+
+// const nBrick: IBrick = nullableString;
+
+// type OutputOf<T> = T extends IBrick ? T['realisedCodec']['_A'] : never;
+// type a = OutputOf<typeof nullableString>;
+
+// const semiBricks = {};
 
 // // TODO: is there a way for ScalarBrick to implement IBrick and IScalar at the same time?
 // // TODO: as things stand, there's no straightforward way to make sure that the scalars passed for realised & unrealised gql types will refer to the same gql object.
