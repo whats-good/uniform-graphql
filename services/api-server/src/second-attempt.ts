@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-empty-interface: 0 */
 import { ApolloServer, gql, UserInputError } from 'apollo-server-express';
 import * as R from 'fp-ts/lib/Record';
 import * as T from 'fp-ts/lib/Task';
@@ -32,8 +33,9 @@ type Codec<A, O> = t.Type<A, O, unknown>;
 type Nullability = 'nullable' | 'notNullable';
 type Shape = 'struct' | 'scalar' | 'array' | 'enum' | 'union';
 
+// TODO: find a way to pass down the names to io-ts codecs.
+
 // TODO: find a new way to make the Bricks more extensible without having to create a universe of generics.
-/* eslint @typescript-eslint/no-empty-interface: 0 */
 interface AbstractBrick<
   A,
   O,
@@ -120,25 +122,24 @@ const array = <
 
 // TODO: find a better name
 // TODO: how can we be more granular with the actual gql types that are sent over?
-// TODO: find a way to pass down the names to io-ts codecs.
 // TODO: could we make sure that there is at least one item in the givem params.props?
-// TODO: make sure the enums get their values exactly replicated from their keys
-function enumerate<T, P extends { [key: string]: unknown }>(params: {
+function enumerate<P extends { [key: string]: unknown }>(params: {
   name: string;
   props: P;
 }) {
   const codec = t.keyof(params.props, params.name);
+  const keyToKey = _.mapValues(params.props, (_, key) => key);
+  const gqlValues = _.mapValues(keyToKey, (_, key) => ({
+    value: key,
+  }));
   const toReturn = {
     __nullability: 'pending' as const,
     __shape: 'enum' as const,
     name: params.name,
     codec,
     gql: new GraphQLEnumType({
-      // TODO: actually pass the values down here.
       name: params.name,
-      values: {
-        K: { value: undefined },
-      },
+      values: gqlValues,
     }),
   };
   return <SemiBrickified<typeof toReturn>>toReturn;
@@ -292,7 +293,7 @@ export const user = struct({
   },
 });
 
-user.codec.encode({
+const a = user.codec.encode({
   id: 'yo',
   person: {
     firstName: 'my first',
