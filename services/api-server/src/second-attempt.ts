@@ -33,6 +33,10 @@ interface SemiBrick<A, O, G extends GraphQLOutputType> {
   __nullability: 'pending' | 'nullable' | 'notNullable';
 }
 
+type SemiBrickified<T> = T extends SemiBrick<infer A, infer B, infer C>
+  ? SemiBrick<A, B, C>
+  : never;
+
 interface Brick<
   A,
   O,
@@ -124,3 +128,32 @@ const n = {
 };
 
 // TODO: find a way to map from the core object into these.
+
+// const type = (props: )
+
+const someStruct = {
+  id: r.id,
+  number: n.float,
+  firstName: n.string,
+};
+
+const b = pipe(someStruct, (s) => {
+  const x = {
+    __nullability: 'pending' as const,
+    name: 'Some struct name',
+    codec: t.type({
+      id: s.id.codec,
+      number: s.number.codec,
+      firstName: s.firstName.codec,
+    }),
+    gql: new GraphQLObjectType({
+      name: 'someStructName',
+      fields: {
+        id: { type: s.id.gql },
+        number: { type: s.number.gql },
+        firstName: { type: s.firstName.gql },
+      },
+    }),
+  };
+  return <SemiBrickified<typeof x>>x;
+});
