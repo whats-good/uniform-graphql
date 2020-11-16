@@ -153,22 +153,28 @@ const boolean = {
   unrealisedGraphQLType: GraphQLBoolean,
 };
 
+type Brickified<T> = T extends IBrick<infer A, infer B, infer C, infer D>
+  ? IBrick<A, B, C, D>
+  : never;
+
 const makeNullable = <A, O>(sb: ISemiBrick<A, O>) => {
-  return {
+  const toReturn = {
     ...sb,
     nullability: 'nullable' as const,
     realisedCodec: t.union([sb.unrealisedCodec, t.undefined, t.null]),
     realisedGraphQLType: sb.unrealisedGraphQLType,
   };
+  return <Brickified<typeof toReturn>>toReturn;
 };
 
 const makeNotNullable = <A, O>(sb: ISemiBrick<A, O>) => {
-  return {
+  const toReturn = {
     ...sb,
     nullability: 'notNullable' as const,
     realisedCodec: sb.unrealisedCodec,
     realisedGraphQLType: new GraphQLNonNull(sb.unrealisedGraphQLType),
   };
+  return <Brickified<typeof toReturn>>toReturn;
 };
 
 const lift = <A, O>(sb: ISemiBrick<A, O>) => {
