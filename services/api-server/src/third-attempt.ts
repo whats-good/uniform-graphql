@@ -387,5 +387,6 @@ export const registrationInput = inputobject({
     name: nameInput,
     address: addressInput,
     membership: membership,
+    referrals: array(scalars.string),
   },
 });
