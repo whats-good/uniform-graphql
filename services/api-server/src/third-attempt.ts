@@ -276,7 +276,7 @@ const inputobject = <T, B extends BrickStruct<T>>(params: {
     _.mapValues(params.fields, (x) => ({ type: x.realisedGraphQLType }))
   );
 
-  const result = {
+  return lift({
     name: params.name,
     shape: 'inputobject' as const,
     unrealisedCodec: t.type(codecs),
@@ -284,8 +284,7 @@ const inputobject = <T, B extends BrickStruct<T>>(params: {
       name: params.name,
       fields: gqls,
     }),
-  };
-  return lift(result);
+  });
 };
 // TODO: find a better name
 // TODO: how can we be more granular with the actual gql types that are sent over?
@@ -310,6 +309,27 @@ function enumerate<P extends { [key: string]: unknown }>(params: {
   });
 }
 
+// TODO: is there a way to communicate to the client that the items within the array could be null?
+const array = <
+  S extends Shape,
+  SB_G extends GraphQLNullableType,
+  // TODO: make it so that B_G can either be SB_G or the NonNull version of it. punting for now...
+  B_G extends GraphQLType,
+  B_A,
+  B_O,
+  SB_A,
+  SB_OT
+>(
+  x: IBrick<S, SB_G, B_G, B_A, B_O, SB_A, SB_OT>,
+) => {
+  return lift({
+    name: `Array<${x.name}>`,
+    shape: 'list',
+    unrealisedCodec: t.array(x.realisedCodec),
+    unrealisedGraphQLType: new GraphQLList(x.realisedGraphQLType),
+  });
+};
+
 const membership = enumerate({
   name: 'Membership',
   props: {
@@ -328,12 +348,14 @@ const person = outputObject({
   },
 });
 
+// TODO: how can we make recursive types????
 export const myBroh = outputObject({
   name: 'MyBroh',
   fields: {
     person: person.nullable,
     friend: person.nullable,
     age: scalars.float,
+    friends: array(person),
   },
 });
 
