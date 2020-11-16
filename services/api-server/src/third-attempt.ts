@@ -44,10 +44,10 @@ type Shape =
   | 'inputobject'
   | 'list';
 
-interface ISemiBrick<S extends Shape, A, O> {
+interface ISemiBrick<S extends Shape, G extends GraphQLNullableType, A, O> {
   name: string;
   shape: S;
-  unrealisedGraphQLType: GraphQLNullableType;
+  unrealisedGraphQLType: G;
   unrealisedCodec: Codec<A, O>;
 }
 
@@ -55,42 +55,61 @@ type Nullability = 'nullable' | 'notNullable';
 
 // TODO: looks like we need to go back to generics...
 // TODO: it also looks like we should start putting the nullability and the shape into the generics...
-interface IBrick<S extends Shape, B_A, B_O, SB_A, SB_O>
-  extends ISemiBrick<S, SB_A, SB_O> {
+interface IBrick<
+  S extends Shape,
+  SB_G extends GraphQLNullableType,
+  // TODO: make it so that B_G can either be SB_G or the NonNull version of it. punting for now...
+  B_G extends GraphQLType,
+  B_A,
+  B_O,
+  SB_A,
+  SB_O
+> extends ISemiBrick<S, SB_G, SB_A, SB_O> {
   nullability: Nullability;
-  realisedGraphQLType: GraphQLType;
+  realisedGraphQLType: B_G;
   realisedCodec: Codec<B_A, B_O>;
 }
 
 type Brickified<T> = T extends IBrick<
   infer S,
+  infer SB_G,
+  infer B_G,
   infer B_A,
   infer B_O,
   infer SB_A,
   infer SB_O
 >
-  ? IBrick<S, B_A, B_O, SB_A, SB_O>
+  ? IBrick<S, SB_G, B_G, B_A, B_O, SB_A, SB_O>
   : never;
 
-type SemiBrickified<T> = T extends ISemiBrick<infer S, infer A, infer O>
-  ? ISemiBrick<S, A, O>
+type SemiBrickified<T> = T extends ISemiBrick<
+  infer S,
+  infer G,
+  infer A,
+  infer O
+>
+  ? ISemiBrick<S, G, A, O>
   : never;
 
 type BrickStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
     infer S,
+    infer SB_G,
+    infer B_G,
     infer B_A,
     infer B_O,
     infer SB_A,
     infer SB_O
   >
-    ? IBrick<S, B_A, B_O, SB_A, SB_O>
+    ? IBrick<S, SB_G, B_G, B_A, B_O, SB_A, SB_O>
     : never;
 };
 
 type RealisedCodecsStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
     infer S,
+    infer SB_G,
+    infer B_G,
     infer B_A,
     infer B_O,
     infer SB_A,
@@ -104,13 +123,15 @@ type RealisedCodecsStruct<T> = {
 type UnrealisedGraphqlTypesStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
     infer S,
+    infer SB_G,
+    infer B_G,
     infer B_A,
     infer B_O,
     infer SB_A,
     infer SB_O
   >
     ? // TODO: find a way to get rid of "type" here.
-      { type: C }
+      { type: SB_G }
     : never;
 };
 const id = {
@@ -148,7 +169,9 @@ const boolean = {
   unrealisedGraphQLType: GraphQLBoolean,
 };
 
-const makeNullable = <S extends Shape, A, O>(sb: ISemiBrick<S, A, O>) => {
+const makeNullable = <S extends Shape, G extends GraphQLNullableType, A, O>(
+  sb: ISemiBrick<S, G, A, O>,
+) => {
   const toReturn = {
     ...sb,
     nullability: 'nullable' as const,
@@ -158,17 +181,22 @@ const makeNullable = <S extends Shape, A, O>(sb: ISemiBrick<S, A, O>) => {
   return <Brickified<typeof toReturn>>toReturn;
 };
 
-const makeNotNullable = <S extends Shape, A, O>(sb: ISemiBrick<S, A, O>) => {
+const makeNotNullable = <S extends Shape, G extends GraphQLNullableType, A, O>(
+  sb: ISemiBrick<S, G, A, O>,
+) => {
   const toReturn = {
     ...sb,
     nullability: 'notNullable' as const,
     realisedCodec: sb.unrealisedCodec,
     realisedGraphQLType: new GraphQLNonNull(sb.unrealisedGraphQLType),
   };
+
   return <Brickified<typeof toReturn>>toReturn;
 };
 
-const lift = <S extends Shape, A, O>(sb: ISemiBrick<S, A, O>) => {
+const lift = <S extends Shape, G extends GraphQLNullableType, A, O>(
+  sb: ISemiBrick<S, G, A, O>,
+) => {
   makeNullable(sb);
   return {
     ...makeNotNullable(sb),
@@ -184,10 +212,11 @@ const scalars = {
   boolean: lift(boolean),
 };
 
-const x = scalars.id.shape;
-const y = makeNullable(id).shape;
-const z = id.shape;
-const as = scalars.id.nullable.realisedCodec;
+// const a = scalars.id.shape;
+// const b = scalars.float.unrealisedCodec.encode(1);
+// TODO: find a way to make the type names inferrable too...
+// const c = scalars.float.realisedGraphQLType;
+// const d = scalars.float.name;
 
 // // TODO: as things stand, there's no straightforward way to make sure that the scalars passed for realised & unrealised gql types will refer to the same gql object.
 
