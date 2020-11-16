@@ -38,7 +38,8 @@ type InputType = 'scalar' | 'enum' | 'inputobject' | 'list';
 type OutputType =
   | 'scalar'
   | 'outputobject'
-  | 'interface'
+  | 'interface' // TODO: figure it out later
+  // TODO: also take a look at abstract types
   | 'union'
   | 'enum'
   | 'list';
@@ -330,6 +331,51 @@ const array = <
   });
 };
 
+interface AnySemiBrick extends ISemiBrick<any, any, any, any> {}
+type SemiOutputOf<B extends AnySemiBrick> = B['unrealisedCodec']['_O'];
+type SemiTypeOf<B extends AnySemiBrick> = B['unrealisedCodec']['_A'];
+// TODO: only enable STRUCT bricks here.
+// TODO: handle the anies here.
+interface AnyUnionableBrick
+  extends ISemiBrick<'outputobject', GraphQLObjectType, any, any> {}
+export interface UnionC<
+  BS extends [AnyUnionableBrick, AnyUnionableBrick, ...Array<AnyUnionableBrick>]
+> extends ISemiBrick<
+    SemiTypeOf<BS[number]>,
+    SemiOutputOf<BS[number]>,
+    GraphQLUnionType,
+    'union'
+  > {}
+
+// TODO: find a way to make the GQL types also inferrable here.
+// TODO: record the fact that things were united, and what those things were, so that you can undo them later.
+// TODO: fix this union error: "Abstract type \"SomeUnion\" must resolve to an Object type at runtime for field \"User.unitedField\". Either the \"SomeUnion\" type should provide a \"resolveType\" function or each possible type should provide an \"isTypeOf\" function.",
+export const union = <
+  BS extends [AnyUnionableBrick, AnyUnionableBrick, ...AnyUnionableBrick[]]
+>(params: {
+  name: string;
+  bricks: BS;
+}) => {
+  const [first, second, ...rest] = params.bricks;
+  const restOfTheCodecs = rest.map(({ unrealisedCodec }) => unrealisedCodec);
+  const gqlObjectTypes = params.bricks.map(
+    ({ unrealisedGraphQLType }) => unrealisedGraphQLType,
+  );
+  return lift({
+    name: params.name,
+    shape: 'union',
+    unrealisedCodec: t.union([
+      first.unrealisedCodec,
+      second.unrealisedCodec,
+      ...restOfTheCodecs,
+    ]),
+    unrealisedGraphQLType: new GraphQLUnionType({
+      name: params.name,
+      types: () => gqlObjectTypes,
+    }),
+  });
+};
+
 const membership = enumerate({
   name: 'Membership',
   props: {
@@ -348,15 +394,35 @@ const person = outputObject({
   },
 });
 
+const animal = outputObject({
+  name: 'Animal',
+  fields: {
+    id: scalars.id,
+    owner: person,
+  },
+});
+
+const bestFriend = union({
+  name: 'BestFriend',
+  bricks: [animal, person],
+});
+
 // TODO: how can we make recursive types????
 export const myBroh = outputObject({
   name: 'MyBroh',
   fields: {
     person: person.nullable,
-    friend: person.nullable,
+    bestFriend: bestFriend.nullable,
     age: scalars.float,
-    friends: array(person),
+    friends: array(person).nullable,
   },
+});
+
+myBroh.realisedCodec.encode({
+  age: 1,
+  bestFriend: null,
+  friends: null,
+  person: null,
 });
 
 /**
