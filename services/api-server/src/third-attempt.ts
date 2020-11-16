@@ -26,13 +26,15 @@ import {
   GraphQLNullableType,
   graphqlSync,
   isInputObjectType,
+  coerceInputValue,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
 import _ from 'lodash';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
-
+type InputType = 'scalar' | 'enum' | 'inputobject' | 'list';
+type OutputType = 'scalar' | 'object' | 'interface' | 'union' | 'enum' | 'list';
 type Shape =
   | 'scalar'
   | 'object'
@@ -94,18 +96,57 @@ interface IBrick<S extends Shape, BA, BO, SB_A, SB_O>
   realisedCodec: Codec<BA, BO>;
 }
 
-/** */
+type Brickified<T> = T extends IBrick<
+  infer A,
+  infer B,
+  infer C,
+  infer D,
+  infer E
+>
+  ? IBrick<A, B, C, D, E>
+  : never;
 
-// interface IScalarSemiBrick<A, O> extends ISemiBrick<A, O> {
-//   shape: 'scalar';
-//   unrealisedGraphQLType: GraphQLScalarType;
-// }
+type SemiBrickified<T> = T extends ISemiBrick<infer A, infer B, infer C>
+  ? ISemiBrick<A, B, C>
+  : never;
 
-// interface IScalarBrick<BA, BO, SA, SO> extends IBrick<BA, BO, SA, SO> {
-//   shape: 'scalar';
-//   realisedGraphQLType: GraphQLScalarType | GraphQLNonNull<GraphQLScalarType>;
-// }
+type BrickStruct<T> = {
+  [P in keyof T]: T[P] extends IBrick<
+    infer A,
+    infer B,
+    infer C,
+    infer D,
+    infer E
+  >
+    ? IBrick<A, B, C, D, E>
+    : never;
+};
 
+type CodecStruct<T> = {
+  [P in keyof T]: T[P] extends IBrick<
+    infer A,
+    infer B,
+    infer C,
+    infer D,
+    infer E
+  >
+    ? Codec<A, B>
+    : never;
+};
+
+// TODO: shutdown warnings for unused inferred generics
+type UnrealisedGraphqlTypesStruct<T> = {
+  [P in keyof T]: T[P] extends IBrick<
+    infer A,
+    infer B,
+    infer C,
+    infer D,
+    infer E
+  >
+    ? // TODO: find a way to get rid of "type" here.
+      { type: C }
+    : never;
+};
 const id = {
   name: 'ID' as const,
   shape: 'scalar' as const,
@@ -140,16 +181,6 @@ const boolean = {
   unrealisedCodec: t.boolean,
   unrealisedGraphQLType: GraphQLBoolean,
 };
-
-type Brickified<T> = T extends IBrick<
-  infer A,
-  infer B,
-  infer C,
-  infer D,
-  infer E
->
-  ? IBrick<A, B, C, D, E>
-  : never;
 
 const makeNullable = <S extends Shape, A, O>(sb: ISemiBrick<S, A, O>) => {
   const toReturn = {
@@ -193,3 +224,49 @@ const z = id.shape;
 const as = scalars.id.nullable.realisedCodec;
 
 // // TODO: as things stand, there's no straightforward way to make sure that the scalars passed for realised & unrealised gql types will refer to the same gql object.
+
+const struct = <T, B extends BrickStruct<T>>(params: {
+  name: string;
+  fields: B;
+}) => {
+  const codecs = <CodecStruct<typeof params.fields>>(
+    _.mapValues(params.fields, (x) => x.realisedCodec)
+  );
+  const gqls = <UnrealisedGraphqlTypesStruct<typeof params.fields>>(
+    _.mapValues(params.fields, (x) => ({ type: x.realisedGraphQLType }))
+  );
+  const codec = t.type(codecs);
+  type A = t.TypeOf<typeof codec>;
+  type O = t.OutputOf<typeof codec>;
+  type CurrentSemiBrick = ISemiBrick<'object', A, O>;
+  // TODO: need to expose graphql types too.
+  const result: CurrentSemiBrick = {
+    name: params.name,
+    shape: 'object',
+    unrealisedCodec: codec,
+    unrealisedGraphQLType: new GraphQLObjectType({
+      name: params.name,
+      // TODO: find a way to fix the fields object.
+      fields: {
+        id: {
+          type: GraphQLString,
+        },
+      },
+      // fields: gqls,
+    }),
+  };
+  return <SemiBrickified<typeof result>>result;
+
+  // type t = ISemiBrick<'object', t.
+  // const x = {
+  //   __nullability: 'pending' as const,
+  //   __shape: 'struct' as const,
+  //   name: params.name,
+  //   codec: t.type(codecs),
+  //   gql: new GraphQLObjectType({
+  //     name: params.name,
+  //     fields: gqls,
+  //   }),
+  // };
+  return <SemiBrickified<typeof x>>x;
+};
