@@ -34,10 +34,16 @@ import _ from 'lodash';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 type InputType = 'scalar' | 'enum' | 'inputobject' | 'list';
-type OutputType = 'scalar' | 'object' | 'interface' | 'union' | 'enum' | 'list';
+type OutputType =
+  | 'scalar'
+  | 'outputobject'
+  | 'interface'
+  | 'union'
+  | 'enum'
+  | 'list';
 type Shape =
   | 'scalar'
-  | 'object'
+  | 'outputobject'
   | 'interface'
   | 'union'
   | 'enum'
@@ -255,7 +261,7 @@ const struct = <T, B extends OutputBrickStruct<T>>(params: {
 
   const result = {
     name: params.name,
-    shape: 'object' as const,
+    shape: 'outputobject' as const,
     unrealisedCodec: t.type(codecs),
     unrealisedGraphQLType: new GraphQLObjectType({
       name: params.name,
@@ -273,13 +279,11 @@ const person = struct({
   },
 });
 
-const myBroh = struct({
-  name: 'myBroh',
+export const myBroh = struct({
+  name: 'MyBroh',
   fields: {
     person: person.nullable,
     friend: person.nullable,
     age: scalars.float,
   },
 });
-
-const d = myBroh.realisedGraphQLType;

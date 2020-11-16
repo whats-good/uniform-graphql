@@ -24,6 +24,7 @@ import { flow, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
 import _ from 'lodash';
 import { user, rootQuery } from './second-attempt';
+import { myBroh } from './third-attempt';
 
 // const rootQuery = new GraphQLObjectType({
 //   name: 'RootQueryType',
@@ -31,8 +32,21 @@ import { user, rootQuery } from './second-attempt';
 // });
 
 const schema = new GraphQLSchema({
-  query: rootQuery,
+  query: new GraphQLObjectType({
+    name: 'RootQueryType',
+    fields: {
+      person: {
+        type: myBroh.realisedGraphQLType,
+        // resolve: personFieldResolver.resolve,
+        // args: personFieldResolver.args,
+      },
+    },
+  }),
 });
+
+// const schema = new GraphQLSchema({
+//   query: rootQuery,
+// });
 
 const apolloServer = new ApolloServer({
   schema,
