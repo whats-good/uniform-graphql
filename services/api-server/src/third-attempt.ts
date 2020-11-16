@@ -245,6 +245,7 @@ const scalars = {
 
 const outputObject = <T, B extends BrickStruct<T>>(params: {
   name: string;
+  description?: string;
   fields: B;
 }) => {
   const codecs = <RealisedCodecsStruct<typeof params.fields>>(
@@ -260,6 +261,7 @@ const outputObject = <T, B extends BrickStruct<T>>(params: {
     unrealisedCodec: t.type(codecs),
     unrealisedGraphQLType: new GraphQLObjectType({
       name: params.name,
+      description: params.description,
       fields: gqls,
     }),
   };
@@ -269,6 +271,7 @@ const outputObject = <T, B extends BrickStruct<T>>(params: {
 // TODO: could we avoid the redundancy here?
 const inputobject = <T, B extends BrickStruct<T>>(params: {
   name: string;
+  description?: string;
   fields: B;
 }) => {
   const codecs = <RealisedCodecsStruct<typeof params.fields>>(
@@ -284,6 +287,7 @@ const inputobject = <T, B extends BrickStruct<T>>(params: {
     unrealisedCodec: t.type(codecs),
     unrealisedGraphQLType: new GraphQLInputObjectType({
       name: params.name,
+      description: params.description,
       fields: gqls,
     }),
   });
@@ -320,6 +324,7 @@ const fieldConfigArgumentMap = <T, B extends BrickStruct<T>>(params: {
 // TODO: could we make sure that there is at least one item in the givem params.props?
 function enumerate<P extends { [key: string]: unknown }>(params: {
   name: string;
+  description?: string;
   props: P;
 }) {
   const codec = t.keyof(params.props, params.name);
@@ -333,6 +338,7 @@ function enumerate<P extends { [key: string]: unknown }>(params: {
     unrealisedCodec: codec,
     unrealisedGraphQLType: new GraphQLEnumType({
       name: params.name,
+      description: params.description,
       values: gqlValues,
     }),
   });
@@ -383,6 +389,7 @@ export const union = <
   BS extends [AnyUnionableBrick, AnyUnionableBrick, ...AnyUnionableBrick[]]
 >(params: {
   name: string;
+  description?: string;
   bricks: BS;
 }) => {
   const [first, second, ...rest] = params.bricks;
@@ -400,6 +407,7 @@ export const union = <
     ]),
     unrealisedGraphQLType: new GraphQLUnionType({
       name: params.name,
+      description: params.description,
       types: () => gqlObjectTypes,
     }),
   });
@@ -407,6 +415,7 @@ export const union = <
 
 const membership = enumerate({
   name: 'Membership',
+  description: 'this is a description for the membership enum',
   props: {
     free: null,
     paid: null,
@@ -416,6 +425,7 @@ const membership = enumerate({
 
 const person = outputObject({
   name: 'Person',
+  description: 'this is a description for the person object',
   fields: {
     id: scalars.string,
     favoriteNumber: scalars.float,
@@ -425,6 +435,7 @@ const person = outputObject({
 
 const animal = outputObject({
   name: 'Animal',
+  description: 'this is an animal.',
   fields: {
     id: scalars.id,
     owner: person,
@@ -433,6 +444,7 @@ const animal = outputObject({
 
 const bestFriend = union({
   name: 'BestFriend',
+  description: 'this is a description for the union',
   bricks: [animal, person],
 });
 
@@ -542,7 +554,13 @@ const personFieldResolver = resolverize({
 
 export const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
+  description: 'this is the root description',
   fields: {
     person: personFieldResolver,
+    kerem: {
+      type: GraphQLString,
+      deprecationReason: 'because deprecated',
+      description: 'this is a description',
+    },
   },
 });
