@@ -44,43 +44,8 @@ type Shape =
   | 'inputobject'
   | 'list';
 
-interface IShape {
-  shape: Shape;
-}
-
-// interface IScalar extends IShape {
-//   shape: 'scalar';
-// }
-
-// interface IObject extends IShape {
-//   shape: 'object';
-// }
-
-// interface IInterface extends IShape {
-//   shape: 'interface';
-// }
-
-// interface IUnion extends IShape {
-//   shape: 'union';
-// }
-
-// interface IEnum extends IShape {
-//   shape: 'enum';
-// }
-
-// interface IInputObject extends IShape {
-//   shape: 'inputobject';
-// }
-
-// interface IList extends IShape {
-//   shape: 'list';
-// }
-
-interface IAbstractBrick<S extends Shape> extends IShape {
+interface ISemiBrick<S extends Shape, A, O> {
   shape: S;
-  name: string;
-}
-interface ISemiBrick<S extends Shape, A, O> extends IAbstractBrick<S> {
   unrealisedGraphQLType: GraphQLNullableType;
   unrealisedCodec: Codec<A, O>;
 }
