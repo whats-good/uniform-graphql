@@ -98,10 +98,10 @@ type Nullability = 'nullable' | 'notNullable';
 
 // TODO: looks like we need to go back to generics...
 // TODO: it also looks like we should start putting the nullability and the shape into the generics...
-interface IBrick<A, O> extends IAbstractBrick {
+interface IBrick<BA, BO, SA, SO> extends ISemiBrick<SA, SO> {
   nullability: Nullability;
   realisedGraphQLType: GraphQLType;
-  realisedCodec: Codec<A, O>;
+  realisedCodec: Codec<BA, BO>;
 }
 
 /** */
@@ -111,7 +111,7 @@ interface IScalarSemiBrick<A, O> extends ISemiBrick<A, O> {
   unrealisedGraphQLType: GraphQLScalarType;
 }
 
-interface IScalarBrick<A, O> extends IBrick<A, O> {
+interface IScalarBrick<BA, BO, SA, SO> extends IBrick<BA, BO, SA, SO> {
   shape: 'scalar';
   realisedGraphQLType: GraphQLScalarType | GraphQLNonNull<GraphQLScalarType>;
 }
@@ -153,7 +153,6 @@ const boolean = {
   unrealisedGraphQLType: GraphQLBoolean,
 };
 
-// TODO: still not able to carry codec information...
 const makeNullable = <A, O>(sb: ISemiBrick<A, O>) => {
   return {
     ...sb,
@@ -165,7 +164,6 @@ const makeNullable = <A, O>(sb: ISemiBrick<A, O>) => {
 
 const makeNotNullable = <A, O>(sb: ISemiBrick<A, O>) => {
   return {
-    // TODO: shoule we point back to the semibrick from the main brick?
     ...sb,
     nullability: 'notNullable' as const,
     realisedCodec: sb.unrealisedCodec,
