@@ -91,15 +91,6 @@ type Brickified<T> = T extends IBrick<
   ? IBrick<S, SB_G, B_G, B_A, B_O, SB_A, SB_O>
   : never;
 
-type SemiBrickified<T> = T extends ISemiBrick<
-  infer S,
-  infer G,
-  infer A,
-  infer O
->
-  ? ISemiBrick<S, G, A, O>
-  : never;
-
 type BrickStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
     infer S,
@@ -525,15 +516,21 @@ const resolverize = <
   brick: T;
   resolve: BasicResolverOf<T, A>;
   args: A;
+  deprecationReason?: string;
+  description?: string;
 }) => ({
   type: params.brick.realisedGraphQLType,
   resolve: params.resolve as any, // TODO: find a way out of making this an any.
   args: params.args.argumentsMap,
+  deprecationReason: params.deprecationReason, // TODO: does this even appear?
+  description: params.description, // TODO: Does this even appear?
 });
 
 // TODO: we want to pass in an ArgsStruct, force the resolve(args) to use the type of said struct, and produce the { type } gql maps
 const personFieldResolver = resolverize({
   brick: person,
+  deprecationReason: 'because deprecated',
+  description: 'some description',
   // TODO: find ways to make these structs more extensible
   args: fieldConfigArgumentMap({
     fields: {
@@ -559,8 +556,23 @@ export const rootQuery = new GraphQLObjectType({
     person: personFieldResolver,
     kerem: {
       type: GraphQLString,
-      deprecationReason: 'because deprecated',
-      description: 'this is a description',
+      resolve: () => {},
+      // deprecationReason: 'because deprecated',
+      // description: 'this is a description',
+    },
+    kazan: {
+      type: GraphQLString,
+      resolve: (root, args, ctx) => {
+        return args.id;
+      },
+      args: {
+        id: {
+          type: registrationInput.realisedGraphQLType,
+          deprecationReason: 'deprecated because',
+          defaultValue: 'this is a default value',
+          description: 'some description!',
+        },
+      },
     },
   },
 });
