@@ -27,6 +27,7 @@ import {
   graphqlSync,
   isInputObjectType,
   coerceInputValue,
+  GraphQLInputType,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
@@ -111,28 +112,6 @@ type BrickStruct<T> = {
     : never;
 };
 
-type OutputBrickStruct<T> = {
-  [P in keyof T]: T[P] extends IBrick<
-    infer S,
-    infer SB_G,
-    infer B_G,
-    infer B_A,
-    infer B_O,
-    infer SB_A,
-    infer SB_O
-  >
-    ? IBrick<
-        S,
-        SB_G extends GraphQLOutputType ? SB_G : never,
-        B_G extends GraphQLOutputType ? B_G : never,
-        B_A,
-        B_O,
-        SB_A,
-        SB_O
-      >
-    : never;
-};
-
 type RealisedCodecsStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
     infer S,
@@ -160,6 +139,20 @@ type RealisedGraphqlOutputTypesStruct<T> = {
   >
     ? // TODO: find a way to get rid of "type" here.
       { type: B_G extends GraphQLOutputType ? B_G : never }
+    : never;
+};
+
+type RealisedGraphqlInputTypesStruct<T> = {
+  [P in keyof T]: T[P] extends IBrick<
+    infer S,
+    infer SB_G,
+    infer B_G,
+    infer B_A,
+    infer B_O,
+    infer SB_A,
+    infer SB_O
+  >
+    ? { type: B_G extends GraphQLInputType ? B_G : never }
     : never;
 };
 const id = {
@@ -248,7 +241,7 @@ const scalars = {
 
 // // TODO: as things stand, there's no straightforward way to make sure that the scalars passed for realised & unrealised gql types will refer to the same gql object.
 
-const struct = <T, B extends OutputBrickStruct<T>>(params: {
+const outputObject = <T, B extends BrickStruct<T>>(params: {
   name: string;
   fields: B;
 }) => {
@@ -271,7 +264,31 @@ const struct = <T, B extends OutputBrickStruct<T>>(params: {
   return lift(result);
 };
 
-const person = struct({
+// TODO: could we avoid the redundancy here?
+const inputobject = <T, B extends BrickStruct<T>>(params: {
+  name: string;
+  fields: B;
+}) => {
+  const codecs = <RealisedCodecsStruct<typeof params.fields>>(
+    _.mapValues(params.fields, (x) => x.realisedCodec)
+  );
+  const gqls = <RealisedGraphqlInputTypesStruct<typeof params.fields>>(
+    _.mapValues(params.fields, (x) => ({ type: x.realisedGraphQLType }))
+  );
+
+  const result = {
+    name: params.name,
+    shape: 'inputobject' as const,
+    unrealisedCodec: t.type(codecs),
+    unrealisedGraphQLType: new GraphQLInputObjectType({
+      name: params.name,
+      fields: gqls,
+    }),
+  };
+  return lift(result);
+};
+
+const person = outputObject({
   name: 'Person',
   fields: {
     id: scalars.string,
@@ -279,11 +296,41 @@ const person = struct({
   },
 });
 
-export const myBroh = struct({
+export const myBroh = outputObject({
   name: 'MyBroh',
   fields: {
     person: person.nullable,
     friend: person.nullable,
     age: scalars.float,
+  },
+});
+
+/**
+ * TODO: is there a way to make convenience input objects directly out
+ * of output objects? Not unless I keep meticulous records of everything as
+ * tagged fields. We'd have to reconstruct them from the ground up
+ */
+export const nameInput = inputobject({
+  name: 'NameInput',
+  fields: {
+    firstName: scalars.string,
+    lastName: scalars.string,
+  },
+});
+
+export const addressInput = inputobject({
+  name: 'AddressInput',
+  fields: {
+    streetName: scalars.string,
+    city: scalars.string,
+    apartmentNo: scalars.int.nullable,
+  },
+});
+
+export const registrationInput = inputobject({
+  name: 'RegistrationInput',
+  fields: {
+    name: nameInput,
+    address: addressInput,
   },
 });

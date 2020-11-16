@@ -24,7 +24,7 @@ import { flow, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
 import _ from 'lodash';
 import { user, rootQuery } from './second-attempt';
-import { myBroh } from './third-attempt';
+import { myBroh, registrationInput } from './third-attempt';
 
 // const rootQuery = new GraphQLObjectType({
 //   name: 'RootQueryType',
@@ -37,8 +37,13 @@ const schema = new GraphQLSchema({
     fields: {
       person: {
         type: myBroh.realisedGraphQLType,
+        args: {
+          abc: {
+            // TODO: find a way to break out of this struct pattern
+            type: registrationInput.realisedGraphQLType,
+          },
+        },
         // resolve: personFieldResolver.resolve,
-        // args: personFieldResolver.args,
       },
     },
   }),
