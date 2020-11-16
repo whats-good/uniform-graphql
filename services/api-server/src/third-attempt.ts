@@ -45,6 +45,7 @@ type Shape =
   | 'list';
 
 interface ISemiBrick<S extends Shape, A, O> {
+  name: string;
   shape: S;
   unrealisedGraphQLType: GraphQLNullableType;
   unrealisedCodec: Codec<A, O>;
@@ -54,59 +55,59 @@ type Nullability = 'nullable' | 'notNullable';
 
 // TODO: looks like we need to go back to generics...
 // TODO: it also looks like we should start putting the nullability and the shape into the generics...
-interface IBrick<S extends Shape, BA, BO, SB_A, SB_O>
+interface IBrick<S extends Shape, B_A, B_O, SB_A, SB_O>
   extends ISemiBrick<S, SB_A, SB_O> {
   nullability: Nullability;
   realisedGraphQLType: GraphQLType;
-  realisedCodec: Codec<BA, BO>;
+  realisedCodec: Codec<B_A, B_O>;
 }
 
 type Brickified<T> = T extends IBrick<
-  infer A,
-  infer B,
-  infer C,
-  infer D,
-  infer E
+  infer S,
+  infer B_A,
+  infer B_O,
+  infer SB_A,
+  infer SB_O
 >
-  ? IBrick<A, B, C, D, E>
+  ? IBrick<S, B_A, B_O, SB_A, SB_O>
   : never;
 
-type SemiBrickified<T> = T extends ISemiBrick<infer A, infer B, infer C>
-  ? ISemiBrick<A, B, C>
+type SemiBrickified<T> = T extends ISemiBrick<infer S, infer A, infer O>
+  ? ISemiBrick<S, A, O>
   : never;
 
 type BrickStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
-    infer A,
-    infer B,
-    infer C,
-    infer D,
-    infer E
+    infer S,
+    infer B_A,
+    infer B_O,
+    infer SB_A,
+    infer SB_O
   >
-    ? IBrick<A, B, C, D, E>
+    ? IBrick<S, B_A, B_O, SB_A, SB_O>
     : never;
 };
 
-type CodecStruct<T> = {
+type RealisedCodecsStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
-    infer A,
-    infer B,
-    infer C,
-    infer D,
-    infer E
+    infer S,
+    infer B_A,
+    infer B_O,
+    infer SB_A,
+    infer SB_O
   >
-    ? Codec<A, B>
+    ? Codec<B_A, B_O>
     : never;
 };
 
 // TODO: shutdown warnings for unused inferred generics
 type UnrealisedGraphqlTypesStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
-    infer A,
-    infer B,
-    infer C,
-    infer D,
-    infer E
+    infer S,
+    infer B_A,
+    infer B_O,
+    infer SB_A,
+    infer SB_O
   >
     ? // TODO: find a way to get rid of "type" here.
       { type: C }
@@ -194,7 +195,7 @@ const struct = <T, B extends BrickStruct<T>>(params: {
   name: string;
   fields: B;
 }) => {
-  const codecs = <CodecStruct<typeof params.fields>>(
+  const codecs = <RealisedCodecsStruct<typeof params.fields>>(
     _.mapValues(params.fields, (x) => x.realisedCodec)
   );
   const gqls = <UnrealisedGraphqlTypesStruct<typeof params.fields>>(
@@ -221,17 +222,4 @@ const struct = <T, B extends BrickStruct<T>>(params: {
     }),
   };
   return <SemiBrickified<typeof result>>result;
-
-  // type t = ISemiBrick<'object', t.
-  // const x = {
-  //   __nullability: 'pending' as const,
-  //   __shape: 'struct' as const,
-  //   name: params.name,
-  //   codec: t.type(codecs),
-  //   gql: new GraphQLObjectType({
-  //     name: params.name,
-  //     fields: gqls,
-  //   }),
-  // };
-  return <SemiBrickified<typeof x>>x;
 };
