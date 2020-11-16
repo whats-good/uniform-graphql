@@ -46,45 +46,33 @@ interface IShape {
   shape: Shape;
 }
 
-interface IScalar extends IShape {
-  shape: 'scalar';
-}
-
-interface IObject extends IShape {
-  shape: 'object';
-}
-
-interface IInterface extends IShape {
-  shape: 'interface';
-}
-
-interface IUnion extends IShape {
-  shape: 'union';
-}
-
-interface IEnum extends IShape {
-  shape: 'enum';
-}
-
-interface IInputObject extends IShape {
-  shape: 'inputobject';
-}
-
-interface IList extends IShape {
-  shape: 'list';
-}
-
-/** */
-
-// interface IUnrealisedGraphQLType extends IType {
-//   __unrealisedGraphQLType: GraphQLNullableType;
+// interface IScalar extends IShape {
+//   shape: 'scalar';
 // }
 
-// interface IRealisedGrapQLTypes extends IUnrealisedGraphQLType {
-//   __realisedGraphqlType: GraphQLType;
+// interface IObject extends IShape {
+//   shape: 'object';
 // }
 
-/** */
+// interface IInterface extends IShape {
+//   shape: 'interface';
+// }
+
+// interface IUnion extends IShape {
+//   shape: 'union';
+// }
+
+// interface IEnum extends IShape {
+//   shape: 'enum';
+// }
+
+// interface IInputObject extends IShape {
+//   shape: 'inputobject';
+// }
+
+// interface IList extends IShape {
+//   shape: 'list';
+// }
 
 interface IAbstractBrick<S extends Shape> extends IShape {
   shape: S;
@@ -204,19 +192,4 @@ const y = makeNullable(id).shape;
 const z = id.shape;
 const as = scalars.id.nullable.realisedCodec;
 
-// nullable.id.realisedCodec.encode(undefined);
-
-// const nullableString = {
-//   ...stringSemiBrick,
-// };
-
-// const nBrick: IBrick = nullableString;
-
-// type OutputOf<T> = T extends IBrick ? T['realisedCodec']['_A'] : never;
-// type a = OutputOf<typeof nullableString>;
-
-// const semiBricks = {};
-
-// // TODO: is there a way for ScalarBrick to implement IBrick and IScalar at the same time?
 // // TODO: as things stand, there's no straightforward way to make sure that the scalars passed for realised & unrealised gql types will refer to the same gql object.
-// // TODO: how can we infer things now?
