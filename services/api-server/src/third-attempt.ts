@@ -28,6 +28,7 @@ import {
   isInputObjectType,
   coerceInputValue,
   GraphQLInputType,
+  GraphQLFieldConfigArgumentMap,
 } from 'graphql';
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
@@ -287,6 +288,33 @@ const inputobject = <T, B extends BrickStruct<T>>(params: {
     }),
   });
 };
+
+interface IFieldConfigArgumentsMap<A, O> {
+  codec: Codec<A, O>;
+  argumentsMap: GraphQLFieldConfigArgumentMap;
+}
+
+const fieldConfigArgumentMap = <T, B extends BrickStruct<T>>(params: {
+  fields: B;
+}) => {
+  const codecs = <RealisedCodecsStruct<typeof params.fields>>(
+    _.mapValues(params.fields, (x) => x.realisedCodec)
+  );
+  const argumentsMap = <RealisedGraphqlInputTypesStruct<typeof params.fields>>(
+    _.mapValues(params.fields, (x) => ({ type: x.realisedGraphQLType }))
+  );
+  const codec = t.type(codecs);
+
+  type A = t.TypeOf<typeof codec>;
+  type O = t.OutputOf<typeof codec>;
+
+  const result: IFieldConfigArgumentsMap<A, O> = {
+    argumentsMap,
+    codec,
+  };
+  return result;
+};
+
 // TODO: find a better name
 // TODO: how can we be more granular with the actual gql types that are sent over?
 // TODO: could we make sure that there is at least one item in the givem params.props?
@@ -471,26 +499,38 @@ interface AnyResolvableBrick
 
 type OutputOf<B extends AnyBrick> = B['realisedCodec']['_O'];
 
-type BasicResolverOf<B extends AnyResolvableBrick, A extends any> = (
-  root: any,
-  args: any,
-  context: any,
-) => OutputOf<B>;
+type BasicResolverOf<
+  B extends AnyResolvableBrick,
+  A extends IFieldConfigArgumentsMap<any, any>
+> = (root: any, args: A['codec']['_A'], context: any) => OutputOf<B>;
 
 // TODO: find a better name for this.
 // TODO: find a way to better shape the arguments
-const resolverize = <T extends AnyResolvableBrick, A extends any>(params: {
+const resolverize = <
+  T extends AnyResolvableBrick,
+  A extends IFieldConfigArgumentsMap<any, any>
+>(params: {
   brick: T;
   resolve: BasicResolverOf<T, A>;
-  args?: A;
+  args: A;
 }) => ({
   type: params.brick.realisedGraphQLType,
-  resolve: params.resolve, // TODO: maybe we should embed the resolving inside the bricks? but probably not...
-  args: params.args,
+  resolve: params.resolve as any, // TODO: find a way out of making this an any.
+  args: params.args.argumentsMap,
 });
 
+// TODO: we want to pass in an ArgsStruct, force the resolve(args) to use the type of said struct, and produce the { type } gql maps
 const personFieldResolver = resolverize({
   brick: person,
+  // TODO: find ways to make these structs more extensible
+  args: fieldConfigArgumentMap({
+    fields: {
+      id: scalars.id,
+      firstName: scalars.string,
+      mySpecialArg: registrationInput,
+      abcabc: scalars.float, // TODO: figure out why passing any key-value pair still works here...
+    },
+  }),
   resolve: (root, args, context) => {
     return {
       favoriteNumber: 1,
@@ -498,27 +538,11 @@ const personFieldResolver = resolverize({
       membership: 'free' as const, // TODO: is there a way to get around enums an allow people to pass them as just consts?
     };
   },
-  args: {
-    id: {
-      type: scalars.id.realisedGraphQLType,
-    },
-    firstName: {
-      type: scalars.string.realisedGraphQLType,
-    },
-    mySpecialArg: {
-      type: registrationInput.realisedGraphQLType,
-    },
-  },
 });
 
 export const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
-  // fields: queryResolver, // TODO: look into the field configs to find ways to insert arguments.
   fields: {
-    person: {
-      type: personFieldResolver.type,
-      resolve: personFieldResolver.resolve,
-      args: personFieldResolver.args,
-    },
+    person: personFieldResolver,
   },
 });
