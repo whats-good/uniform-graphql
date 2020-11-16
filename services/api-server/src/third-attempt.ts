@@ -332,6 +332,7 @@ const array = <
 };
 
 interface AnySemiBrick extends ISemiBrick<any, any, any, any> {}
+interface AnyBrick extends IBrick<any, any, any, any, any, any, any> {}
 type SemiOutputOf<B extends AnySemiBrick> = B['unrealisedCodec']['_O'];
 type SemiTypeOf<B extends AnySemiBrick> = B['unrealisedCodec']['_A'];
 // TODO: only enable STRUCT bricks here.
@@ -389,7 +390,7 @@ const person = outputObject({
   name: 'Person',
   fields: {
     id: scalars.string,
-    firstName: scalars.float,
+    favoriteNumber: scalars.float,
     membership: membership,
   },
 });
@@ -454,5 +455,70 @@ export const registrationInput = inputobject({
     address: addressInput,
     membership: membership,
     referrals: array(scalars.string),
+  },
+});
+
+interface AnyResolvableBrick
+  extends IBrick<
+    any,
+    GraphQLOutputType,
+    GraphQLOutputType,
+    any,
+    any,
+    any,
+    any
+  > {}
+
+type OutputOf<B extends AnyBrick> = B['realisedCodec']['_O'];
+
+type BasicResolverOf<B extends AnyResolvableBrick, A extends any> = (
+  root: any,
+  args: any,
+  context: any,
+) => OutputOf<B>;
+
+// TODO: find a better name for this.
+// TODO: find a way to better shape the arguments
+const resolverize = <T extends AnyResolvableBrick, A extends any>(params: {
+  brick: T;
+  resolve: BasicResolverOf<T, A>;
+  args?: A;
+}) => ({
+  type: params.brick.realisedGraphQLType,
+  resolve: params.resolve, // TODO: maybe we should embed the resolving inside the bricks? but probably not...
+  args: params.args,
+});
+
+const personFieldResolver = resolverize({
+  brick: person,
+  resolve: (root, args, context) => {
+    return {
+      favoriteNumber: 1,
+      id: 'myid',
+      membership: 'free' as const, // TODO: is there a way to get around enums an allow people to pass them as just consts?
+    };
+  },
+  args: {
+    id: {
+      type: scalars.id.realisedGraphQLType,
+    },
+    firstName: {
+      type: scalars.string.realisedGraphQLType,
+    },
+    mySpecialArg: {
+      type: registrationInput.realisedGraphQLType,
+    },
+  },
+});
+
+export const rootQuery = new GraphQLObjectType({
+  name: 'RootQueryType',
+  // fields: queryResolver, // TODO: look into the field configs to find ways to insert arguments.
+  fields: {
+    person: {
+      type: personFieldResolver.type,
+      resolve: personFieldResolver.resolve,
+      args: personFieldResolver.args,
+    },
   },
 });
