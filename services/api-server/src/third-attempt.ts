@@ -105,6 +105,28 @@ type BrickStruct<T> = {
     : never;
 };
 
+type OutputBrickStruct<T> = {
+  [P in keyof T]: T[P] extends IBrick<
+    infer S,
+    infer SB_G,
+    infer B_G,
+    infer B_A,
+    infer B_O,
+    infer SB_A,
+    infer SB_O
+  >
+    ? IBrick<
+        S,
+        SB_G extends GraphQLOutputType ? SB_G : never,
+        B_G extends GraphQLOutputType ? B_G : never,
+        B_A,
+        B_O,
+        SB_A,
+        SB_O
+      >
+    : never;
+};
+
 type RealisedCodecsStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
     infer S,
@@ -120,7 +142,7 @@ type RealisedCodecsStruct<T> = {
 };
 
 // TODO: shutdown warnings for unused inferred generics
-type UnrealisedGraphqlTypesStruct<T> = {
+type RealisedGraphqlOutputTypesStruct<T> = {
   [P in keyof T]: T[P] extends IBrick<
     infer S,
     infer SB_G,
@@ -131,7 +153,7 @@ type UnrealisedGraphqlTypesStruct<T> = {
     infer SB_O
   >
     ? // TODO: find a way to get rid of "type" here.
-      { type: SB_G }
+      { type: B_G extends GraphQLOutputType ? B_G : never }
     : never;
 };
 const id = {
@@ -220,38 +242,27 @@ const scalars = {
 
 // // TODO: as things stand, there's no straightforward way to make sure that the scalars passed for realised & unrealised gql types will refer to the same gql object.
 
-const struct = <T, B extends BrickStruct<T>>(params: {
+const struct = <T, B extends OutputBrickStruct<T>>(params: {
   name: string;
   fields: B;
 }) => {
   const codecs = <RealisedCodecsStruct<typeof params.fields>>(
     _.mapValues(params.fields, (x) => x.realisedCodec)
   );
-  const gqls = <UnrealisedGraphqlTypesStruct<typeof params.fields>>(
+  const gqls = <RealisedGraphqlOutputTypesStruct<typeof params.fields>>(
     _.mapValues(params.fields, (x) => ({ type: x.realisedGraphQLType }))
   );
-  const codec = t.type(codecs);
-  type A = t.TypeOf<typeof codec>;
-  type O = t.OutputOf<typeof codec>;
-  type CurrentSemiBrick = ISemiBrick<'object', GraphQLObjectType, A, O>;
-  // TODO: need to expose graphql types too.
-  const result: CurrentSemiBrick = {
+
+  const result = {
     name: params.name,
-    shape: 'object',
-    unrealisedCodec: codec,
+    shape: 'object' as const,
+    unrealisedCodec: t.type(codecs),
     unrealisedGraphQLType: new GraphQLObjectType({
       name: params.name,
-      // TODO: find a way to fix the fields object.
-      fields: {
-        id: {
-          type: GraphQLString,
-        },
-      },
-      // fields: gqls,
+      fields: gqls,
     }),
   };
-  const newSb = <SemiBrickified<typeof result>>result;
-  return lift(newSb);
+  return lift(result);
 };
 
 const person = struct({
@@ -270,3 +281,5 @@ const myBroh = struct({
     age: scalars.float,
   },
 });
+
+const d = myBroh.realisedGraphQLType;
