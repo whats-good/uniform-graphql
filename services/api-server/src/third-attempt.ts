@@ -86,10 +86,11 @@ interface IList extends IShape {
 
 /** */
 
-interface IAbstractBrick extends IShape {
+interface IAbstractBrick<S extends Shape> extends IShape {
+  shape: S;
   name: string;
 }
-interface ISemiBrick<A, O> extends IAbstractBrick {
+interface ISemiBrick<S extends Shape, A, O> extends IAbstractBrick<S> {
   unrealisedGraphQLType: GraphQLNullableType;
   unrealisedCodec: Codec<A, O>;
 }
@@ -98,7 +99,8 @@ type Nullability = 'nullable' | 'notNullable';
 
 // TODO: looks like we need to go back to generics...
 // TODO: it also looks like we should start putting the nullability and the shape into the generics...
-interface IBrick<BA, BO, SA, SO> extends ISemiBrick<SA, SO> {
+interface IBrick<S extends Shape, BA, BO, SB_A, SB_O>
+  extends ISemiBrick<S, SB_A, SB_O> {
   nullability: Nullability;
   realisedGraphQLType: GraphQLType;
   realisedCodec: Codec<BA, BO>;
@@ -106,17 +108,15 @@ interface IBrick<BA, BO, SA, SO> extends ISemiBrick<SA, SO> {
 
 /** */
 
-interface IScalarSemiBrick<A, O> extends ISemiBrick<A, O> {
-  shape: 'scalar';
-  unrealisedGraphQLType: GraphQLScalarType;
-}
+// interface IScalarSemiBrick<A, O> extends ISemiBrick<A, O> {
+//   shape: 'scalar';
+//   unrealisedGraphQLType: GraphQLScalarType;
+// }
 
-interface IScalarBrick<BA, BO, SA, SO> extends IBrick<BA, BO, SA, SO> {
-  shape: 'scalar';
-  realisedGraphQLType: GraphQLScalarType | GraphQLNonNull<GraphQLScalarType>;
-}
-
-// TODO: if we dont reuse the semiBrick within the brick, then what's the point? How can we keep them centralized?
+// interface IScalarBrick<BA, BO, SA, SO> extends IBrick<BA, BO, SA, SO> {
+//   shape: 'scalar';
+//   realisedGraphQLType: GraphQLScalarType | GraphQLNonNull<GraphQLScalarType>;
+// }
 
 const id = {
   name: 'ID' as const,
@@ -153,11 +153,17 @@ const boolean = {
   unrealisedGraphQLType: GraphQLBoolean,
 };
 
-type Brickified<T> = T extends IBrick<infer A, infer B, infer C, infer D>
-  ? IBrick<A, B, C, D>
+type Brickified<T> = T extends IBrick<
+  infer A,
+  infer B,
+  infer C,
+  infer D,
+  infer E
+>
+  ? IBrick<A, B, C, D, E>
   : never;
 
-const makeNullable = <A, O>(sb: ISemiBrick<A, O>) => {
+const makeNullable = <S extends Shape, A, O>(sb: ISemiBrick<S, A, O>) => {
   const toReturn = {
     ...sb,
     nullability: 'nullable' as const,
@@ -167,7 +173,7 @@ const makeNullable = <A, O>(sb: ISemiBrick<A, O>) => {
   return <Brickified<typeof toReturn>>toReturn;
 };
 
-const makeNotNullable = <A, O>(sb: ISemiBrick<A, O>) => {
+const makeNotNullable = <S extends Shape, A, O>(sb: ISemiBrick<S, A, O>) => {
   const toReturn = {
     ...sb,
     nullability: 'notNullable' as const,
@@ -177,7 +183,7 @@ const makeNotNullable = <A, O>(sb: ISemiBrick<A, O>) => {
   return <Brickified<typeof toReturn>>toReturn;
 };
 
-const lift = <A, O>(sb: ISemiBrick<A, O>) => {
+const lift = <S extends Shape, A, O>(sb: ISemiBrick<S, A, O>) => {
   makeNullable(sb);
   return {
     ...makeNotNullable(sb),
@@ -192,6 +198,11 @@ const scalars = {
   int: lift(int),
   boolean: lift(boolean),
 };
+
+const x = scalars.id.shape;
+const y = makeNullable(id).shape;
+const z = id.shape;
+const as = scalars.id.nullable.realisedCodec;
 
 // nullable.id.realisedCodec.encode(undefined);
 
