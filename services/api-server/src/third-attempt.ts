@@ -287,12 +287,44 @@ const inputobject = <T, B extends BrickStruct<T>>(params: {
   };
   return lift(result);
 };
+// TODO: find a better name
+// TODO: how can we be more granular with the actual gql types that are sent over?
+// TODO: could we make sure that there is at least one item in the givem params.props?
+function enumerate<P extends { [key: string]: unknown }>(params: {
+  name: string;
+  props: P;
+}) {
+  const codec = t.keyof(params.props, params.name);
+  const keyToKey = _.mapValues(params.props, (_, key) => key);
+  const gqlValues = _.mapValues(keyToKey, (_, key) => ({
+    value: key,
+  }));
+  return lift({
+    name: params.name,
+    shape: 'enum' as const,
+    unrealisedCodec: codec,
+    unrealisedGraphQLType: new GraphQLEnumType({
+      name: params.name,
+      values: gqlValues,
+    }),
+  });
+}
+
+const membership = enumerate({
+  name: 'Membership',
+  props: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
 
 const person = outputObject({
   name: 'Person',
   fields: {
     id: scalars.string,
     firstName: scalars.float,
+    membership: membership,
   },
 });
 
@@ -332,5 +364,6 @@ export const registrationInput = inputobject({
   fields: {
     name: nameInput,
     address: addressInput,
+    membership: membership,
   },
 });
