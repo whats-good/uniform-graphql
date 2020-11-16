@@ -233,7 +233,7 @@ const struct = <T, B extends BrickStruct<T>>(params: {
   const codec = t.type(codecs);
   type A = t.TypeOf<typeof codec>;
   type O = t.OutputOf<typeof codec>;
-  type CurrentSemiBrick = ISemiBrick<'object', A, O>;
+  type CurrentSemiBrick = ISemiBrick<'object', GraphQLObjectType, A, O>;
   // TODO: need to expose graphql types too.
   const result: CurrentSemiBrick = {
     name: params.name,
@@ -250,5 +250,23 @@ const struct = <T, B extends BrickStruct<T>>(params: {
       // fields: gqls,
     }),
   };
-  return <SemiBrickified<typeof result>>result;
+  const newSb = <SemiBrickified<typeof result>>result;
+  return lift(newSb);
 };
+
+const person = struct({
+  name: 'Person',
+  fields: {
+    id: scalars.string,
+    firstName: scalars.float,
+  },
+});
+
+const myBroh = struct({
+  name: 'myBroh',
+  fields: {
+    person: person.nullable,
+    friend: person.nullable,
+    age: scalars.float,
+  },
+});
