@@ -15,6 +15,8 @@ import * as t from 'io-ts';
 type Codec<A, O> = t.Type<A, O, unknown>;
 
 class SemiBrick<S_A, S_O, S_G extends GraphQLNullableType> {
+  public readonly S_A!: S_A;
+  public readonly S_O!: S_O;
   public readonly name: string;
   public readonly semiGraphQLType: S_G;
   public readonly semiCodec: Codec<S_A, S_O>;
@@ -38,6 +40,8 @@ class Brick<
   B_O,
   B_G extends GraphQLType
 > extends SemiBrick<S_A, S_O, S_G> {
+  public readonly B_A!: B_A;
+  public readonly B_O!: B_O;
   public readonly graphQLType: B_G;
   public readonly codec: Codec<B_A, B_O>;
 
