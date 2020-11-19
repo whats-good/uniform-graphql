@@ -144,14 +144,14 @@ export type OutputOf<B extends AnyBrick> = B['B_O'];
 export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 
 export class UnionSemiBrick<
-  BS extends Array<AnyBrick>,
+  SBS extends Array<AnySemiBrick>,
   S_A,
   S_O,
   S_G extends GraphQLNullableType
 > extends SemiBrick<S_A, S_O, S_G> {
   constructor(params: {
     name: string;
-    bricks: BS;
+    semiBricks: SBS;
     semiGraphQLType: S_G;
     semiCodec: Codec<S_A, S_O>;
   }) {
@@ -159,21 +159,22 @@ export class UnionSemiBrick<
   }
 }
 
-export interface UnionSB<BS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]>
-  extends UnionSemiBrick<
-    BS,
-    SemiTypeOf<BS[number]>,
-    SemiOutputOf<BS[number]>,
-    SemiGraphQTypeOf<BS[number]>
+export interface UnionSB<
+  SBS extends [AnySemiBrick, AnySemiBrick, ...Array<AnySemiBrick>]
+> extends UnionSemiBrick<
+    SBS,
+    SemiTypeOf<SBS[number]>,
+    SemiOutputOf<SBS[number]>,
+    SemiGraphQTypeOf<SBS[number]>
   > {}
 
 export const union = <
-  BS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]
+  SBS extends [AnySemiBrick, AnySemiBrick, ...Array<AnySemiBrick>]
 >(params: {
-  bricks: BS;
+  semiBricks: SBS;
   name: string;
-}): UnionSB<BS> => {
-  const [firstBrick, secondBrick, ...otherBricks] = params.bricks;
+}): UnionSB<SBS> => {
+  const [firstBrick, secondBrick, ...otherBricks] = params.semiBricks;
   const codecs: [t.Mixed, t.Mixed, ...Array<t.Mixed>] = [
     firstBrick.semiCodec,
     secondBrick.semiCodec,
@@ -181,7 +182,7 @@ export const union = <
   ];
   return new UnionSemiBrick({
     name: params.name,
-    bricks: params.bricks,
+    semiBricks: params.semiBricks,
     semiCodec: t.union(codecs),
     semiGraphQLType: GraphQLFloat, // TODO: actually compute
   });
@@ -189,8 +190,13 @@ export const union = <
 
 const d = union({
   name: 'yhi',
-  bricks: [scalars.boolean, scalars.float],
+  semiBricks: [scalars.boolean, scalars.float],
 });
 
-type D = typeof d;
-type A = SemiTypeOf<D>;
+const e = union({
+  name: 'yho',
+  semiBricks: [boolean, string],
+});
+
+type D = SemiTypeOf<typeof d>;
+type E = SemiTypeOf<typeof e>;
