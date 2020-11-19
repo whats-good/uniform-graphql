@@ -36,6 +36,8 @@
 }
 ```
 
+- We can use "any" in function arguments but still manage to get down to specifics if we use type level programming in return types: `const f = <B extends AnySemiBrick>(b: B): SemiBrickType<B>`
+
 # TODOS
 
 - install and setup the `eslint-plugin-import` rules.
