@@ -1,3 +1,4 @@
+import { flow } from 'fp-ts/lib/function';
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -168,7 +169,7 @@ export interface UnionSB<
     SemiGraphQTypeOf<SBS[number]>
   > {}
 
-export const union = <
+const unionS = <
   SBS extends [AnySemiBrick, AnySemiBrick, ...Array<AnySemiBrick>]
 >(params: {
   semiBricks: SBS;
@@ -188,6 +189,8 @@ export const union = <
   });
 };
 
+export const union = flow(unionS, Brick.lift);
+
 const d = union({
   name: 'yhi',
   semiBricks: [scalars.boolean, scalars.float],
@@ -196,7 +199,9 @@ const d = union({
 const e = union({
   name: 'yho',
   semiBricks: [boolean, string],
-});
+}).nullable;
 
-type D = SemiTypeOf<typeof d>;
-type E = SemiTypeOf<typeof e>;
+type SD = SemiTypeOf<typeof d>;
+type D = TypeOf<typeof d>;
+type SE = SemiTypeOf<typeof e>;
+type E = TypeOf<typeof e>;
