@@ -47,8 +47,8 @@ class Brick<
     this.codec = params.codec;
   }
 
-  static fromNullableSemiBrick = <A, G extends GraphQLNullableType>(
-    sb: SemiBrick<A, G>,
+  static fromNullableSemiBrick = <S_A, S_G extends GraphQLNullableType>(
+    sb: SemiBrick<S_A, S_G>,
   ) => {
     return new Brick({
       ...sb,
@@ -57,8 +57,8 @@ class Brick<
     });
   };
 
-  static fromNonNullableSemiBrick = <S, G extends GraphQLNullableType>(
-    sb: SemiBrick<S, G>,
+  static fromNonNullableSemiBrick = <S_A, S_G extends GraphQLNullableType>(
+    sb: SemiBrick<S_A, S_G>,
   ) => {
     return new Brick({
       ...sb,
