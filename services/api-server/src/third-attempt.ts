@@ -46,7 +46,7 @@ type OutputType =
   | 'union'
   | 'enum'
   | 'list';
-type Shape =
+type Kind =
   | 'scalar'
   | 'outputobject'
   | 'interface'
@@ -55,9 +55,9 @@ type Shape =
   | 'inputobject'
   | 'list';
 
-interface ISemiBrick<S extends Shape, G extends GraphQLNullableType, A, O> {
+interface ISemiBrick<S extends Kind, G extends GraphQLNullableType, A, O> {
   name: string;
-  shape: S;
+  kind: S;
   unrealisedGraphQLType: G;
   unrealisedCodec: Codec<A, O>;
 }
@@ -65,9 +65,9 @@ interface ISemiBrick<S extends Shape, G extends GraphQLNullableType, A, O> {
 type Nullability = 'nullable' | 'notNullable';
 
 // TODO: looks like we need to go back to generics...
-// TODO: it also looks like we should start putting the nullability and the shape into the generics...
+// TODO: it also looks like we should start putting the nullability and the kind into the generics...
 interface IBrick<
-  S extends Shape,
+  S extends Kind,
   SB_G extends GraphQLNullableType,
   // TODO: make it so that B_G can either be SB_G or the NonNull version of it. punting for now...
   B_G extends GraphQLType,
@@ -152,40 +152,40 @@ type RealisedGraphqlInputTypesStruct<T> = {
 };
 const id = {
   name: 'ID' as const,
-  shape: 'scalar' as const,
+  kind: 'scalar' as const,
   unrealisedCodec: t.union([t.string, t.number]),
   unrealisedGraphQLType: GraphQLID,
 };
 
 const string = {
   name: 'String' as const,
-  shape: 'scalar' as const,
+  kind: 'scalar' as const,
   unrealisedCodec: t.string,
   unrealisedGraphQLType: GraphQLString,
 };
 
 const float = {
   name: 'Float' as const,
-  shape: 'scalar' as const,
+  kind: 'scalar' as const,
   unrealisedCodec: t.number,
   unrealisedGraphQLType: GraphQLFloat,
 };
 
 const int = {
   name: 'Int' as const,
-  shape: 'scalar' as const,
+  kind: 'scalar' as const,
   unrealisedCodec: t.Int,
   unrealisedGraphQLType: GraphQLInt,
 };
 
 const boolean = {
   name: 'Boolean' as const,
-  shape: 'scalar' as const,
+  kind: 'scalar' as const,
   unrealisedCodec: t.boolean,
   unrealisedGraphQLType: GraphQLBoolean,
 };
 
-const makeNullable = <S extends Shape, G extends GraphQLNullableType, A, O>(
+const makeNullable = <S extends Kind, G extends GraphQLNullableType, A, O>(
   sb: ISemiBrick<S, G, A, O>,
 ) => {
   const toReturn = {
@@ -197,7 +197,7 @@ const makeNullable = <S extends Shape, G extends GraphQLNullableType, A, O>(
   return <Brickified<typeof toReturn>>toReturn;
 };
 
-const makeNotNullable = <S extends Shape, G extends GraphQLNullableType, A, O>(
+const makeNotNullable = <S extends Kind, G extends GraphQLNullableType, A, O>(
   sb: ISemiBrick<S, G, A, O>,
 ) => {
   const toReturn = {
@@ -210,7 +210,7 @@ const makeNotNullable = <S extends Shape, G extends GraphQLNullableType, A, O>(
   return <Brickified<typeof toReturn>>toReturn;
 };
 
-const lift = <S extends Shape, G extends GraphQLNullableType, A, O>(
+const lift = <S extends Kind, G extends GraphQLNullableType, A, O>(
   sb: ISemiBrick<S, G, A, O>,
 ) => {
   makeNullable(sb);
@@ -228,7 +228,7 @@ const scalars = {
   boolean: lift(boolean),
 };
 
-// const a = scalars.id.shape;
+// const a = scalars.id.kind;
 // const b = scalars.float.unrealisedCodec.encode(1);
 // TODO: find a way to make the type names inferrable too...
 // const c = scalars.float.realisedGraphQLType;
@@ -250,7 +250,7 @@ const outputObject = <T, B extends BrickStruct<T>>(params: {
 
   const result = {
     name: params.name,
-    shape: 'outputobject' as const,
+    kind: 'outputobject' as const,
     unrealisedCodec: t.type(codecs),
     unrealisedGraphQLType: new GraphQLObjectType({
       name: params.name,
@@ -276,7 +276,7 @@ const inputobject = <T, B extends BrickStruct<T>>(params: {
 
   return lift({
     name: params.name,
-    shape: 'inputobject' as const,
+    kind: 'inputobject' as const,
     unrealisedCodec: t.type(codecs),
     unrealisedGraphQLType: new GraphQLInputObjectType({
       name: params.name,
@@ -327,7 +327,7 @@ function enumerate<P extends { [key: string]: unknown }>(params: {
   }));
   return lift({
     name: params.name,
-    shape: 'enum' as const,
+    kind: 'enum' as const,
     unrealisedCodec: codec,
     unrealisedGraphQLType: new GraphQLEnumType({
       name: params.name,
@@ -339,7 +339,7 @@ function enumerate<P extends { [key: string]: unknown }>(params: {
 
 // TODO: is there a way to communicate to the client that the items within the array could be null?
 const array = <
-  S extends Shape,
+  S extends Kind,
   SB_G extends GraphQLNullableType,
   // TODO: make it so that B_G can either be SB_G or the NonNull version of it. punting for now...
   B_G extends GraphQLType,
@@ -352,7 +352,7 @@ const array = <
 ) => {
   return lift({
     name: `Array<${x.name}>`,
-    shape: 'list',
+    kind: 'list',
     unrealisedCodec: t.array(x.realisedCodec),
     unrealisedGraphQLType: new GraphQLList(x.realisedGraphQLType),
   });
@@ -392,7 +392,7 @@ export const union = <
   );
   return lift({
     name: params.name,
-    shape: 'union',
+    kind: 'union',
     unrealisedCodec: t.union([
       first.unrealisedCodec,
       second.unrealisedCodec,
@@ -510,7 +510,7 @@ type BasicResolverOf<
 > = (root: any, args: A['codec']['_A'], context: any) => OutputOf<B>;
 
 // TODO: find a better name for this.
-// TODO: find a way to better shape the arguments
+// TODO: find a way to better kind the arguments
 const queryResolverize = <
   T extends AnyResolvableBrick,
   A extends IFieldConfigArgumentsMap<any, any>
@@ -528,7 +528,7 @@ const queryResolverize = <
   description: params.description, // TODO: Does this even appear?
 });
 
-// TODO: maybe we can get rid of some of these extra shape etc types
+// TODO: maybe we can get rid of some of these extra kind etc types
 
 // using the semibrick here so that we can make sure the unrealised gql type is an object type.
 interface AnyFieldResolvableBrick
@@ -583,7 +583,7 @@ const fieldResolverize = <
 
   const result = {
     name: params.from.name,
-    shape: params.from.shape,
+    kind: params.from.kind,
     unrealisedCodec: params.from.unrealisedCodec,
     unrealisedGraphQLType: gql,
   };
