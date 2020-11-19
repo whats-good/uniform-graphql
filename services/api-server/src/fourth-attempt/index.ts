@@ -143,35 +143,28 @@ export type TypeOf<B extends AnyBrick> = B['B_A'];
 export type OutputOf<B extends AnyBrick> = B['B_O'];
 export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 
-export class UnionBrick<
+export class UnionSemiBrick<
   BS extends Array<AnyBrick>,
   S_A,
   S_O,
-  S_G extends GraphQLNullableType,
-  B_A,
-  B_O,
-  B_G extends GraphQLType
-> extends Brick<S_A, S_O, S_G, B_A, B_O, B_G> {
+  S_G extends GraphQLNullableType
+> extends SemiBrick<S_A, S_O, S_G> {
   constructor(params: {
     name: string;
     bricks: BS;
     semiGraphQLType: S_G;
     semiCodec: Codec<S_A, S_O>;
-    graphQLType: B_G;
-    codec: Codec<B_A, B_O>;
   }) {
     super(params);
   }
 }
-export interface UnionB<BS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]>
-  extends UnionBrick<
+
+export interface UnionSB<BS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]>
+  extends UnionSemiBrick<
     BS,
     SemiTypeOf<BS[number]>,
     SemiOutputOf<BS[number]>,
-    SemiGraphQTypeOf<BS[number]>,
-    TypeOf<BS[number]>,
-    OutputOf<BS[number]>,
-    GraphQLTypeOf<BS[number]>
+    SemiGraphQTypeOf<BS[number]>
   > {}
 
 export const union = <
@@ -179,23 +172,19 @@ export const union = <
 >(params: {
   bricks: BS;
   name: string;
-}): UnionB<BS> => {
+}): UnionSB<BS> => {
   const [firstBrick, secondBrick, ...otherBricks] = params.bricks;
   const codecs: [t.Mixed, t.Mixed, ...Array<t.Mixed>] = [
     firstBrick.semiCodec,
     secondBrick.semiCodec,
     ...otherBricks.map(({ semiCodec }) => semiCodec),
   ];
-  // TODO: do we need to do SemiUnionBrick, and then lift it upto a UnionBrick? That'd be too much...
-  const a = new UnionBrick({
+  return new UnionSemiBrick({
     name: params.name,
     bricks: params.bricks,
-    codec: t.union(codecs),
-    graphQLType: GraphQLFloat, // TODO: actually compute
     semiCodec: t.union(codecs),
     semiGraphQLType: GraphQLFloat, // TODO: actually compute
   });
-  return a;
 };
 
 const d = union({
@@ -204,4 +193,4 @@ const d = union({
 });
 
 type D = typeof d;
-type A = TypeOf<D>;
+type A = SemiTypeOf<D>;
