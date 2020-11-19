@@ -31,8 +31,11 @@ type AnySemiBrick = ISemiBrick<any, any, any>;
 type AnyBrick = IBrick<any, any, any, any, any, any>;
 
 type SemiBrickType<T extends AnySemiBrick> = T['semiCodec']['_A'];
+type SemiBrickOutType<T extends AnySemiBrick> = T['semiCodec']['_O'];
 type SemiBrickGraphQLType<T extends AnySemiBrick> = T['semiGraphQLType'];
+
 type BrickType<T extends AnyBrick> = T['codec']['_A'];
+type BrickOutType<T extends AnyBrick> = T['codec']['_O'];
 type BrickGraphQLType<T extends AnyBrick> = T['graphQLType'];
 
 type F = <B extends AnySemiBrick>(b: B) => SemiBrickType<B>;
@@ -57,9 +60,9 @@ type Brickified<T> = T extends IBrick<
   : never;
 
 type BrickOf<SB extends AnySemiBrick> = IBrick<
-  SB['semiGraphQLType'],
-  SB['semiCodec']['_A'],
-  SB['semiCodec']['_O'],
+  SemiBrickGraphQLType<SB>,
+  SemiBrickType<SB>,
+  SemiBrickOutType<SB>,
   any,
   any,
   any
