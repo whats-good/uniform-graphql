@@ -23,34 +23,10 @@ import {
 import { flow, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
 import _ from 'lodash';
-// import { user, rootQuery } from './second-attempt';
-import { myBroh, registrationInput, rootQuery } from './third-attempt';
-
-// const rootQuery = new GraphQLObjectType({
-//   name: 'RootQueryType',
-//   fields: queryResolver, // TODO: look into the field configs to find ways to insert arguments.
-// });
-
-// const schema = new GraphQLSchema({
-//   query: new GraphQLObjectType({
-//     name: 'RootQueryType',
-//     fields: {
-//       person: {
-//         type: myBroh.realisedGraphQLType,
-//         args: {
-//           abc: {
-//             // TODO: find a way to break out of this struct pattern
-//             type: registrationInput.realisedGraphQLType,
-//           },
-//         },
-//         // resolve: personFieldResolver.resolve,
-//       },
-//     },
-//   }),
-// });
+import { queryResolver } from './third-attempt';
 
 const schema = new GraphQLSchema({
-  query: rootQuery,
+  query: queryResolver,
 });
 
 const apolloServer = new ApolloServer({

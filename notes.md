@@ -14,6 +14,27 @@
 - `TE.bind` is an excellent way to accumulate results in tasks
 - `[P in keyof T]: T[P]` is a good method to create a mapped type.
 - Mapped types dont allow you to add extra properties. For that, you can use intersection types.
+- GraphQL field resolvers can also be made to take arguments:
+
+```gql
+{
+  person(
+    id: "some id"
+    firstName: "kerem"
+    abcabc: 1234
+    mySpecialArg: {
+      name: { firstName: "f", lastName: "l" }
+      address: { streetName: "sn", city: "ct", apartmentNo: 123 }
+      referrals: ["asdf"]
+      membership: free
+    }
+  ) {
+    id(someParamName: "hi")
+    favoriteNumber(someParamName: "yo")
+    membership(someParamName: "yes")
+  }
+}
+```
 
 # TODOS
 

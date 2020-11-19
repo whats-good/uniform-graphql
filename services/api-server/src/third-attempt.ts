@@ -33,6 +33,8 @@ import {
 import { flow, not, pipe } from 'fp-ts/lib/function';
 import { isLeft } from 'fp-ts/lib/Either';
 import _ from 'lodash';
+import { fromArray } from 'fp-ts/lib/ReadonlyNonEmptyArray';
+import { make } from 'fp-ts/lib/Tree';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 type InputType = 'scalar' | 'enum' | 'inputobject' | 'list';
@@ -509,7 +511,7 @@ type BasicResolverOf<
 
 // TODO: find a better name for this.
 // TODO: find a way to better shape the arguments
-const resolverize = <
+const queryResolverize = <
   T extends AnyResolvableBrick,
   A extends IFieldConfigArgumentsMap<any, any>
 >(params: {
@@ -526,18 +528,114 @@ const resolverize = <
   description: params.description, // TODO: Does this even appear?
 });
 
+// TODO: maybe we can get rid of some of these extra shape etc types
+
+// using the semibrick here so that we can make sure the unrealised gql type is an object type.
+interface AnyFieldResolvableBrick
+  extends IBrick<
+    'outputobject',
+    GraphQLObjectType,
+    GraphQLOutputType,
+    any,
+    any,
+    any,
+    any
+  > {}
+
+// TODO: we need a collecting / wrapping object to make sure that there's only one instance of any given resolvable object
+// TODO: we might need to store the gql object type's underlying structure / fields
+
+const fieldResolverize = <
+  B extends AnyFieldResolvableBrick,
+  A extends B['realisedCodec']['_A'],
+  P extends Partial<A>
+>(params: {
+  from: B;
+  a: A;
+  p: P;
+  resolvers: any;
+}) => {
+  // return null;
+  const existingFields = params.from.unrealisedGraphQLType.getFields();
+  const existingFieldsConfig = _.mapValues(
+    existingFields,
+    ({ args, type, resolve, ...rest }, key) => {
+      const extendedResolver = params.resolvers[key];
+      const pickedResolver = extendedResolver || resolve;
+
+      return {
+        // TODO: find a way to reconstruct the previous one without messing the rest up.
+        type,
+        // @ts-ignore
+        resolve: pickedResolver,
+        // TODO: can field resolvers have arguments?
+        args: {
+          someParamName: { type: new GraphQLNonNull(GraphQLString) },
+        },
+      };
+    },
+  );
+
+  const gql = new GraphQLObjectType({
+    name: params.from.name,
+    fields: existingFieldsConfig,
+  });
+
+  const result = {
+    name: params.from.name,
+    shape: params.from.shape,
+    unrealisedCodec: params.from.unrealisedCodec,
+    unrealisedGraphQLType: gql,
+  };
+  // TODO: once an object passes through here, it will be irreversible. This means that
+  // it doesn't make sense to lift it anymore.
+
+  if (params.from.nullability === 'nullable') {
+    return makeNullable(result);
+  } else {
+    return makeNotNullable(result);
+  }
+};
+
+// NOTE: we want to enable the rest of the app to return things that aren't fully
+// realized graphql objects, but things we know that our object level field resolvers
+// will eventually figure out. Or do we just want to let the higher ups always return
+// tasks, and the low level field resolvers always assume something is already given to them,
+// and have them only be eligible for modification of said items? Because i doubt that low level
+// field resolvers will have access to what their siblings will eventually compute. All the data they
+// have will be made available to them from above.
+
+export const personResolver = fieldResolverize({
+  from: person,
+  a: {
+    id: 'asdf',
+    favoriteNumber: 2,
+    membership: 'enterprise' as const,
+  },
+  p: {},
+  // @ts-ignore
+  resolvers: {
+    // @ts-ignore
+    id: (root, context, args) => {
+      return 'yo';
+    },
+  },
+});
+
 // TODO: we want to pass in an ArgsStruct, force the resolve(args) to use the type of said struct, and produce the { type } gql maps
-const personFieldResolver = resolverize({
-  brick: person,
-  deprecationReason: 'because deprecated',
+const personQueryResolver = queryResolverize({
+  // brick: person,
+  // TODO: how do we go from normal brick to resolver brick?
+  brick: personResolver,
+  // deprecationReason: 'because deprecated',
   description: 'some description',
   // TODO: find ways to make these structs more extensible
   args: fieldConfigArgumentMap({
     fields: {
       id: scalars.id,
       firstName: scalars.string,
-      mySpecialArg: registrationInput,
-      abcabc: scalars.float, // TODO: figure out why passing any key-value pair still works here...
+      // mySpecialArg: registrationInput,
+      // abcabc: scalars.float, // TODO: figure out why passing any key-value pair still works here...
     },
   }),
   resolve: (root, args, context) => {
@@ -549,11 +647,11 @@ const personFieldResolver = resolverize({
   },
 });
 
-export const rootQuery = new GraphQLObjectType({
+export const queryResolver = new GraphQLObjectType({
   name: 'RootQueryType',
   description: 'this is the root description',
   fields: {
-    person: personFieldResolver,
+    person: personQueryResolver,
     kerem: {
       type: GraphQLString,
       resolve: () => {},
@@ -568,7 +666,7 @@ export const rootQuery = new GraphQLObjectType({
       args: {
         id: {
           type: registrationInput.realisedGraphQLType,
-          deprecationReason: 'deprecated because',
+          // deprecationReason: 'deprecated because',
           defaultValue: 'this is a default value',
           description: 'some description!',
         },
