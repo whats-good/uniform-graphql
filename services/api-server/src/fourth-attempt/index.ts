@@ -8,17 +8,18 @@ import {
   GraphQLObjectType,
   GraphQLString,
   GraphQLType,
+  GraphQLUnionType,
   LoneSchemaDefinitionRule,
 } from 'graphql';
 import * as t from 'io-ts';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
-class SemiBrick<S_A, S_O, S_G extends GraphQLNullableType> {
+export class SemiBrick<S_A, S_O, S_G extends GraphQLNullableType> {
   public readonly S_A!: S_A;
   public readonly S_O!: S_O;
-  public readonly name: string;
   public readonly semiGraphQLType: S_G;
+  public readonly name: string;
   public readonly semiCodec: Codec<S_A, S_O>;
 
   constructor(params: {
@@ -32,7 +33,7 @@ class SemiBrick<S_A, S_O, S_G extends GraphQLNullableType> {
   }
 }
 
-class Brick<
+export class Brick<
   S_A,
   S_O,
   S_G extends GraphQLNullableType,
@@ -132,3 +133,75 @@ const scalars = {
   int: Brick.lift(int),
   boolean: Brick.lift(boolean),
 };
+
+export interface AnySemiBrick extends SemiBrick<any, any, any> {}
+export interface AnyBrick extends Brick<any, any, any, any, any, any> {}
+export type SemiTypeOf<SB extends AnySemiBrick> = SB['S_A'];
+export type SemiOutputOf<SB extends AnySemiBrick> = SB['S_O'];
+export type SemiGraphQTypeOf<SB extends AnySemiBrick> = SB['semiGraphQLType'];
+export type TypeOf<B extends AnyBrick> = B['B_A'];
+export type OutputOf<B extends AnyBrick> = B['B_O'];
+export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
+
+export class UnionBrick<
+  BS extends Array<AnyBrick>,
+  S_A,
+  S_O,
+  S_G extends GraphQLNullableType,
+  B_A,
+  B_O,
+  B_G extends GraphQLType
+> extends Brick<S_A, S_O, S_G, B_A, B_O, B_G> {
+  constructor(params: {
+    name: string;
+    bricks: BS;
+    semiGraphQLType: S_G;
+    semiCodec: Codec<S_A, S_O>;
+    graphQLType: B_G;
+    codec: Codec<B_A, B_O>;
+  }) {
+    super(params);
+  }
+}
+export interface UnionB<BS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]>
+  extends UnionBrick<
+    BS,
+    SemiTypeOf<BS[number]>,
+    SemiOutputOf<BS[number]>,
+    SemiGraphQTypeOf<BS[number]>,
+    TypeOf<BS[number]>,
+    OutputOf<BS[number]>,
+    GraphQLTypeOf<BS[number]>
+  > {}
+
+export const union = <
+  BS extends [AnyBrick, AnyBrick, ...Array<AnyBrick>]
+>(params: {
+  bricks: BS;
+  name: string;
+}): UnionB<BS> => {
+  const [firstBrick, secondBrick, ...otherBricks] = params.bricks;
+  const codecs: [t.Mixed, t.Mixed, ...Array<t.Mixed>] = [
+    firstBrick.semiCodec,
+    secondBrick.semiCodec,
+    ...otherBricks.map(({ semiCodec }) => semiCodec),
+  ];
+  // TODO: do we need to do SemiUnionBrick, and then lift it upto a UnionBrick? That'd be too much...
+  const a = new UnionBrick({
+    name: params.name,
+    bricks: params.bricks,
+    codec: t.union(codecs),
+    graphQLType: GraphQLFloat, // TODO: actually compute
+    semiCodec: t.union(codecs),
+    semiGraphQLType: GraphQLFloat, // TODO: actually compute
+  });
+  return a;
+};
+
+const d = union({
+  name: 'yhi',
+  bricks: [scalars.boolean, scalars.float],
+});
+
+type D = typeof d;
+type A = TypeOf<D>;
