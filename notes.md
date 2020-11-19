@@ -16,6 +16,7 @@
 - Mapped types dont allow you to add extra properties. For that, you can use intersection types.
 - GraphQL field resolvers can also be made to take arguments:
 - You can refer to the types of input params in your function return types.
+- You can typecast as you return: `return <string> yo`;
 
 ```gql
 {
