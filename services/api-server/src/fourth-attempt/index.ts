@@ -14,15 +14,15 @@ import * as t from 'io-ts';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
-class SemiBrick<A, O, G extends GraphQLNullableType> {
+class SemiBrick<S_A, S_O, S_G extends GraphQLNullableType> {
   public readonly name: string;
-  public readonly semiGraphQLType: G;
-  public readonly semiCodec: Codec<A, O>;
+  public readonly semiGraphQLType: S_G;
+  public readonly semiCodec: Codec<S_A, S_O>;
 
   constructor(params: {
     name: string;
-    semiGraphQLType: G;
-    semiCodec: Codec<A, O>;
+    semiGraphQLType: S_G;
+    semiCodec: Codec<S_A, S_O>;
   }) {
     this.name = params.name;
     this.semiGraphQLType = params.semiGraphQLType;
