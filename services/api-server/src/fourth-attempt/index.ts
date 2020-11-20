@@ -3,6 +3,7 @@ import { flow } from 'fp-ts/lib/function';
 import _ from 'lodash';
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
@@ -118,6 +119,7 @@ export class Brick<
   >(
     sb: SemiBrick<S_A, S_O, S_G, K>,
   ) => {
+    // TODO: we need to create one more class: LiftedBricks
     return {
       ...Brick.fromNonNullableSemiBrick(sb),
       nullable: Brick.fromNullableSemiBrick(sb),
@@ -203,7 +205,7 @@ export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
 export interface Props {
   [key: string]: AnyBrick;
 }
-export interface TypeC<P extends Props>
+export interface OutputObjectSemiBrickOfProps<P extends Props>
   extends OutputObjectSemiBrick<
     P,
     { [K in keyof P]: TypeOf<P[K]> },
@@ -213,7 +215,7 @@ export interface TypeC<P extends Props>
 const outputObjectS = <P extends Props>(params: {
   name: string;
   bricks: P;
-}): TypeC<P> => {
+}): OutputObjectSemiBrickOfProps<P> => {
   const codecs = _.mapValues(params.bricks, (brick) => brick.codec);
   // TODO: how do we add more than just `type` here?
   const graphQLFields = _.mapValues(params.bricks, (brick) => ({
@@ -322,3 +324,59 @@ const d = union({
   name: 'yhi',
   semiBricks: [myOb, myOb], // TODO: how do we prevent these two objects frombeing the same?
 });
+
+class EnumSemiBrick<D extends { [key: string]: unknown }> extends SemiBrick<
+  keyof D,
+  unknown,
+  GraphQLEnumType,
+  'enum'
+> {
+  constructor(params: {
+    name: string;
+    keys: D;
+    semiCodec: Codec<keyof D, keyof D>; // TODO: maybe we shouldn't compute this here, and just do the usual S_A & S_B
+    semiGraphQLType: GraphQLEnumType;
+  }) {
+    super({
+      name: params.name,
+      semiCodec: params.semiCodec,
+      kind: 'enum',
+      semiGraphQLType: params.semiGraphQLType,
+    });
+  }
+}
+
+interface EnumSemiBrickOfKeyOf<D extends { [key: string]: unknown }>
+  extends EnumSemiBrick<D> {}
+
+const keyofS = <D extends { [key: string]: unknown }>(params: {
+  name: string;
+  keys: D;
+}): EnumSemiBrickOfKeyOf<D> => {
+  const keyToKey = _.mapValues(params.keys, (_, key) => key);
+  const gqlValues = _.mapValues(keyToKey, (_, key) => ({
+    value: key,
+  }));
+  return new EnumSemiBrick({
+    name: params.name,
+    keys: params.keys,
+    semiCodec: t.keyof(params.keys),
+    semiGraphQLType: new GraphQLEnumType({
+      name: params.name,
+      values: gqlValues,
+    }),
+  });
+};
+
+export const keyOf = flow(keyofS, Brick.lift);
+
+const enum1 = keyOf({
+  name: 'Membership',
+  keys: {
+    paid: null,
+    free: null,
+    enterprise: null,
+  },
+});
+
+// TODO: how difficult would it be to compute the enum from an array of literals?
