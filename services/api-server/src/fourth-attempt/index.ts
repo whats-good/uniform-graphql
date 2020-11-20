@@ -1,4 +1,5 @@
 import { flow } from 'fp-ts/lib/function';
+import _ from 'lodash';
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -7,6 +8,7 @@ import {
   GraphQLNonNull,
   GraphQLNullableType,
   GraphQLObjectType,
+  GraphQLSpecifiedByDirective,
   GraphQLString,
   GraphQLType,
   GraphQLUnionType,
@@ -144,7 +146,74 @@ export type TypeOf<B extends AnyBrick> = B['B_A'];
 export type OutputOf<B extends AnyBrick> = B['B_O'];
 export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 
-export class UnionSemiBrick<
+export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
+  S_A,
+  S_O,
+  GraphQLObjectType
+> {
+  public readonly props: P;
+  constructor(params: {
+    name: string;
+    bricks: P;
+    semiCodec: Codec<S_A, S_O>;
+    semiGraphQLType: GraphQLObjectType;
+  }) {
+    super({
+      name: params.name,
+      semiCodec: params.semiCodec,
+      semiGraphQLType: params.semiGraphQLType,
+    });
+    this.props = params.bricks;
+  }
+}
+
+export interface Props {
+  [key: string]: AnyBrick;
+}
+export interface TypeC<P extends Props>
+  extends OutputObjectSemiBrick<
+    P,
+    { [K in keyof P]: TypeOf<P[K]> },
+    { [K in keyof P]: OutputOf<P[K]> }
+  > {}
+
+const outputObjectS = <P extends Props>(params: {
+  name: string;
+  bricks: P;
+}): TypeC<P> => {
+  const codecs = _.mapValues(params.bricks, (brick) => brick.codec);
+  // TODO: how do we add more than just `type` here?
+  const graphQLFields = _.mapValues(params.bricks, (brick) => ({
+    type: brick.graphQLType,
+  }));
+  const semiGraphQLType = new GraphQLObjectType({
+    name: params.name,
+    fields: graphQLFields,
+  });
+  return new OutputObjectSemiBrick({
+    name: params.name,
+    bricks: params.bricks,
+    semiCodec: t.type(codecs),
+    semiGraphQLType,
+  });
+};
+
+const outputObject = flow(outputObjectS, Brick.lift);
+
+const myOb = outputObject({
+  name: 'yo',
+  bricks: {
+    firstName: scalars.string,
+    lastName: scalars.float,
+  },
+});
+
+myOb.semiCodec.encode({
+  firstName: 'yo',
+  lastName: 1,
+});
+
+class UnionSemiBrick<
   SBS extends Array<AnySemiBrick>,
   S_A,
   S_O,
@@ -163,7 +232,7 @@ export class UnionSemiBrick<
   }
 }
 
-export interface UnionSB<
+interface UnionSB<
   SBS extends [AnySemiBrick, AnySemiBrick, ...Array<AnySemiBrick>]
 > extends UnionSemiBrick<
     SBS,
