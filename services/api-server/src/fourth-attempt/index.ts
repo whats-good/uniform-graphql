@@ -148,8 +148,10 @@ export class UnionSemiBrick<
   SBS extends Array<AnySemiBrick>,
   S_A,
   S_O,
-  S_G extends GraphQLNullableType
+  S_G extends GraphQLUnionType
 > extends SemiBrick<S_A, S_O, S_G> {
+  public readonly semiBricks;
+
   constructor(params: {
     name: string;
     semiBricks: SBS;
@@ -157,6 +159,7 @@ export class UnionSemiBrick<
     semiCodec: Codec<S_A, S_O>;
   }) {
     super(params);
+    this.semiBricks = params.semiBricks;
   }
 }
 
@@ -169,6 +172,7 @@ export interface UnionSB<
     SemiGraphQTypeOf<SBS[number]>
   > {}
 
+// TODO: make these only take in unionable bricks, and not anybricks
 const unionS = <
   SBS extends [AnySemiBrick, AnySemiBrick, ...Array<AnySemiBrick>]
 >(params: {
@@ -181,11 +185,20 @@ const unionS = <
     secondBrick.semiCodec,
     ...otherBricks.map(({ semiCodec }) => semiCodec),
   ];
+  const graphQLTypes = [
+    firstBrick.semiGraphQLType,
+    secondBrick.semiGraphQLType,
+    ...otherBricks.map(({ semiGraphQLType }) => semiGraphQLType),
+  ];
   return new UnionSemiBrick({
     name: params.name,
     semiBricks: params.semiBricks,
     semiCodec: t.union(codecs),
-    semiGraphQLType: GraphQLFloat, // TODO: actually compute
+    semiGraphQLType: new GraphQLUnionType({
+      // TODO:refine
+      name: params.name,
+      types: graphQLTypes,
+    }),
   });
 };
 
