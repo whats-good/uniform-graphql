@@ -18,21 +18,32 @@ import * as t from 'io-ts';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
+type Kind =
+  | 'scalar'
+  | 'outputobject'
+  | 'interface'
+  | 'union'
+  | 'enum'
+  | 'inputobject'
+  | 'list';
 export class SemiBrick<S_A, S_O, S_G extends GraphQLNullableType> {
   public readonly S_A!: S_A;
   public readonly S_O!: S_O;
   public readonly semiGraphQLType: S_G;
   public readonly name: string;
   public readonly semiCodec: Codec<S_A, S_O>;
+  public readonly kind: Kind;
 
   constructor(params: {
     name: string;
     semiGraphQLType: S_G;
     semiCodec: Codec<S_A, S_O>;
+    kind: Kind;
   }) {
     this.name = params.name;
     this.semiGraphQLType = params.semiGraphQLType;
     this.semiCodec = params.semiCodec;
+    this.kind = params.kind;
   }
 }
 
@@ -55,6 +66,7 @@ export class Brick<
     semiCodec: Codec<S_A, S_O>;
     graphQLType: B_G;
     codec: Codec<B_A, B_O>;
+    kind: Kind;
   }) {
     super(params);
     this.graphQLType = params.graphQLType;
@@ -100,30 +112,35 @@ export class Brick<
 }
 
 const id = new SemiBrick({
+  kind: 'scalar',
   name: 'ID',
   semiCodec: t.union([t.string, t.number]),
   semiGraphQLType: GraphQLID,
 });
 
 const string = new SemiBrick({
+  kind: 'scalar',
   name: 'String' as const,
   semiCodec: t.string,
   semiGraphQLType: GraphQLString,
 });
 
 const float = new SemiBrick({
+  kind: 'scalar',
   name: 'Float' as const,
   semiCodec: t.number,
   semiGraphQLType: GraphQLFloat,
 });
 
 const int = new SemiBrick({
+  kind: 'scalar',
   name: 'Int' as const,
   semiCodec: t.Int,
   semiGraphQLType: GraphQLInt,
 });
 
 const boolean = new SemiBrick({
+  kind: 'scalar',
   name: 'Boolean' as const,
   semiCodec: t.boolean,
   semiGraphQLType: GraphQLBoolean,
@@ -162,6 +179,7 @@ export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
       name: params.name,
       semiCodec: params.semiCodec,
       semiGraphQLType: params.semiGraphQLType,
+      kind: 'outputobject',
     });
     this.props = params.bricks;
   }
@@ -227,7 +245,10 @@ class UnionSemiBrick<
     semiGraphQLType: S_G;
     semiCodec: Codec<S_A, S_O>;
   }) {
-    super(params);
+    super({
+      ...params,
+      kind: 'union',
+    });
     this.semiBricks = params.semiBricks;
   }
 }
