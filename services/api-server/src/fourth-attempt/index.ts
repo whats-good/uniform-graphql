@@ -233,31 +233,20 @@ const outputObjectS = <P extends Props>(params: {
 
 const outputObject = flow(outputObjectS, Brick.lift);
 
-const myOb = outputObject({
-  name: 'yo',
-  bricks: {
-    firstName: scalars.string,
-    lastName: scalars.float,
-  },
-});
-
-myOb.semiCodec.encode({
-  firstName: 'yo',
-  lastName: 1,
-});
+interface AnyUnionableSemiBrick
+  extends SemiBrick<any, any, GraphQLObjectType, 'outputobject'> {}
 
 class UnionSemiBrick<
-  SBS extends Array<AnySemiBrick>,
+  SBS extends Array<AnyUnionableSemiBrick>,
   S_A,
-  S_O,
-  S_G extends GraphQLUnionType
-> extends SemiBrick<S_A, S_O, S_G, 'union'> {
+  S_O
+> extends SemiBrick<S_A, S_O, GraphQLUnionType, 'union'> {
   public readonly semiBricks;
 
   constructor(params: {
     name: string;
     semiBricks: SBS;
-    semiGraphQLType: S_G;
+    semiGraphQLType: GraphQLUnionType;
     semiCodec: Codec<S_A, S_O>;
   }) {
     super({
@@ -269,17 +258,24 @@ class UnionSemiBrick<
 }
 
 interface UnionSB<
-  SBS extends [AnySemiBrick, AnySemiBrick, ...Array<AnySemiBrick>]
+  SBS extends [
+    AnyUnionableSemiBrick,
+    AnyUnionableSemiBrick,
+    ...Array<AnyUnionableSemiBrick>
+  ]
 > extends UnionSemiBrick<
     SBS,
     SemiTypeOf<SBS[number]>,
-    SemiOutputOf<SBS[number]>,
-    SemiGraphQTypeOf<SBS[number]>
+    SemiOutputOf<SBS[number]>
   > {}
 
 // TODO: make these only take in unionable bricks, and not anybricks
 const unionS = <
-  SBS extends [AnySemiBrick, AnySemiBrick, ...Array<AnySemiBrick>]
+  SBS extends [
+    AnyUnionableSemiBrick,
+    AnyUnionableSemiBrick,
+    ...Array<AnyUnionableSemiBrick>
+  ]
 >(params: {
   semiBricks: SBS;
   name: string;
@@ -309,17 +305,20 @@ const unionS = <
 
 export const union = flow(unionS, Brick.lift);
 
-const d = union({
-  name: 'yhi',
-  semiBricks: [scalars.boolean, scalars.float],
+const myOb = outputObject({
+  name: 'yo',
+  bricks: {
+    firstName: scalars.string,
+    lastName: scalars.float,
+  },
 });
 
-const e = union({
-  name: 'yho',
-  semiBricks: [boolean, string],
-}).nullable;
+myOb.semiCodec.encode({
+  firstName: 'yo',
+  lastName: 1,
+});
 
-type SD = SemiTypeOf<typeof d>;
-type D = TypeOf<typeof d>;
-type SE = SemiTypeOf<typeof e>;
-type E = TypeOf<typeof e>;
+const d = union({
+  name: 'yhi',
+  semiBricks: [myOb, myOb], // TODO: how do we prevent these two objects frombeing the same?
+});
