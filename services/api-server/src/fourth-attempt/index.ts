@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-empty-interface: 0 */
 import { flow } from 'fp-ts/lib/function';
 import _ from 'lodash';
 import {
@@ -26,19 +27,24 @@ type Kind =
   | 'enum'
   | 'inputobject'
   | 'list';
-export class SemiBrick<S_A, S_O, S_G extends GraphQLNullableType> {
+export class SemiBrick<
+  S_A,
+  S_O,
+  S_G extends GraphQLNullableType,
+  K extends Kind
+> {
   public readonly S_A!: S_A;
   public readonly S_O!: S_O;
   public readonly semiGraphQLType: S_G;
   public readonly name: string;
   public readonly semiCodec: Codec<S_A, S_O>;
-  public readonly kind: Kind;
+  public readonly kind: K;
 
   constructor(params: {
     name: string;
     semiGraphQLType: S_G;
     semiCodec: Codec<S_A, S_O>;
-    kind: Kind;
+    kind: K;
   }) {
     this.name = params.name;
     this.semiGraphQLType = params.semiGraphQLType;
@@ -53,8 +59,9 @@ export class Brick<
   S_G extends GraphQLNullableType,
   B_A,
   B_O,
-  B_G extends GraphQLType
-> extends SemiBrick<S_A, S_O, S_G> {
+  B_G extends GraphQLType,
+  K extends Kind
+> extends SemiBrick<S_A, S_O, S_G, K> {
   public readonly B_A!: B_A;
   public readonly B_O!: B_O;
   public readonly graphQLType: B_G;
@@ -66,7 +73,7 @@ export class Brick<
     semiCodec: Codec<S_A, S_O>;
     graphQLType: B_G;
     codec: Codec<B_A, B_O>;
-    kind: Kind;
+    kind: K;
   }) {
     super(params);
     this.graphQLType = params.graphQLType;
@@ -76,9 +83,10 @@ export class Brick<
   private static fromNullableSemiBrick = <
     S_A,
     S_O,
-    S_G extends GraphQLNullableType
+    S_G extends GraphQLNullableType,
+    K extends Kind
   >(
-    sb: SemiBrick<S_A, S_O, S_G>,
+    sb: SemiBrick<S_A, S_O, S_G, K>,
   ) => {
     return new Brick({
       ...sb,
@@ -90,9 +98,10 @@ export class Brick<
   private static fromNonNullableSemiBrick = <
     S_A,
     S_O,
-    S_G extends GraphQLNullableType
+    S_G extends GraphQLNullableType,
+    K extends Kind
   >(
-    sb: SemiBrick<S_A, S_O, S_G>,
+    sb: SemiBrick<S_A, S_O, S_G, K>,
   ) => {
     return new Brick({
       ...sb,
@@ -101,8 +110,13 @@ export class Brick<
     });
   };
 
-  public static lift = <S_A, S_O, S_G extends GraphQLNullableType>(
-    sb: SemiBrick<S_A, S_O, S_G>,
+  public static lift = <
+    S_A,
+    S_O,
+    S_G extends GraphQLNullableType,
+    K extends Kind
+  >(
+    sb: SemiBrick<S_A, S_O, S_G, K>,
   ) => {
     return {
       ...Brick.fromNonNullableSemiBrick(sb),
@@ -154,8 +168,8 @@ const scalars = {
   boolean: Brick.lift(boolean),
 };
 
-export interface AnySemiBrick extends SemiBrick<any, any, any> {}
-export interface AnyBrick extends Brick<any, any, any, any, any, any> {}
+export interface AnySemiBrick extends SemiBrick<any, any, any, any> {}
+export interface AnyBrick extends Brick<any, any, any, any, any, any, any> {}
 export type SemiTypeOf<SB extends AnySemiBrick> = SB['S_A'];
 export type SemiOutputOf<SB extends AnySemiBrick> = SB['S_O'];
 export type SemiGraphQTypeOf<SB extends AnySemiBrick> = SB['semiGraphQLType'];
@@ -166,7 +180,8 @@ export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
   S_A,
   S_O,
-  GraphQLObjectType
+  GraphQLObjectType,
+  'outputobject'
 > {
   public readonly props: P;
   constructor(params: {
@@ -236,7 +251,7 @@ class UnionSemiBrick<
   S_A,
   S_O,
   S_G extends GraphQLUnionType
-> extends SemiBrick<S_A, S_O, S_G> {
+> extends SemiBrick<S_A, S_O, S_G, 'union'> {
   public readonly semiBricks;
 
   constructor(params: {
