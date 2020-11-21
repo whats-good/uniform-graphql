@@ -512,4 +512,41 @@ export const array = flow(arraySB, Brick.lift);
 
 const membershiplist = array(membership);
 
-const abc = membershiplist.codec.encode(['enterprise', 'free', 'paid']);
+export const rootQuery = new GraphQLObjectType({
+  name: 'RootQueryType',
+  fields: {
+    person: {
+      type: person.graphQLType,
+      // resolve: personFieldResolver.resolve,
+      // args: personFieldResolver.args,
+    },
+    otherPerson: {
+      type: new GraphQLObjectType({
+        name: 'OtherPerson',
+        fields: {
+          id: {
+            type: GraphQLID,
+            args: {
+              scalarArg: {
+                type: GraphQLString,
+              },
+              inputObjectArg: {
+                type: new GraphQLInputObjectType({
+                  name: 'InputObjectArg',
+                  fields: {
+                    first: {
+                      type: GraphQLString,
+                    },
+                    second: {
+                      type: GraphQLString,
+                    },
+                  },
+                }),
+              },
+            },
+          },
+        },
+      }),
+    },
+  },
+});
