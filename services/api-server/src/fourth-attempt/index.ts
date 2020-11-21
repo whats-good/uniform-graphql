@@ -6,6 +6,8 @@ import {
   GraphQLEnumType,
   GraphQLFloat,
   GraphQLID,
+  GraphQLInputObjectType,
+  GraphQLInputType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -29,7 +31,7 @@ type Kind =
   | 'interface'
   | 'union' // done
   | 'enum' // done
-  | 'inputobject'
+  | 'inputobject' // done
   | 'list'; // done
 
 type InputKind = 'scalar' | 'enum' | 'inputobject' | 'list'; // TODO: the list items themselves should be 'inputable'
@@ -197,7 +199,6 @@ export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 // TODO: can we add kind
 interface AnyOutputObjectPropBrick
   extends Brick<any, any, GraphQLOutputType, any, any, any, OutputKind> {}
-
 export interface OutputProps {
   [key: string]: AnyOutputObjectPropBrick;
 }
@@ -231,7 +232,7 @@ export interface OutputObjectSemiBrickOfProps<P extends OutputProps>
     { [K in keyof P]: OutputOf<P[K]> }
   > {}
 
-const outputObjectS = <P extends OutputProps>(params: {
+const outputObjectSB = <P extends OutputProps>(params: {
   name: string;
   bricks: P;
 }): OutputObjectSemiBrickOfProps<P> => {
@@ -252,7 +253,66 @@ const outputObjectS = <P extends OutputProps>(params: {
   });
 };
 
-const outputObject = flow(outputObjectS, Brick.lift);
+const outputObject = flow(outputObjectSB, Brick.lift);
+
+interface AnyInputObjectBrick
+  extends Brick<any, any, GraphQLInputType, any, any, any, InputKind> {}
+
+export interface InputProps {
+  [key: string]: AnyInputObjectBrick;
+}
+export class InputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
+  S_A,
+  S_O,
+  GraphQLInputObjectType,
+  'inputobject'
+> {
+  public readonly props: P;
+  constructor(params: {
+    name: string;
+    bricks: P;
+    semiCodec: Codec<S_A, S_O>;
+    semiGraphQLType: GraphQLInputObjectType;
+  }) {
+    super({
+      name: params.name,
+      semiCodec: params.semiCodec,
+      semiGraphQLType: params.semiGraphQLType,
+      kind: 'inputobject',
+    });
+    this.props = params.bricks;
+  }
+}
+
+export interface InputObjectSemiBrickOfProps<P extends InputProps>
+  extends InputObjectSemiBrick<
+    P,
+    { [K in keyof P]: TypeOf<P[K]> },
+    { [K in keyof P]: OutputOf<P[K]> }
+  > {}
+
+const inputObjectSB = <P extends InputProps>(params: {
+  name: string;
+  bricks: P;
+}): InputObjectSemiBrickOfProps<P> => {
+  const codecs = _.mapValues(params.bricks, (brick) => brick.codec);
+  // TODO: how do we add more than just `type` here?
+  const graphQLFields = _.mapValues(params.bricks, (brick) => ({
+    type: brick.graphQLType,
+  }));
+  const semiGraphQLType = new GraphQLInputObjectType({
+    name: params.name,
+    fields: graphQLFields,
+  });
+  return new InputObjectSemiBrick({
+    name: params.name,
+    bricks: params.bricks,
+    semiCodec: t.type(codecs),
+    semiGraphQLType,
+  });
+};
+
+const inputObject = flow(inputObjectSB, Brick.lift);
 
 interface AnyUnionableSemiBrick
   extends SemiBrick<any, any, GraphQLObjectType, 'outputobject'> {}
