@@ -512,6 +512,33 @@ export const array = flow(arraySB, Brick.lift);
 
 const membershiplist = array(membership);
 
+const person = outputObject({
+  name: 'Person',
+  bricks: {
+    id: scalars.id,
+    firstName: scalars.string,
+    lastName: scalars.string,
+    age: scalars.float,
+  },
+});
+
+const personSB = outputObjectSB({
+  name: 'Person',
+  bricks: {
+    id: scalars.id,
+    firstName: scalars.string,
+    lastName: scalars.string,
+    age: scalars.float,
+  },
+});
+const signupArgs = inputObject({
+  name: 'SignupArgs',
+  bricks: {
+    firstName: scalars.string,
+    lastName: scalars.string,
+    age: scalars.float,
+  },
+});
 export const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
