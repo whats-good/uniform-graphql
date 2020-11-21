@@ -7,6 +7,7 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLList,
   GraphQLNonNull,
   GraphQLNullableType,
   GraphQLObjectType,
@@ -17,15 +18,16 @@ import {
   LoneSchemaDefinitionRule,
 } from 'graphql';
 import * as t from 'io-ts';
+import { key } from 'monocle-ts/lib/Traversal';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
 type Kind =
-  | 'scalar'
-  | 'outputobject'
+  | 'scalar' // done
+  | 'outputobject' // done
   | 'interface'
-  | 'union'
-  | 'enum'
+  | 'union' // done
+  | 'enum' // done
   | 'inputobject'
   | 'list';
 export class SemiBrick<
@@ -380,3 +382,65 @@ const enum1 = keyOf({
 });
 
 // TODO: how difficult would it be to compute the enum from an array of literals?
+
+// TODO: how do we do recursive definitions?
+// TODO: also, how do we do non-nullable recursives? Do we do a Task?
+
+t.array;
+
+export class ArraySemiBrick<
+  S_A,
+  S_O,
+  S_G extends GraphQLList<any>, // TODO: maybe this shouldn't be an any
+  SB extends AnySemiBrick
+> extends SemiBrick<S_A, S_O, S_G, 'list'> {
+  public readonly item: SB;
+
+  constructor(params: {
+    semiCodec: Codec<S_A, S_O>;
+    semiGraphQLType: S_G;
+    item: SB;
+  }) {
+    super({
+      name: `Array<${params.item.name}>`,
+      kind: 'list',
+      semiCodec: params.semiCodec,
+      semiGraphQLType: params.semiGraphQLType,
+    });
+    this.item = params.item;
+  }
+}
+
+export interface ArraySB<SB extends AnySemiBrick>
+  extends ArraySemiBrick<
+    Array<SemiTypeOf<SB>>,
+    Array<SemiOutputOf<SB>>,
+    GraphQLList<SB['semiGraphQLType']>,
+    SB
+  > {}
+
+const membership = keyOf({
+  name: 'Membership',
+  keys: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
+
+type ASD = ArraySB<typeof membership>;
+
+const arraySB = <SB extends AnySemiBrick>(item: SB): ArraySB<SB> => {
+  // TODO: do lists have names?
+  return new ArraySemiBrick({
+    item,
+    semiCodec: t.array(item.semiCodec),
+    semiGraphQLType: new GraphQLList(item.semiGraphQLType),
+  });
+};
+
+export const array = flow(arraySB, Brick.lift);
+
+const membershiplist = array(membership);
+
+const abc = membershiplist.codec.encode(['enterprise', 'free', 'paid']);
