@@ -128,6 +128,7 @@ export class Brick<
     });
   };
 
+  // TODO: lifting removes special fields...
   public static lift = <
     S_A,
     S_O,
@@ -197,10 +198,10 @@ export type OutputOf<B extends AnyBrick> = B['B_O'];
 export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 
 // TODO: can we add kind
-interface AnyOutputObjectPropBrick
+interface AnyOutputBrick
   extends Brick<any, any, GraphQLOutputType, any, any, any, OutputKind> {}
 export interface OutputProps {
-  [key: string]: AnyOutputObjectPropBrick;
+  [key: string]: AnyOutputBrick;
 }
 export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
   S_A,
@@ -208,7 +209,7 @@ export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
   GraphQLObjectType,
   'outputobject'
 > {
-  public readonly props: P;
+  public readonly bricks: P;
   constructor(params: {
     name: string;
     bricks: P;
@@ -221,7 +222,7 @@ export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
       semiGraphQLType: params.semiGraphQLType,
       kind: 'outputobject',
     });
-    this.props = params.bricks;
+    this.bricks = params.bricks;
   }
 }
 
@@ -255,11 +256,11 @@ const outputObjectSB = <P extends OutputProps>(params: {
 
 const outputObject = flow(outputObjectSB, Brick.lift);
 
-interface AnyInputObjectBrick
+interface AnyInputBrick
   extends Brick<any, any, GraphQLInputType, any, any, any, InputKind> {}
 
-export interface InputProps {
-  [key: string]: AnyInputObjectBrick;
+interface InputProps {
+  [key: string]: AnyInputBrick;
 }
 export class InputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
   S_A,
