@@ -5,7 +5,7 @@ import * as T from 'fp-ts/lib/Task';
 import * as A from 'fp-ts/lib/Array';
 import * as O from 'fp-ts/lib/Option';
 import express from 'express';
-import { data } from './cached/data';
+import { data } from '../cached/data';
 import * as t from 'io-ts';
 import { Lens } from 'monocle-ts';
 import {
