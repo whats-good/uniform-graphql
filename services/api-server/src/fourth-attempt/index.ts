@@ -11,6 +11,7 @@ import {
   GraphQLNonNull,
   GraphQLNullableType,
   GraphQLObjectType,
+  GraphQLOutputType,
   GraphQLSpecifiedByDirective,
   GraphQLString,
   GraphQLType,
@@ -29,7 +30,19 @@ type Kind =
   | 'union' // done
   | 'enum' // done
   | 'inputobject'
-  | 'list';
+  | 'list'; // done
+
+type InputKind = 'scalar' | 'enum' | 'inputobject' | 'list'; // TODO: the list items themselves should be 'inputable'
+
+type OutputKind =
+  | 'scalar'
+  | 'outputobject'
+  | 'interface'
+  | 'union'
+  | 'enum'
+  | 'list'; // TODO: the list items themselves should be outputable
+
+// TODO: consider creating different kinds of lists (one for input, one for output)
 export class SemiBrick<
   S_A,
   S_O,
@@ -181,6 +194,13 @@ export type TypeOf<B extends AnyBrick> = B['B_A'];
 export type OutputOf<B extends AnyBrick> = B['B_O'];
 export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 
+// TODO: can we add kind
+interface AnyOutputObjectPropBrick
+  extends Brick<any, any, GraphQLOutputType, any, any, any, OutputKind> {}
+
+export interface OutputProps {
+  [key: string]: AnyOutputObjectPropBrick;
+}
 export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
   S_A,
   S_O,
@@ -204,17 +224,14 @@ export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
   }
 }
 
-export interface Props {
-  [key: string]: AnyBrick;
-}
-export interface OutputObjectSemiBrickOfProps<P extends Props>
+export interface OutputObjectSemiBrickOfProps<P extends OutputProps>
   extends OutputObjectSemiBrick<
     P,
     { [K in keyof P]: TypeOf<P[K]> },
     { [K in keyof P]: OutputOf<P[K]> }
   > {}
 
-const outputObjectS = <P extends Props>(params: {
+const outputObjectS = <P extends OutputProps>(params: {
   name: string;
   bricks: P;
 }): OutputObjectSemiBrickOfProps<P> => {
@@ -372,15 +389,6 @@ const keyofS = <D extends { [key: string]: unknown }>(params: {
 
 export const keyOf = flow(keyofS, Brick.lift);
 
-const enum1 = keyOf({
-  name: 'Membership',
-  keys: {
-    paid: null,
-    free: null,
-    enterprise: null,
-  },
-});
-
 // TODO: how difficult would it be to compute the enum from an array of literals?
 
 // TODO: how do we do recursive definitions?
@@ -411,7 +419,7 @@ export class ArraySemiBrick<
   }
 }
 
-export interface ArraySB<SB extends AnySemiBrick>
+interface ArraySB<SB extends AnySemiBrick>
   extends ArraySemiBrick<
     Array<SemiTypeOf<SB>>,
     Array<SemiOutputOf<SB>>,
