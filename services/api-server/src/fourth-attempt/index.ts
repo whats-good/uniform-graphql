@@ -604,18 +604,18 @@ const fieldResolverize = <
   SB extends OutputObjectSemiBrick<any, any, any>,
   K extends keyof SB['bricks'],
   I extends InputProps
->(
-  sb: SB,
-  key: K,
-  args: I,
-  resolve: FieldResolveFn<SB, K, I>,
-): FieldResolver<SB, SB['bricks'][K], K, I> => {
+>(params: {
+  root: SB;
+  key: K;
+  args: I;
+  resolve: FieldResolveFn<SB, K, I>;
+}): FieldResolver<SB, SB['bricks'][K], K, I> => {
   return new FieldResolver({
-    root: sb,
-    fieldBrick: sb.bricks[key],
-    key,
-    args,
-    resolve, // TODO: find a way out of this.
+    root: params.root,
+    fieldBrick: params.root.bricks[params.key],
+    key: params.key,
+    args: params.args,
+    resolve: params.resolve, // TODO: find a way out of this.
   });
 };
 
@@ -624,13 +624,13 @@ type FieldResolversMap<SB extends OutputObjectSemiBrick<any, any, any>> = {
 };
 
 const resolverize = <
-  SB extends OutputObjectSemiBrick<any, any, any>,
+  P extends OutputProps,
+  SB extends OutputObjectSemiBrick<P, any, any>,
   F extends Partial<FieldResolversMap<SB>>
 >(
   sb: SB,
   enhancedFields: F,
 ) => {
-  // TODO: why is the brick of type any here?
   const existingFields = _.mapValues(sb.bricks, (brick) => ({
     type: brick.graphQLType,
   }));
@@ -652,31 +652,24 @@ const resolverize = <
 };
 
 // TODO: next milestones: a: find a way to avoid having to repeat "fieldResolverize",
+// TODO: b: find a way to avoid having to repeat "personobject"
 const enhancedPerson = resolverize(personobject, {
-  id: fieldResolverize(
-    personobject,
-    'id',
-    { deeperId: scalars.id },
-    (root, { deeperId }) => {
-      return deeperId;
+  id: fieldResolverize({
+    root: personobject,
+    key: 'id',
+    args: { deeperId: scalars.id },
+    resolve: (root, args) => {
+      return args.deeperId;
     },
-  ),
-  firstName: fieldResolverize(
-    personobject,
-    'firstName',
-    { someRandomArg: scalars.boolean },
-    async (root, args, context) => {
+  }),
+  firstName: fieldResolverize({
+    root: personobject,
+    key: 'firstName',
+    args: { someRandomArg: scalars.boolean },
+    resolve: async (root, args, context) => {
       return args.someRandomArg ? root.firstName : 'fallback';
     },
-  ),
-  lastName: fieldResolverize(
-    personobject,
-    'lastName',
-    { someOtherArg: scalars.float },
-    (root, args, context) => {
-      return root.lastName;
-    },
-  ),
+  }),
 });
 
 // const a = resolverize(personobject, {
