@@ -577,7 +577,6 @@ class FieldResolver<
 
   constructor(params: {
     root: SB;
-    fieldBrick: B;
     key: K;
     args: I;
     resolve: FieldResolveFn<SB, K, I>;
@@ -586,7 +585,7 @@ class FieldResolver<
     this.key = params.key;
     this.args = params.args;
     this.resolve = params.resolve;
-    this.fieldBrick = params.fieldBrick;
+    this.fieldBrick = params.root.bricks[params.key];
   }
 
   getFieldConfig = () => {
@@ -612,7 +611,6 @@ const fieldResolverize = <
 }): FieldResolver<SB, SB['bricks'][K], K, I> => {
   return new FieldResolver({
     root: params.root,
-    fieldBrick: params.root.bricks[params.key],
     key: params.key,
     args: params.args,
     resolve: params.resolve, // TODO: find a way out of this.
