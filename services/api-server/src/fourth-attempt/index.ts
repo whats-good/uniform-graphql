@@ -549,29 +549,42 @@ const personobject = outputObjectSB({
   },
 });
 
+type ARGSOF<T extends InputProps> = {
+  [P in keyof T]: T[P]['B_A'];
+};
+
 const fieldResolverize = <
   P extends OutputProps,
   SB extends OutputObjectSemiBrick<P, any, any>,
   K extends keyof SB['bricks'],
+  I extends InputProps,
   RET extends SB['bricks'][K]['B_A']
 >(
   sb: SB,
   key: K,
-  resolve: (root: SB['S_A'], args: any, context: any) => RET,
+  args: I,
+  resolve: (
+    root: SB['S_A'],
+    args: ARGSOF<I>,
+    context: any,
+  ) => RET | Promise<RET>,
 ) => ({
   // TODO: graph other things too, such as descripton and deprecation reason.
   type: sb.bricks[key].graphQLType,
-  args: {
-    deeperId: {
-      type: GraphQLID,
-    },
-  },
-  resolve,
+  args: _.mapValues(args, (arg) => ({
+    type: arg.graphQLType, // TODO: see if there's a better way than this
+  })),
+  resolve: resolve as any, // TODO: find a way out of this.
 });
 
-const fieldResolvedId = fieldResolverize(personobject, 'id', (root) => {
-  return 'yo' + root.firstName;
-});
+const fieldResolvedId = fieldResolverize(
+  personobject,
+  'id',
+  { deeperId: scalars.id, deeperNumber: scalars.float },
+  (root, { deeperId, deeperNumber }) => {
+    return 'yo' + root.firstName + deeperId + ',' + deeperNumber;
+  },
+);
 
 const enhancedPersonGraphQLType = new GraphQLObjectType({
   name: personobject.name,
