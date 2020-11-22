@@ -545,6 +545,7 @@ const personobject = outputObjectSB({
   bricks: {
     id: scalars.id,
     firstName: scalars.string,
+    lastName: scalars.string,
   },
 });
 
@@ -552,7 +553,7 @@ type ARGSOF<T extends InputProps> = {
   [P in keyof T]: T[P]['B_A'];
 };
 
-type FieldResolverOf<
+type FieldResolveFn<
   SB extends OutputObjectSemiBrick<any, any, any>,
   K extends keyof SB['bricks'],
   I extends InputProps
@@ -562,6 +563,43 @@ type FieldResolverOf<
   context: any,
 ) => SB['bricks'][K]['B_A'] | Promise<SB['bricks'][K]['B_A']>;
 
+class FieldResolver<
+  SB extends OutputObjectSemiBrick<any, any, any>,
+  B extends AnyOutputBrick,
+  K extends keyof SB['bricks'],
+  I extends InputProps
+> {
+  public readonly root: SB;
+  public readonly fieldBrick: B;
+  public readonly key: K;
+  public readonly args: I;
+  public readonly resolve: FieldResolveFn<SB, K, I>;
+
+  constructor(params: {
+    root: SB;
+    fieldBrick: B;
+    key: K;
+    args: I;
+    resolve: FieldResolveFn<SB, K, I>;
+  }) {
+    this.root = params.root;
+    this.key = params.key;
+    this.args = params.args;
+    this.resolve = params.resolve;
+    this.fieldBrick = params.fieldBrick;
+  }
+
+  getFieldConfig = () => {
+    return {
+      type: this.fieldBrick.graphQLType,
+      args: _.mapValues(this.args, (arg) => ({
+        type: arg.graphQLType,
+      })),
+      resolve: this.resolve,
+    };
+  };
+}
+
 const fieldResolverize = <
   SB extends OutputObjectSemiBrick<any, any, any>,
   K extends keyof SB['bricks'],
@@ -570,18 +608,19 @@ const fieldResolverize = <
   sb: SB,
   key: K,
   args: I,
-  resolve: FieldResolverOf<SB, K, I>,
-) => ({
-  // TODO: graph other things too, such as descripton and deprecation reason.
-  type: sb.bricks[key].graphQLType,
-  args: _.mapValues(args, (arg) => ({
-    type: arg.graphQLType, // TODO: see if there's a better way than this
-  })),
-  resolve: resolve as any, // TODO: find a way out of this.
-});
+  resolve: FieldResolveFn<SB, K, I>,
+): FieldResolver<SB, SB['bricks'][K], K, I> => {
+  return new FieldResolver({
+    root: sb,
+    fieldBrick: sb.bricks[key],
+    key,
+    args,
+    resolve, // TODO: find a way out of this.
+  });
+};
 
 type FieldResolversMap<SB extends OutputObjectSemiBrick<any, any, any>> = {
-  [K in keyof SB['bricks']]: ReturnType<typeof fieldResolverize>;
+  [K in keyof SB['bricks']]: FieldResolver<SB, SB['bricks'][K], K, any>; // TODO: how do we handle the ANY here?
 };
 
 const resolverize = <
@@ -591,14 +630,18 @@ const resolverize = <
   sb: SB,
   enhancedFields: F,
 ) => {
+  // TODO: why is the brick of type any here?
+  const existingFields = _.mapValues(sb.bricks, (brick) => ({
+    type: brick.graphQLType,
+  }));
+  const mappedGQLtypes = _.mapValues(enhancedFields, (field) =>
+    field?.getFieldConfig(),
+  );
   const nextGraphQLType = new GraphQLObjectType({
     name: sb.name,
     fields: {
-      // TODO: find a way to preserve the previous values here, without having to overwrite everything.
-      ..._.mapValues(sb.bricks, (brick) => ({
-        type: brick.graphQLType,
-      })),
-      ...enhancedFields,
+      ...existingFields,
+      ...mappedGQLtypes,
     },
   });
   const nextSB = new OutputObjectSemiBrick({
@@ -608,7 +651,7 @@ const resolverize = <
   return Brick.lift(nextSB);
 };
 
-// TODO: next milestones: a: find a way to avoid having to repeat "fieldResolverize", b) make it impossible to resolverize another field.
+// TODO: next milestones: a: find a way to avoid having to repeat "fieldResolverize",
 const enhancedPerson = resolverize(personobject, {
   id: fieldResolverize(
     personobject,
@@ -622,11 +665,26 @@ const enhancedPerson = resolverize(personobject, {
     personobject,
     'firstName',
     { someRandomArg: scalars.boolean },
-    async (root, { someRandomArg }) => {
-      return someRandomArg ? root.firstName : 'fallback';
+    async (root, args, context) => {
+      return args.someRandomArg ? root.firstName : 'fallback';
+    },
+  ),
+  lastName: fieldResolverize(
+    personobject,
+    'lastName',
+    { someOtherArg: scalars.float },
+    (root, args, context) => {
+      return root.lastName;
     },
   ),
 });
+
+// const a = resolverize(personobject, {
+//   id: (root, args: @args({ deeperId: scalars.id})) => {
+//     return args.deeperId;
+//   }
+// });
+// TODO: ^ this is the goal
 
 export const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
@@ -635,8 +693,9 @@ export const rootQuery = new GraphQLObjectType({
       type: enhancedPerson.graphQLType,
       resolve: () => {
         return {
-          id: 'kerem',
-          firstName: 'kazan',
+          id: '1234',
+          firstName: 'kerem',
+          lastName: 'kazan',
         };
       },
     },
