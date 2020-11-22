@@ -194,67 +194,6 @@ export type TypeOf<B extends AnyBrick> = B['B_A'];
 export type OutputOf<B extends AnyBrick> = B['B_O'];
 export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 
-// TODO: can we add kind
-interface AnyOutputBrick
-  extends Brick<any, any, GraphQLOutputType, any, any, any, OutputKind> {}
-interface OutputProps {
-  [key: string]: AnyOutputBrick;
-}
-
-class OutputObjectSemiBrick<P extends OutputProps, S_A, S_O> extends SemiBrick<
-  S_A,
-  S_O,
-  GraphQLObjectType,
-  'outputobject'
-> {
-  public readonly bricks: P;
-  constructor(
-    public readonly params: {
-      name: string;
-      bricks: P;
-      semiCodec: Codec<S_A, S_O>;
-      semiGraphQLType: GraphQLObjectType;
-    },
-  ) {
-    super({
-      name: params.name,
-      semiCodec: params.semiCodec,
-      semiGraphQLType: params.semiGraphQLType,
-      kind: 'outputobject',
-    });
-    this.bricks = params.bricks;
-  }
-}
-
-interface OutputObjectSemiBrickOfProps<P extends OutputProps>
-  extends OutputObjectSemiBrick<
-    P,
-    { [K in keyof P]: TypeOf<P[K]> },
-    { [K in keyof P]: OutputOf<P[K]> }
-  > {}
-
-const outputObjectSB = <P extends OutputProps>(params: {
-  name: string;
-  bricks: P;
-}): OutputObjectSemiBrickOfProps<P> => {
-  const codecs = _.mapValues(params.bricks, (brick) => brick.codec);
-  const graphQLFields = _.mapValues(params.bricks, (brick) => ({
-    type: brick.graphQLType,
-  }));
-  const semiGraphQLType = new GraphQLObjectType({
-    name: params.name,
-    fields: graphQLFields,
-  });
-  return new OutputObjectSemiBrick({
-    name: params.name,
-    bricks: params.bricks,
-    semiCodec: t.type(codecs),
-    semiGraphQLType,
-  });
-};
-
-const outputObject = flow(outputObjectSB, Brick.lift);
-
 interface AnyInputBrick
   extends Brick<any, any, GraphQLInputType, any, any, any, InputKind> {}
 
@@ -315,6 +254,66 @@ const inputObjectSB = <P extends InputProps>(params: {
 
 const inputObject = flow(inputObjectSB, Brick.lift);
 
+// TODO: can we add kind
+interface AnyOutputBrick
+  extends Brick<any, any, GraphQLOutputType, any, any, any, OutputKind> {}
+interface OutputProps {
+  [key: string]: AnyOutputBrick;
+}
+
+class OutputObjectSemiBrick<P extends OutputProps, S_A, S_O> extends SemiBrick<
+  S_A,
+  S_O,
+  GraphQLObjectType,
+  'outputobject'
+> {
+  public readonly bricks: P;
+  constructor(
+    public readonly params: {
+      name: string;
+      bricks: P;
+      semiCodec: Codec<S_A, S_O>;
+      semiGraphQLType: GraphQLObjectType;
+    },
+  ) {
+    super({
+      name: params.name,
+      semiCodec: params.semiCodec,
+      semiGraphQLType: params.semiGraphQLType,
+      kind: 'outputobject',
+    });
+    this.bricks = params.bricks;
+  }
+}
+
+interface OutputObjectSemiBrickOfProps<P extends OutputProps>
+  extends OutputObjectSemiBrick<
+    P,
+    { [K in keyof P]: TypeOf<P[K]> },
+    { [K in keyof P]: OutputOf<P[K]> }
+  > {}
+
+const outputObjectSB = <P extends OutputProps>(params: {
+  name: string;
+  bricks: P;
+}): OutputObjectSemiBrickOfProps<P> => {
+  const codecs = _.mapValues(params.bricks, (brick) => brick.codec);
+  const graphQLFields = _.mapValues(params.bricks, (brick) => ({
+    type: brick.graphQLType,
+  }));
+  const semiGraphQLType = new GraphQLObjectType({
+    name: params.name,
+    fields: graphQLFields,
+  });
+  return new OutputObjectSemiBrick({
+    name: params.name,
+    bricks: params.bricks,
+    semiCodec: t.type(codecs),
+    semiGraphQLType,
+  });
+};
+
+const outputObject = flow(outputObjectSB, Brick.lift);
 interface AnyUnionableSemiBrick
   extends SemiBrick<any, any, GraphQLObjectType, 'outputobject'> {}
 
