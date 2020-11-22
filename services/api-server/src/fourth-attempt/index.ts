@@ -580,14 +580,13 @@ const fieldResolverize = <
   resolve: resolve as any, // TODO: find a way out of this.
 });
 
-type FieldResolversMap<P extends OutputProps> = {
-  [K in keyof P]: ReturnType<typeof fieldResolverize>;
+type FieldResolversMap<SB extends OutputObjectSemiBrick<any, any, any>> = {
+  [K in keyof SB['bricks']]: ReturnType<typeof fieldResolverize>;
 };
 
 const resolverize = <
   SB extends OutputObjectSemiBrick<any, any, any>,
-  P extends SB['bricks'],
-  F extends Partial<FieldResolversMap<P>>
+  F extends Partial<FieldResolversMap<SB>>
 >(
   sb: SB,
   enhancedFields: F,
