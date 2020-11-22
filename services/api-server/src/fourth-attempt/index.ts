@@ -653,6 +653,7 @@ const resolverize = <
 
 // TODO: next milestones: a: find a way to avoid having to repeat "fieldResolverize",
 // TODO: b: find a way to avoid having to repeat "personobject"
+// TODO: c: find a way to avoid having to repeat the key, since it comes from the object"
 const enhancedPerson = resolverize(personobject, {
   id: fieldResolverize({
     root: personobject,
