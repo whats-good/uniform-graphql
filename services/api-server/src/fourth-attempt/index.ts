@@ -14,14 +14,11 @@ import {
   GraphQLNullableType,
   GraphQLObjectType,
   GraphQLOutputType,
-  GraphQLSpecifiedByDirective,
   GraphQLString,
   GraphQLType,
   GraphQLUnionType,
-  LoneSchemaDefinitionRule,
 } from 'graphql';
 import * as t from 'io-ts';
-import { key } from 'monocle-ts/lib/Traversal';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
@@ -85,7 +82,7 @@ export class Brick<
   public readonly graphQLType: B_G;
   public readonly codec: Codec<B_A, B_O>;
 
-  constructor(params: {
+  private constructor(params: {
     name: string;
     semiGraphQLType: S_G;
     semiCodec: Codec<S_A, S_O>;
@@ -211,12 +208,14 @@ class OutputObjectSemiBrick<P extends OutputProps, S_A, S_O> extends SemiBrick<
   'outputobject'
 > {
   public readonly bricks: P;
-  constructor(params: {
-    name: string;
-    bricks: P;
-    semiCodec: Codec<S_A, S_O>;
-    semiGraphQLType: GraphQLObjectType;
-  }) {
+  constructor(
+    public readonly params: {
+      name: string;
+      bricks: P;
+      semiCodec: Codec<S_A, S_O>;
+      semiGraphQLType: GraphQLObjectType;
+    },
+  ) {
     super({
       name: params.name,
       semiCodec: params.semiCodec,
@@ -554,8 +553,7 @@ type ARGSOF<T extends InputProps> = {
 };
 
 const fieldResolverize = <
-  P extends OutputProps,
-  SB extends OutputObjectSemiBrick<P, any, any>,
+  SB extends OutputObjectSemiBrick<any, any, any>,
   K extends keyof SB['bricks'],
   I extends InputProps,
   RET extends SB['bricks'][K]['B_A']
@@ -586,6 +584,55 @@ const fieldResolvedId = fieldResolverize(
   },
 );
 
+type FieldResolversMap<P extends OutputProps> = {
+  [K in keyof P]: ReturnType<typeof fieldResolverize>;
+};
+
+const resolverize = <
+  SB extends OutputObjectSemiBrick<any, any, any>,
+  P extends SB['bricks'],
+  F extends Partial<FieldResolversMap<P>>
+>(
+  sb: SB,
+  enhancedFields: F,
+) => {
+  const nextGraphQLType = new GraphQLObjectType({
+    name: sb.name,
+    fields: {
+      // TODO: find a way to preserve the previous values here, without having to overwrite everything.
+      ..._.mapValues(sb.bricks, (brick) => ({
+        type: brick.graphQLType,
+      })),
+      ...enhancedFields,
+    },
+  });
+  const nextSB = new OutputObjectSemiBrick({
+    ...sb.params,
+    semiGraphQLType: nextGraphQLType,
+  });
+  return Brick.lift(nextSB);
+};
+
+// TODO: next milestones: a: find a way to avoid having to repeat "fieldResolverize", b) make it impossible to resolverize another field.
+const enhancedPerson = resolverize(personobject, {
+  id: fieldResolverize(
+    personobject,
+    'id',
+    { deeperId: scalars.id },
+    (root, { deeperId }) => {
+      return deeperId;
+    },
+  ),
+  firstName: fieldResolverize(
+    personobject,
+    'firstName',
+    { someRandomArg: scalars.boolean },
+    async (root, { someRandomArg }) => {
+      return someRandomArg ? root.firstName : 'fallback';
+    },
+  ),
+});
+
 const enhancedPersonGraphQLType = new GraphQLObjectType({
   name: personobject.name,
   fields: {
@@ -600,20 +647,13 @@ const enhancedPersonGraphQLType = new GraphQLObjectType({
 export const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
-    person: {
-      type: enhancedPersonGraphQLType,
+    enhancedPerson: {
+      type: enhancedPerson.graphQLType,
       resolve: () => {
         return {
           id: 'kerem',
           firstName: 'kazan',
         };
-      },
-      args: {
-        id: {
-          type: GraphQLID,
-          // deprecationReason: 'deprecation reason', // TODO: deprecated args dont show up on the playground
-          description: 'description',
-        },
       },
     },
     otherPerson: {
