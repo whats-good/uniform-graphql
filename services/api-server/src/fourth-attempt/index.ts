@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/no-empty-interface: 0 */
-import { flow } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 import _ from 'lodash';
 import {
   GraphQLBoolean,
@@ -203,12 +203,12 @@ interface AnyOutputBrick
 export interface OutputProps {
   [key: string]: AnyOutputBrick;
 }
-export class OutputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
+
+export class OutputObjectSemiBrick<
+  P extends OutputProps,
   S_A,
-  S_O,
-  GraphQLObjectType,
-  'outputobject'
-> {
+  S_O
+> extends SemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'> {
   public readonly bricks: P;
   constructor(params: {
     name: string;
@@ -262,6 +262,7 @@ interface AnyInputBrick
 interface InputProps {
   [key: string]: AnyInputBrick;
 }
+
 export class InputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
   S_A,
   S_O,
