@@ -200,15 +200,16 @@ export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 // TODO: can we add kind
 interface AnyOutputBrick
   extends Brick<any, any, GraphQLOutputType, any, any, any, OutputKind> {}
-export interface OutputProps {
+interface OutputProps {
   [key: string]: AnyOutputBrick;
 }
 
-export class OutputObjectSemiBrick<
-  P extends OutputProps,
+class OutputObjectSemiBrick<P extends OutputProps, S_A, S_O> extends SemiBrick<
   S_A,
-  S_O
-> extends SemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'> {
+  S_O,
+  GraphQLObjectType,
+  'outputobject'
+> {
   public readonly bricks: P;
   constructor(params: {
     name: string;
@@ -226,7 +227,7 @@ export class OutputObjectSemiBrick<
   }
 }
 
-export interface OutputObjectSemiBrickOfProps<P extends OutputProps>
+interface OutputObjectSemiBrickOfProps<P extends OutputProps>
   extends OutputObjectSemiBrick<
     P,
     { [K in keyof P]: TypeOf<P[K]> },
@@ -238,7 +239,6 @@ const outputObjectSB = <P extends OutputProps>(params: {
   bricks: P;
 }): OutputObjectSemiBrickOfProps<P> => {
   const codecs = _.mapValues(params.bricks, (brick) => brick.codec);
-  // TODO: how do we add more than just `type` here?
   const graphQLFields = _.mapValues(params.bricks, (brick) => ({
     type: brick.graphQLType,
   }));
@@ -540,15 +540,75 @@ const signupArgs = inputObject({
     age: scalars.float,
   },
 });
+// TODO: find a way so that lifting preserves the extended types.
+const personobject = outputObjectSB({
+  name: 'Person',
+  bricks: {
+    id: scalars.id,
+    firstName: scalars.string,
+  },
+});
+
+const fieldResolverize = <
+  P extends OutputProps,
+  SB extends OutputObjectSemiBrick<P, any, any>,
+  K extends keyof SB['bricks'],
+  RET extends SB['bricks'][K]['B_A']
+>(
+  sb: SB,
+  key: K,
+  resolve: (root: SB['S_A'], args: any, context: any) => RET,
+) => ({
+  // TODO: graph other things too, such as descripton and deprecation reason.
+  type: sb.bricks[key].graphQLType,
+  args: {
+    deeperId: {
+      type: GraphQLID,
+    },
+  },
+  resolve,
+});
+
+const fieldResolvedId = fieldResolverize(personobject, 'id', (root) => {
+  return 'yo' + root.firstName;
+});
+
+const enhancedPersonGraphQLType = new GraphQLObjectType({
+  name: personobject.name,
+  fields: {
+    // TODO: find a way to preserve the previous values here, without having to overwrite everything.
+    ..._.mapValues(personobject.bricks, (brick) => ({
+      type: brick.graphQLType,
+    })),
+    id: fieldResolvedId,
+  },
+});
+
 export const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
     person: {
-      type: person.graphQLType,
-      // resolve: personFieldResolver.resolve,
-      // args: personFieldResolver.args,
+      type: enhancedPersonGraphQLType,
+      resolve: () => {
+        return {
+          id: 'kerem',
+          firstName: 'kazan',
+        };
+      },
+      args: {
+        id: {
+          type: GraphQLID,
+          // deprecationReason: 'deprecation reason', // TODO: deprecated args dont show up on the playground
+          description: 'description',
+        },
+      },
     },
     otherPerson: {
+      args: {
+        higherArg: {
+          type: GraphQLString,
+        },
+      },
       type: new GraphQLObjectType({
         name: 'OtherPerson',
         fields: {
