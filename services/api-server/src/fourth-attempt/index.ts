@@ -497,8 +497,6 @@ const membership = keyOf({
   },
 });
 
-type ASD = ArraySB<typeof membership>;
-
 const arraySB = <SB extends AnySemiBrick>(item: SB): ArraySB<SB> => {
   // TODO: do lists have names?
   return new ArraySemiBrick({
@@ -586,10 +584,6 @@ interface IOutputFieldConfigConstructorArgs<
   resolve: FieldResolveFn<SB, K, I>;
 }
 
-type OutputFieldConfigs<SB extends OutputObjectSemiBrick<any, any, any>> = {
-  [K in keyof SB['bricks']]: IOutputFieldConfig<SB, K, any>; // TODO: how do we handle the ANY here?
-};
-
 class OutputFieldConfig<
   SB extends OutputObjectSemiBrick<any, any, any>,
   K extends keyof SB['bricks'],
@@ -620,8 +614,13 @@ class OutputFieldConfig<
   };
 }
 
+interface AnyOutputFieldConfig<
+  SB extends OutputObjectSemiBrick<any, any, any>,
+  K extends keyof SB['bricks']
+> extends OutputFieldConfig<SB, K, any> {}
+
 type FieldConfigsMap<SB extends OutputObjectSemiBrick<any, any, any>> = {
-  [K in keyof SB['bricks']]: OutputFieldConfig<SB, K, any>; // TODO: how do we handle the ANY here?
+  [K in keyof SB['bricks']]: AnyOutputFieldConfig<SB, K>; // TODO: how do we handle the ANY here?
 };
 
 const resolverize = <
