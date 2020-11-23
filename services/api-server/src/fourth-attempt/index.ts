@@ -595,12 +595,12 @@ class OutputFieldConfig<
   public readonly args: I;
   public readonly resolve: FieldResolveFn<SB, K, I>;
 
-  constructor(params: IOutputFieldConfigConstructorArgs<SB, K, I>) {
-    this.root = params.root;
-    this.key = params.key;
-    this.args = params.args;
-    this.resolve = params.resolve;
-    this.fieldBrick = params.root.bricks[params.key];
+  constructor(root: SB, key: K, args: I, resolve: FieldResolveFn<SB, K, I>) {
+    this.root = root;
+    this.key = key;
+    this.args = args;
+    this.resolve = resolve;
+    this.fieldBrick = root.bricks[key];
   }
 
   getFieldConfig = () => {
@@ -655,30 +655,30 @@ const resolverize = <
 // TODO: b: find a way to avoid having to repeat "personobject"
 // TODO: c: find a way to avoid having to repeat the key, since it comes from the object"
 const enhancedPerson = resolverize(personobject, {
-  id: new OutputFieldConfig({
-    root: personobject,
-    key: 'id',
-    args: { deeperId: scalars.id },
-    resolve: (root, args) => {
+  id: new OutputFieldConfig(
+    personobject,
+    'id',
+    { deeperId: scalars.id },
+    (root, args) => {
       return args.deeperId;
     },
-  }),
-  firstName: new OutputFieldConfig({
-    root: personobject,
-    key: 'firstName',
-    args: { someRandomArg: scalars.boolean },
-    resolve: async (root, args, context) => {
+  ),
+  firstName: new OutputFieldConfig(
+    personobject,
+    'firstName',
+    { someRandomArg: scalars.boolean },
+    async (root, args, context) => {
       return args.someRandomArg ? root.firstName : 'fallback';
     },
-  }),
-  lastName: new OutputFieldConfig({
-    root: personobject,
-    key: 'lastName',
-    args: { id: scalars.float },
-    resolve: async (root, args, context) => {
+  ),
+  lastName: new OutputFieldConfig(
+    personobject,
+    'lastName',
+    { id: scalars.float },
+    (root, args, context) => {
       return args.id > 0 ? 'gt' : 'lt';
     },
-  }),
+  ),
 });
 
 // const a = resolverize(personobject, {
