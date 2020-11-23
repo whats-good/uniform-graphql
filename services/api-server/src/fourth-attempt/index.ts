@@ -591,6 +591,62 @@ class OutputFieldConfig<
   };
 }
 
+class SemiOutputFieldConfig<
+  SB extends OutputObjectSemiBrick<any, any, any>,
+  K extends keyof SB['bricks']
+> {
+  public readonly root: SB;
+  public readonly key: K;
+  public readonly resolvedBrick: SB['bricks'][K];
+
+  constructor(params: { root: SB; key: K; resolvedBrick: SB['bricks'][K] }) {
+    this.root = params.root;
+    this.key = params.key;
+    this.resolvedBrick = params.resolvedBrick;
+  }
+}
+
+class SemiOutputFieldConfigs<
+  SB extends OutputObjectSemiBrick<any, any, any>,
+  F
+> {
+  public readonly root: SB;
+  public readonly fields: F;
+
+  constructor(params: { root: SB; fields: F }) {
+    this.root = params.root;
+    this.fields = params.fields;
+  }
+}
+
+interface SemiOutputFieldConfigsOf<
+  SB extends OutputObjectSemiBrick<P, any, any>
+> extends SemiOutputFieldConfigs<
+    SB,
+    {
+      [K in keyof SB['bricks']]: SemiOutputFieldConfig<SB, K>;
+    }
+  > {}
+
+const semiConfigs = <SB extends OutputObjectSemiBrick<any, any, any>>(
+  root: SB,
+): SemiOutputFieldConfigsOf<SB> => {
+  type Fields = SemiOutputFieldConfigsOf<SB>['fields'];
+  const mapped = _.mapValues(root.bricks, (resolvedBrick, key) => {
+    return new SemiOutputFieldConfig({
+      root,
+      key,
+      resolvedBrick,
+    });
+  });
+  return new SemiOutputFieldConfigs({
+    root,
+    fields: mapped as Fields, // TODO: is there a way out of doing this fields AS?
+  });
+};
+
+const s = semiConfigs(personobject);
+
 interface AnyOutputFieldConfig<
   SB extends OutputObjectSemiBrick<any, any, any>,
   K extends keyof SB['bricks']
@@ -606,31 +662,43 @@ const resolverize = <
   F extends Partial<FieldConfigsMap<SB>>
 >(
   sb: SB,
-  enhancedFields: F,
+  enhancedFields: (input: []) => {},
 ) => {
-  const existingFields = _.mapValues(sb.bricks, (brick) => ({
-    type: brick.graphQLType,
-  }));
-  const mappedGQLtypes = _.mapValues(enhancedFields, (field) =>
-    field?.getFieldConfig(),
-  );
-  const nextGraphQLType = new GraphQLObjectType({
-    name: sb.name,
-    fields: {
-      ...existingFields,
-      ...mappedGQLtypes,
-    },
-  });
-  const nextSB = new OutputObjectSemiBrick({
-    ...sb.params,
-    semiGraphQLType: nextGraphQLType,
-  });
-  return Brick.lift(nextSB);
+  // const existingFields = _.mapValues(sb.bricks, (brick) => ({
+  //   type: brick.graphQLType,
+  // }));
+  // const mappedGQLtypes = _.mapValues(enhancedFields, (field) =>
+  //   field?.getFieldConfig(),
+  // );
+  // const nextGraphQLType = new GraphQLObjectType({
+  //   name: sb.name,
+  //   fields: {
+  //     ...existingFields,
+  //     ...mappedGQLtypes,
+  //   },
+  // });
+  // const nextSB = new OutputObjectSemiBrick({
+  //   ...sb.params,
+  //   semiGraphQLType: nextGraphQLType,
+  // });
+  // return Brick.lift(nextSB);
 };
 
 // TODO: next milestones: a: find a way to avoid having to repeat "fieldResolverize",
 // TODO: b: find a way to avoid having to repeat "personobject"
 // TODO: c: find a way to avoid having to repeat the key, since it comes from the object"
+
+const a = resolverize(personobject, (k) =>
+  k({
+    id: [
+      { firstName: scalars.string },
+      (root, args, context) => {
+        return root.id;
+      },
+    ],
+  }),
+);
+
 const enhancedPerson = resolverize(personobject, {
   id: new OutputFieldConfig(
     personobject,
