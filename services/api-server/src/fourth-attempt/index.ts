@@ -387,24 +387,6 @@ const unionS = <
 
 export const union = flow(unionS, Brick.lift);
 
-const myOb = outputObject({
-  name: 'yo',
-  bricks: {
-    firstName: scalars.string,
-    lastName: scalars.float,
-  },
-});
-
-myOb.semiCodec.encode({
-  firstName: 'yo',
-  lastName: 1,
-});
-
-const d = union({
-  name: 'yhi',
-  semiBricks: [myOb, myOb], // TODO: how do we prevent these two objects frombeing the same?
-});
-
 class EnumSemiBrick<D extends { [key: string]: unknown }> extends SemiBrick<
   keyof D,
   unknown,
@@ -561,6 +543,21 @@ type FieldResolveFn<
   context: any,
 ) => SB['bricks'][K]['B_A'] | Promise<SB['bricks'][K]['B_A']>;
 
+class SemiOutputFieldConfig<
+  SB extends OutputObjectSemiBrick<any, any, any>,
+  K extends keyof SB['bricks']
+> {
+  public readonly root: SB;
+  public readonly key: K;
+  public readonly fieldBrick: SB['bricks'][K];
+
+  constructor(params: { root: SB; key: K; resolvedBrick: SB['bricks'][K] }) {
+    this.root = params.root;
+    this.key = params.key;
+    this.fieldBrick = params.resolvedBrick;
+  }
+}
+
 class OutputFieldConfig<
   SB extends OutputObjectSemiBrick<any, any, any>,
   K extends keyof SB['bricks'],
@@ -596,33 +593,7 @@ class OutputFieldConfig<
   };
 }
 
-class SemiOutputFieldConfig<
-  SB extends OutputObjectSemiBrick<any, any, any>,
-  K extends keyof SB['bricks']
-> {
-  public readonly root: SB;
-  public readonly key: K;
-  public readonly fieldBrick: SB['bricks'][K];
-
-  constructor(params: { root: SB; key: K; resolvedBrick: SB['bricks'][K] }) {
-    this.root = params.root;
-    this.key = params.key;
-    this.fieldBrick = params.resolvedBrick;
-  }
-
-  getOutputFieldConfig = <I extends InputProps>(
-    args: I,
-    resolve: FieldResolveFn<SB, K, I>,
-  ) =>
-    new OutputFieldConfig({
-      root: this.root,
-      key: this.key,
-      args,
-      resolve,
-    });
-}
-
-class SemiOutputFieldConfigs<
+class SemiOutputFieldConfigsMap<
   SB extends OutputObjectSemiBrick<any, any, any>,
   F
 > {
@@ -635,9 +606,9 @@ class SemiOutputFieldConfigs<
   }
 }
 
-interface SemiOutputFieldConfigsOf<
-  SB extends OutputObjectSemiBrick<P, any, any>
-> extends SemiOutputFieldConfigs<
+interface SemiOutputFieldConfigsMapOf<
+  SB extends OutputObjectSemiBrick<any, any, any>
+> extends SemiOutputFieldConfigsMap<
     SB,
     {
       [K in keyof SB['bricks']]: SemiOutputFieldConfig<SB, K>;
@@ -646,8 +617,8 @@ interface SemiOutputFieldConfigsOf<
 
 const semiConfigs = <SB extends OutputObjectSemiBrick<any, any, any>>(
   root: SB,
-): SemiOutputFieldConfigsOf<SB> => {
-  type Fields = SemiOutputFieldConfigsOf<SB>['fields'];
+): SemiOutputFieldConfigsMapOf<SB> => {
+  type Fields = SemiOutputFieldConfigsMapOf<SB>['fields'];
   const mapped = _.mapValues(root.bricks, (resolvedBrick, key) => {
     return new SemiOutputFieldConfig({
       root,
@@ -655,13 +626,15 @@ const semiConfigs = <SB extends OutputObjectSemiBrick<any, any, any>>(
       resolvedBrick,
     });
   });
-  return new SemiOutputFieldConfigs({
+  return new SemiOutputFieldConfigsMap({
     root,
     fields: mapped as Fields, // TODO: is there a way out of doing this fields AS?
   });
 };
 
 const s = semiConfigs(personobject);
+const d = s.fields.firstName.fieldBrick.codec.encode('abc');
+const a = s.fields.firstName.key;
 
 interface AnyOutputFieldConfig<
   SB extends OutputObjectSemiBrick<any, any, any>,
@@ -672,75 +645,75 @@ type FieldConfigsMap<SB extends OutputObjectSemiBrick<any, any, any>> = {
   [K in keyof SB['bricks']]: AnyOutputFieldConfig<SB, K>; // TODO: how do we handle the ANY here?
 };
 
-const resolverize = <
-  P extends OutputProps,
-  SB extends OutputObjectSemiBrick<P, any, any>,
-  F extends Partial<FieldConfigsMap<SB>>
->(
-  sb: SB,
-  enhancedFields: (input: []) => {},
-) => {
-  // const existingFields = _.mapValues(sb.bricks, (brick) => ({
-  //   type: brick.graphQLType,
-  // }));
-  // const mappedGQLtypes = _.mapValues(enhancedFields, (field) =>
-  //   field?.getFieldConfig(),
-  // );
-  // const nextGraphQLType = new GraphQLObjectType({
-  //   name: sb.name,
-  //   fields: {
-  //     ...existingFields,
-  //     ...mappedGQLtypes,
-  //   },
-  // });
-  // const nextSB = new OutputObjectSemiBrick({
-  //   ...sb.params,
-  //   semiGraphQLType: nextGraphQLType,
-  // });
-  // return Brick.lift(nextSB);
-};
+// const resolverize = <
+//   P extends OutputProps,
+//   SB extends OutputObjectSemiBrick<P, any, any>,
+//   F extends Partial<FieldConfigsMap<SB>>
+// >(
+//   sb: SB,
+//   enhancedFields: (input: []) => {},
+// ) => {
+// const existingFields = _.mapValues(sb.bricks, (brick) => ({
+//   type: brick.graphQLType,
+// }));
+// const mappedGQLtypes = _.mapValues(enhancedFields, (field) =>
+//   field?.getFieldConfig(),
+// );
+// const nextGraphQLType = new GraphQLObjectType({
+//   name: sb.name,
+//   fields: {
+//     ...existingFields,
+//     ...mappedGQLtypes,
+//   },
+// });
+// const nextSB = new OutputObjectSemiBrick({
+//   ...sb.params,
+//   semiGraphQLType: nextGraphQLType,
+// });
+// return Brick.lift(nextSB);
+// };
 
 // TODO: next milestones: a: find a way to avoid having to repeat "fieldResolverize",
 // TODO: b: find a way to avoid having to repeat "personobject"
 // TODO: c: find a way to avoid having to repeat the key, since it comes from the object"
 
-const a = resolverize(personobject, (k) =>
-  k({
-    id: [
-      { firstName: scalars.string },
-      (root, args, context) => {
-        return root.id;
-      },
-    ],
-  }),
-);
+// const a = resolverize(personobject, (k) =>
+//   k({
+//     id: [
+//       { firstName: scalars.string },
+//       (root, args, context) => {
+//         return root.id;
+//       },
+//     ],
+//   }),
+// );
 
-const enhancedPerson = resolverize(personobject, {
-  id: new OutputFieldConfig(
-    personobject,
-    'id',
-    { deeperId: scalars.id },
-    (root, args) => {
-      return args.deeperId;
-    },
-  ),
-  firstName: new OutputFieldConfig(
-    personobject,
-    'firstName',
-    { someRandomArg: scalars.boolean },
-    async (root, args, context) => {
-      return args.someRandomArg ? root.firstName : 'fallback';
-    },
-  ),
-  lastName: new OutputFieldConfig(
-    personobject,
-    'lastName',
-    { id: scalars.float },
-    (root, args, context) => {
-      return args.id > 0 ? 'gt' : 'lt';
-    },
-  ),
-});
+// const enhancedPerson = resolverize(personobject, {
+//   id: new OutputFieldConfig(
+//     personobject,
+//     'id',
+//     { deeperId: scalars.id },
+//     (root, args) => {
+//       return args.deeperId;
+//     },
+//   ),
+//   firstName: new OutputFieldConfig(
+//     personobject,
+//     'firstName',
+//     { someRandomArg: scalars.boolean },
+//     async (root, args, context) => {
+//       return args.someRandomArg ? root.firstName : 'fallback';
+//     },
+//   ),
+//   lastName: new OutputFieldConfig(
+//     personobject,
+//     'lastName',
+//     { id: scalars.float },
+//     (root, args, context) => {
+//       return args.id > 0 ? 'gt' : 'lt';
+//     },
+//   ),
+// });
 
 // const a = resolverize(personobject, {
 //   id: (root, args: @args({ deeperId: scalars.id})) => {
