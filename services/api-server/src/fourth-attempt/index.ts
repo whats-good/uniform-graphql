@@ -122,6 +122,33 @@ export class Brick<
   }
 }
 
+interface BrickOf<SB extends SemiBrick<any, any, any, any>>
+  extends Brick<
+    SB['S_A'],
+    SB['S_O'],
+    SB['semiGraphQLType'],
+    any,
+    any,
+    any,
+    SB['kind']
+  > {}
+
+class OutputSemiBrick<
+  S_A,
+  S_O,
+  S_G extends GraphQLOutputType,
+  K extends OutputKind
+> extends SemiBrick<S_A, S_O, S_G, K> {
+  // TODO: can resolverize here.
+  resolverize() {
+    return null;
+  }
+}
+interface AnyOutputSemiBrick
+  extends OutputSemiBrick<any, any, any, OutputKind> {}
+
+interface AnyOutputBrick extends BrickOf<AnyOutputSemiBrick> {}
+
 class ScalarSemiBrick<
   S_A,
   S_O,
@@ -244,21 +271,19 @@ const inputObjectSB = <P extends InputProps>(params: {
   });
 };
 
-const inputObject = flow(inputObjectSB, Brick.lift);
+const inputObject = flow(inputObjectSB, (x) => x.lift());
 
 // TODO: can we add kind
-interface AnyOutputBrick
-  extends Brick<any, any, GraphQLOutputType, any, any, any, OutputKind> {}
+
 interface OutputProps {
   [key: string]: AnyOutputBrick;
 }
 
-class OutputObjectSemiBrick<P extends OutputProps, S_A, S_O> extends SemiBrick<
+class OutputObjectSemiBrick<
+  P extends OutputProps,
   S_A,
-  S_O,
-  GraphQLObjectType,
-  'outputobject'
-> {
+  S_O
+> extends OutputSemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'> {
   public readonly bricks: P;
   constructor(
     public readonly params: {
@@ -305,7 +330,7 @@ const outputObjectSB = <P extends OutputProps>(params: {
   });
 };
 
-const outputObject = flow(outputObjectSB, Brick.lift);
+const outputObject = flow(outputObjectSB, (x) => x.lift());
 
 interface AnyUnionableSemiBrick
   extends SemiBrick<any, any, GraphQLObjectType, 'outputobject'> {}
@@ -314,7 +339,7 @@ class UnionSemiBrick<
   SBS extends Array<AnyUnionableSemiBrick>,
   S_A,
   S_O
-> extends SemiBrick<S_A, S_O, GraphQLUnionType, 'union'> {
+> extends OutputSemiBrick<S_A, S_O, GraphQLUnionType, 'union'> {
   public readonly semiBricks;
 
   constructor(params: {
@@ -377,14 +402,11 @@ const unionS = <
   });
 };
 
-export const union = flow(unionS, Brick.lift);
+export const union = flow(unionS, (x) => x.lift());
 
-class EnumSemiBrick<D extends { [key: string]: unknown }> extends SemiBrick<
-  keyof D,
-  unknown,
-  GraphQLEnumType,
-  'enum'
-> {
+class EnumSemiBrick<
+  D extends { [key: string]: unknown }
+> extends OutputSemiBrick<keyof D, unknown, GraphQLEnumType, 'enum'> {
   constructor(params: {
     name: string;
     keys: D;
@@ -422,7 +444,7 @@ const keyofS = <D extends { [key: string]: unknown }>(params: {
   });
 };
 
-export const keyOf = flow(keyofS, Brick.lift);
+export const keyOf = flow(keyofS, (x) => x.lift());
 
 // TODO: how difficult would it be to compute the enum from an array of literals?
 
