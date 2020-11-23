@@ -99,7 +99,7 @@ export class Brick<
   public readonly graphQLType: B_G;
   public readonly codec: Codec<B_A, B_O>;
 
-  private constructor(params: {
+  constructor(params: {
     name: string;
     semiGraphQLType: S_G;
     semiCodec: Codec<S_A, S_O>;
@@ -111,52 +111,6 @@ export class Brick<
     this.graphQLType = params.graphQLType;
     this.codec = params.codec;
   }
-
-  private static fromNullableSemiBrick = <
-    S_A,
-    S_O,
-    S_G extends GraphQLNullableType,
-    K extends Kind
-  >(
-    sb: SemiBrick<S_A, S_O, S_G, K>,
-  ) => {
-    return new Brick({
-      ...sb,
-      codec: t.union([sb.semiCodec, t.undefined, t.null]),
-      graphQLType: sb.semiGraphQLType,
-    });
-  };
-
-  private static fromNonNullableSemiBrick = <
-    S_A,
-    S_O,
-    S_G extends GraphQLNullableType,
-    K extends Kind
-  >(
-    sb: SemiBrick<S_A, S_O, S_G, K>,
-  ) => {
-    return new Brick({
-      ...sb,
-      codec: sb.semiCodec,
-      graphQLType: new GraphQLNonNull(sb.semiGraphQLType),
-    });
-  };
-
-  // TODO: lifting removes special fields...
-  public static lift = <
-    S_A,
-    S_O,
-    S_G extends GraphQLNullableType,
-    K extends Kind
-  >(
-    sb: SemiBrick<S_A, S_O, S_G, K>,
-  ) => {
-    // TODO: we need to create one more class: LiftedBricks
-    return {
-      ...Brick.fromNonNullableSemiBrick(sb),
-      nullable: Brick.fromNullableSemiBrick(sb),
-    };
-  };
 }
 
 const id = new SemiBrick({
