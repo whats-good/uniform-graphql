@@ -572,12 +572,17 @@ class OutputFieldConfig<
   public readonly args: I;
   public readonly resolve: FieldResolveFn<SB, K, I>;
 
-  constructor(root: SB, key: K, args: I, resolve: FieldResolveFn<SB, K, I>) {
-    this.root = root;
-    this.key = key;
-    this.args = args;
-    this.resolve = resolve;
-    this.fieldBrick = root.bricks[key];
+  constructor(params: {
+    root: SB;
+    key: K;
+    args: I;
+    resolve: FieldResolveFn<SB, K, I>;
+  }) {
+    this.root = params.root;
+    this.key = params.key;
+    this.args = params.args;
+    this.resolve = params.resolve;
+    this.fieldBrick = params.root.bricks[params.key];
   }
 
   getFieldConfig = () => {
@@ -597,13 +602,24 @@ class SemiOutputFieldConfig<
 > {
   public readonly root: SB;
   public readonly key: K;
-  public readonly resolvedBrick: SB['bricks'][K];
+  public readonly fieldBrick: SB['bricks'][K];
 
   constructor(params: { root: SB; key: K; resolvedBrick: SB['bricks'][K] }) {
     this.root = params.root;
     this.key = params.key;
-    this.resolvedBrick = params.resolvedBrick;
+    this.fieldBrick = params.resolvedBrick;
   }
+
+  getOutputFieldConfig = <I extends InputProps>(
+    args: I,
+    resolve: FieldResolveFn<SB, K, I>,
+  ) =>
+    new OutputFieldConfig({
+      root: this.root,
+      key: this.key,
+      args,
+      resolve,
+    });
 }
 
 class SemiOutputFieldConfigs<
