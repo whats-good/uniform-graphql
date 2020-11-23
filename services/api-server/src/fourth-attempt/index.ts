@@ -90,7 +90,7 @@ export class SemiBrick<
     return {
       ...notNullableOuter,
       nullable: nullableOuter,
-  };
+    };
   };
 }
 
@@ -133,27 +133,23 @@ interface BrickOf<SB extends SemiBrick<any, any, any, any>>
     SB['kind']
   > {}
 
-class OutputSemiBrick<
+interface OutputSemiBrick<
   S_A,
   S_O,
   S_G extends GraphQLOutputType,
   K extends OutputKind
 > extends SemiBrick<S_A, S_O, S_G, K> {
-  // TODO: can resolverize here.
-  resolverize() {
-    return null;
-  }
+  resolverize(): null;
 }
+
 interface AnyOutputSemiBrick
   extends OutputSemiBrick<any, any, any, OutputKind> {}
 
 interface AnyOutputBrick extends BrickOf<AnyOutputSemiBrick> {}
 
-class ScalarSemiBrick<
-  S_A,
-  S_O,
-  S_G extends GraphQLScalarType
-> extends OutputSemiBrick<S_A, S_O, S_G, 'scalar'> {
+class ScalarSemiBrick<S_A, S_O, S_G extends GraphQLScalarType>
+  extends SemiBrick<S_A, S_O, S_G, 'scalar'>
+  implements OutputSemiBrick<S_A, S_O, S_G, 'scalar'> {
   constructor(params: {
     name: string;
     semiCodec: Codec<S_A, S_O>;
@@ -161,8 +157,12 @@ class ScalarSemiBrick<
   }) {
     super({
       ...params,
-  kind: 'scalar',
+      kind: 'scalar',
     });
+  }
+
+  resolverize() {
+    return null;
   }
 }
 
@@ -279,11 +279,9 @@ interface OutputProps {
   [key: string]: AnyOutputBrick;
 }
 
-class OutputObjectSemiBrick<
-  P extends OutputProps,
-  S_A,
-  S_O
-> extends OutputSemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'> {
+class OutputObjectSemiBrick<P extends OutputProps, S_A, S_O>
+  extends SemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'>
+  implements OutputSemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'> {
   public readonly bricks: P;
   constructor(
     public readonly params: {
@@ -300,6 +298,10 @@ class OutputObjectSemiBrick<
       kind: 'outputobject',
     });
     this.bricks = params.bricks;
+  }
+
+  resolverize() {
+    return null;
   }
 }
 
@@ -335,11 +337,9 @@ const outputObject = flow(outputObjectSB, (x) => x.lift());
 interface AnyUnionableSemiBrick
   extends SemiBrick<any, any, GraphQLObjectType, 'outputobject'> {}
 
-class UnionSemiBrick<
-  SBS extends Array<AnyUnionableSemiBrick>,
-  S_A,
-  S_O
-> extends OutputSemiBrick<S_A, S_O, GraphQLUnionType, 'union'> {
+class UnionSemiBrick<SBS extends Array<AnyUnionableSemiBrick>, S_A, S_O>
+  extends SemiBrick<S_A, S_O, GraphQLUnionType, 'union'>
+  implements OutputSemiBrick<S_A, S_O, GraphQLUnionType, 'union'> {
   public readonly semiBricks;
 
   constructor(params: {
@@ -353,6 +353,10 @@ class UnionSemiBrick<
       kind: 'union',
     });
     this.semiBricks = params.semiBricks;
+  }
+
+  resolverize() {
+    return null;
   }
 }
 
@@ -404,9 +408,9 @@ const unionS = <
 
 export const union = flow(unionS, (x) => x.lift());
 
-class EnumSemiBrick<
-  D extends { [key: string]: unknown }
-> extends OutputSemiBrick<keyof D, unknown, GraphQLEnumType, 'enum'> {
+class EnumSemiBrick<D extends { [key: string]: unknown }>
+  extends SemiBrick<keyof D, unknown, GraphQLEnumType, 'enum'>
+  implements OutputSemiBrick<keyof D, unknown, GraphQLEnumType, 'enum'> {
   constructor(params: {
     name: string;
     keys: D;
@@ -419,6 +423,10 @@ class EnumSemiBrick<
       kind: 'enum',
       semiGraphQLType: params.semiGraphQLType,
     });
+  }
+
+  resolverize() {
+    return null;
   }
 }
 
@@ -453,17 +461,18 @@ export const keyOf = flow(keyofS, (x) => x.lift());
 
 t.array;
 
+// TODO: differentiate between input and output types later
 export class ArraySemiBrick<
   S_A,
   S_O,
-  S_G extends GraphQLList<any>, // TODO: maybe this shouldn't be an any
+  BASE_G extends GraphQLType,
   SB extends AnySemiBrick
-> extends SemiBrick<S_A, S_O, S_G, 'list'> {
+> extends SemiBrick<S_A, S_O, GraphQLList<BASE_G>, 'list'> {
   public readonly item: SB;
 
   constructor(params: {
     semiCodec: Codec<S_A, S_O>;
-    semiGraphQLType: S_G;
+    semiGraphQLType: GraphQLList<BASE_G>;
     item: SB;
   }) {
     super({
@@ -480,18 +489,9 @@ interface ArraySB<SB extends AnySemiBrick>
   extends ArraySemiBrick<
     Array<SemiTypeOf<SB>>,
     Array<SemiOutputOf<SB>>,
-    GraphQLList<SB['semiGraphQLType']>,
+    SB['semiGraphQLType'],
     SB
   > {}
-
-const membership = keyOf({
-  name: 'Membership',
-  keys: {
-    free: null,
-    paid: null,
-    enterprise: null,
-  },
-});
 
 const arraySB = <SB extends AnySemiBrick>(item: SB): ArraySB<SB> => {
   // TODO: do lists have names?
@@ -502,37 +502,8 @@ const arraySB = <SB extends AnySemiBrick>(item: SB): ArraySB<SB> => {
   });
 };
 
-export const array = flow(arraySB, Brick.lift);
+export const array = flow(arraySB, (x) => x.lift());
 
-const membershiplist = array(membership);
-
-const person = outputObject({
-  name: 'Person',
-  bricks: {
-    id: scalars.id,
-    firstName: scalars.string,
-    lastName: scalars.string,
-    age: scalars.float,
-  },
-});
-
-const personSB = outputObjectSB({
-  name: 'Person',
-  bricks: {
-    id: scalars.id,
-    firstName: scalars.string,
-    lastName: scalars.string,
-    age: scalars.float,
-  },
-});
-const signupArgs = inputObject({
-  name: 'SignupArgs',
-  bricks: {
-    firstName: scalars.string,
-    lastName: scalars.string,
-    age: scalars.float,
-  },
-});
 // TODO: find a way so that lifting preserves the extended types.
 const personobject = outputObjectSB({
   name: 'Person',
@@ -670,9 +641,31 @@ interface AnyOutputFieldConfig<
   K extends keyof SB['bricks']
 > extends OutputFieldConfig<SB, K, any> {}
 
-type FieldConfigsMap<SB extends OutputObjectSemiBrick<any, any, any>> = {
-  [K in keyof SB['bricks']]: AnyOutputFieldConfig<SB, K>; // TODO: how do we handle the ANY here?
-};
+const membership = keyOf({
+  name: 'Membership',
+  keys: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
+
+const person1 = outputObject({
+  name: 'Person1',
+  bricks: {
+    firstName: scalars.id,
+    lastName: scalars.string,
+    favoriteNumber: scalars.float,
+  },
+});
+
+const person2 = outputObject({
+  name: 'Person2',
+  bricks: {
+    id: scalars.id,
+    bestFriend: person1,
+  },
+});
 
 // const resolverize = <
 //   P extends OutputProps,
@@ -704,7 +697,6 @@ type FieldConfigsMap<SB extends OutputObjectSemiBrick<any, any, any>> = {
 
 // TODO: next milestones: a: find a way to avoid having to repeat "fieldResolverize",
 // TODO: b: find a way to avoid having to repeat "personobject"
-// TODO: c: find a way to avoid having to repeat the key, since it comes from the object"
 
 // const a = resolverize(personobject, (k) =>
 //   k({
