@@ -314,6 +314,7 @@ const outputObjectSB = <P extends OutputProps>(params: {
 };
 
 const outputObject = flow(outputObjectSB, Brick.lift);
+
 interface AnyUnionableSemiBrick
   extends SemiBrick<any, any, GraphQLObjectType, 'outputobject'> {}
 
@@ -562,24 +563,45 @@ type FieldResolveFn<
   context: any,
 ) => SB['bricks'][K]['B_A'] | Promise<SB['bricks'][K]['B_A']>;
 
-class FieldResolver<
+interface IOutputFieldConfig<
   SB extends OutputObjectSemiBrick<any, any, any>,
-  B extends AnyOutputBrick,
   K extends keyof SB['bricks'],
   I extends InputProps
 > {
+  root: SB;
+  fieldBrick: SB['bricks'][K];
+  key: K;
+  args: I;
+  resolve: FieldResolveFn<SB, K, I>;
+}
+
+interface IOutputFieldConfigConstructorArgs<
+  SB extends OutputObjectSemiBrick<any, any, any>,
+  K extends keyof SB['bricks'],
+  I extends InputProps
+> {
+  root: SB;
+  key: K;
+  args: I;
+  resolve: FieldResolveFn<SB, K, I>;
+}
+
+type OutputFieldConfigs<SB extends OutputObjectSemiBrick<any, any, any>> = {
+  [K in keyof SB['bricks']]: IOutputFieldConfig<SB, K, any>; // TODO: how do we handle the ANY here?
+};
+
+class OutputFieldConfig<
+  SB extends OutputObjectSemiBrick<any, any, any>,
+  K extends keyof SB['bricks'],
+  I extends InputProps
+> implements IOutputFieldConfig<SB, K, I> {
   public readonly root: SB;
-  public readonly fieldBrick: B;
+  public readonly fieldBrick: SB['bricks'][K];
   public readonly key: K;
   public readonly args: I;
   public readonly resolve: FieldResolveFn<SB, K, I>;
 
-  constructor(params: {
-    root: SB;
-    key: K;
-    args: I;
-    resolve: FieldResolveFn<SB, K, I>;
-  }) {
+  constructor(params: IOutputFieldConfigConstructorArgs<SB, K, I>) {
     this.root = params.root;
     this.key = params.key;
     this.args = params.args;
@@ -598,32 +620,14 @@ class FieldResolver<
   };
 }
 
-const fieldResolverize = <
-  SB extends OutputObjectSemiBrick<any, any, any>,
-  K extends keyof SB['bricks'],
-  I extends InputProps
->(params: {
-  root: SB;
-  key: K;
-  args: I;
-  resolve: FieldResolveFn<SB, K, I>;
-}): FieldResolver<SB, SB['bricks'][K], K, I> => {
-  return new FieldResolver({
-    root: params.root,
-    key: params.key,
-    args: params.args,
-    resolve: params.resolve, // TODO: find a way out of this.
-  });
-};
-
-type FieldResolversMap<SB extends OutputObjectSemiBrick<any, any, any>> = {
-  [K in keyof SB['bricks']]: FieldResolver<SB, SB['bricks'][K], K, any>; // TODO: how do we handle the ANY here?
+type FieldConfigsMap<SB extends OutputObjectSemiBrick<any, any, any>> = {
+  [K in keyof SB['bricks']]: OutputFieldConfig<SB, K, any>; // TODO: how do we handle the ANY here?
 };
 
 const resolverize = <
   P extends OutputProps,
   SB extends OutputObjectSemiBrick<P, any, any>,
-  F extends Partial<FieldResolversMap<SB>>
+  F extends Partial<FieldConfigsMap<SB>>
 >(
   sb: SB,
   enhancedFields: F,
@@ -652,7 +656,7 @@ const resolverize = <
 // TODO: b: find a way to avoid having to repeat "personobject"
 // TODO: c: find a way to avoid having to repeat the key, since it comes from the object"
 const enhancedPerson = resolverize(personobject, {
-  id: fieldResolverize({
+  id: new OutputFieldConfig({
     root: personobject,
     key: 'id',
     args: { deeperId: scalars.id },
@@ -660,12 +664,20 @@ const enhancedPerson = resolverize(personobject, {
       return args.deeperId;
     },
   }),
-  firstName: fieldResolverize({
+  firstName: new OutputFieldConfig({
     root: personobject,
     key: 'firstName',
     args: { someRandomArg: scalars.boolean },
     resolve: async (root, args, context) => {
       return args.someRandomArg ? root.firstName : 'fallback';
+    },
+  }),
+  lastName: new OutputFieldConfig({
+    root: personobject,
+    key: 'lastName',
+    args: { id: scalars.float },
+    resolve: async (root, args, context) => {
+      return args.id > 0 ? 'gt' : 'lt';
     },
   }),
 });
