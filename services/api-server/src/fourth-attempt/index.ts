@@ -25,22 +25,23 @@ type Codec<A, O> = t.Type<A, O, unknown>;
 
 type Kind =
   | 'scalar' // done
-  | 'outputobject' // done
-  | 'interface'
-  | 'union' // done
   | 'enum' // done
+  | 'outputobject' // done
+  | 'outputlist'
+  | 'interface' // TODO: implement
+  | 'union' // done
   | 'inputobject' // done
-  | 'list'; // done
+  | 'inputlist'; // done
 
-type InputKind = 'scalar' | 'enum' | 'inputobject' | 'list'; // TODO: the list items themselves should be 'inputable'
+type InputKind = 'scalar' | 'enum' | 'inputobject' | 'inputlist'; // TODO: the list items themselves should be 'inputable'
 
 type OutputKind =
   | 'scalar'
-  | 'outputobject'
-  | 'interface'
-  | 'union'
   | 'enum'
-  | 'list'; // TODO: the list items themselves should be outputable
+  | 'outputobject'
+  | 'outputlist'
+  | 'interface'
+  | 'union';
 
 // TODO: consider creating different kinds of lists (one for input, one for output)
 export class SemiBrick<
@@ -462,12 +463,12 @@ export const keyOf = flow(keyofS, (x) => x.lift());
 t.array;
 
 // TODO: differentiate between input and output types later
-export class ArraySemiBrick<
+export class OutputListSemiBrick<
   S_A,
   S_O,
   BASE_G extends GraphQLType,
   SB extends AnySemiBrick
-> extends SemiBrick<S_A, S_O, GraphQLList<BASE_G>, 'list'> {
+> extends SemiBrick<S_A, S_O, GraphQLList<BASE_G>, 'outputlist'> {
   public readonly item: SB;
 
   constructor(params: {
@@ -477,7 +478,7 @@ export class ArraySemiBrick<
   }) {
     super({
       name: `Array<${params.item.name}>`,
-      kind: 'list',
+      kind: 'outputlist',
       semiCodec: params.semiCodec,
       semiGraphQLType: params.semiGraphQLType,
     });
@@ -485,34 +486,24 @@ export class ArraySemiBrick<
   }
 }
 
-interface ArraySB<SB extends AnySemiBrick>
-  extends ArraySemiBrick<
+interface OutputListSB<SB extends AnySemiBrick>
+  extends OutputListSemiBrick<
     Array<SemiTypeOf<SB>>,
     Array<SemiOutputOf<SB>>,
     SB['semiGraphQLType'],
     SB
   > {}
 
-const arraySB = <SB extends AnySemiBrick>(item: SB): ArraySB<SB> => {
+const outputListSB = <SB extends AnySemiBrick>(item: SB): OutputListSB<SB> => {
   // TODO: do lists have names?
-  return new ArraySemiBrick({
+  return new OutputListSemiBrick({
     item,
     semiCodec: t.array(item.semiCodec),
     semiGraphQLType: new GraphQLList(item.semiGraphQLType),
   });
 };
 
-export const array = flow(arraySB, (x) => x.lift());
-
-// TODO: find a way so that lifting preserves the extended types.
-const personobject = outputObjectSB({
-  name: 'Person',
-  bricks: {
-    id: scalars.id,
-    firstName: scalars.string,
-    lastName: scalars.string,
-  },
-});
+export const outputList = flow(outputListSB, (x) => x.lift());
 
 const membership = keyOf({
   name: 'Membership',
@@ -523,20 +514,14 @@ const membership = keyOf({
   },
 });
 
-const person1 = outputObject({
-  name: 'Person1',
-  bricks: {
-    firstName: scalars.id,
-    lastName: scalars.string,
-    favoriteNumber: scalars.float,
-  },
-});
-
-const person2 = outputObject({
-  name: 'Person2',
+// TODO: find a way so that lifting preserves the extended types.
+const personobject = outputObject({
+  name: 'Person',
   bricks: {
     id: scalars.id,
-    bestFriend: person1,
+    firstName: scalars.string,
+    lastName: scalars.string,
+    membership,
   },
 });
 
@@ -544,7 +529,7 @@ export const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
     enhancedPerson: {
-      type: enhancedPerson.graphQLType,
+      type: personobject.graphQLType,
       resolve: () => {
         return {
           id: '1234',
