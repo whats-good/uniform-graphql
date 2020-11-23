@@ -123,14 +123,18 @@ export class Brick<
   }
 }
 
-interface BrickOf<SB extends SemiBrick<any, any, any, any>>
-  extends Brick<
+interface BrickOf<
+  SB extends SemiBrick<any, any, any, any>,
+  B_A,
+  B_O,
+  B_G extends GraphQLType
+> extends Brick<
     SB['S_A'],
     SB['S_O'],
     SB['semiGraphQLType'],
-    any,
-    any,
-    any,
+    B_A,
+    B_O,
+    B_G,
     SB['kind']
   > {}
 
@@ -146,7 +150,7 @@ interface OutputSemiBrick<
 interface AnyOutputSemiBrick
   extends OutputSemiBrick<any, any, any, OutputKind> {}
 
-interface AnyOutputBrick extends BrickOf<AnyOutputSemiBrick> {}
+interface AnyOutputBrick extends BrickOf<AnyOutputSemiBrick, any, any, any> {}
 
 class ScalarSemiBrick<S_A, S_O, S_G extends GraphQLScalarType>
   extends SemiBrick<S_A, S_O, S_G, 'scalar'>
@@ -221,12 +225,11 @@ interface InputProps {
   [key: string]: AnyInputBrick;
 }
 
-export class InputObjectSemiBrick<P, S_A, S_O> extends SemiBrick<
+export class InputObjectSemiBrick<
+  P extends InputProps,
   S_A,
-  S_O,
-  GraphQLInputObjectType,
-  'inputobject'
-> {
+  S_O
+> extends SemiBrick<S_A, S_O, GraphQLInputObjectType, 'inputobject'> {
   public readonly props: P;
   constructor(params: {
     name: string;
@@ -301,9 +304,17 @@ class OutputObjectSemiBrick<P extends OutputProps, S_A, S_O>
     this.bricks = params.bricks;
   }
 
-  resolverize() {
-    return null;
-  }
+  resolverize = (): any => {
+    return {
+      type: this.semiGraphQLType,
+      args: {
+        id: {
+          type: GraphQLID,
+        },
+      },
+      resolve: () => {},
+    };
+  };
 }
 
 interface OutputObjectSemiBrickOfProps<P extends OutputProps>
@@ -552,6 +563,7 @@ export const rootQuery = new GraphQLObjectType({
   fields: {
     user: {
       type: user.graphQLType,
+      args: undefined,
       resolve: () => {
         return {
           id: '1234',
@@ -560,6 +572,7 @@ export const rootQuery = new GraphQLObjectType({
         };
       },
     },
+    keremUser: user.resolverize(),
     otherPerson: {
       args: {
         higherArg: {
