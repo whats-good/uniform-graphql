@@ -66,6 +66,23 @@ export class SemiBrick<
     this.semiCodec = params.semiCodec;
     this.kind = params.kind;
   }
+
+  lift = () => {
+    const nullable = new Brick({
+      ...this,
+      codec: t.union([this.semiCodec, t.undefined, t.null]),
+      graphQLType: this.semiGraphQLType,
+    });
+    const notNullable = new Brick({
+      ...this,
+      codec: this.semiCodec,
+      graphQLType: new GraphQLNonNull(this.semiGraphQLType),
+    });
+    return {
+      ...notNullable,
+      nullable,
+    };
+  };
 }
 
 export class Brick<
