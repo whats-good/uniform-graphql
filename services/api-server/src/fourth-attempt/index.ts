@@ -14,6 +14,7 @@ import {
   GraphQLNullableType,
   GraphQLObjectType,
   GraphQLOutputType,
+  GraphQLScalarType,
   GraphQLString,
   GraphQLType,
   GraphQLUnionType,
@@ -121,47 +122,59 @@ export class Brick<
   }
 }
 
-const id = new SemiBrick({
+class ScalarSemiBrick<
+  S_A,
+  S_O,
+  S_G extends GraphQLScalarType
+> extends OutputSemiBrick<S_A, S_O, S_G, 'scalar'> {
+  constructor(params: {
+    name: string;
+    semiCodec: Codec<S_A, S_O>;
+    semiGraphQLType: S_G;
+  }) {
+    super({
+      ...params,
   kind: 'scalar',
+    });
+  }
+}
+
+const id = new ScalarSemiBrick({
   name: 'ID',
   semiCodec: t.union([t.string, t.number]),
   semiGraphQLType: GraphQLID,
 });
 
-const string = new SemiBrick({
-  kind: 'scalar',
+const string = new ScalarSemiBrick({
   name: 'String' as const,
   semiCodec: t.string,
   semiGraphQLType: GraphQLString,
 });
 
-const float = new SemiBrick({
-  kind: 'scalar',
+const float = new ScalarSemiBrick({
   name: 'Float' as const,
   semiCodec: t.number,
   semiGraphQLType: GraphQLFloat,
 });
 
-const int = new SemiBrick({
-  kind: 'scalar',
+const int = new ScalarSemiBrick({
   name: 'Int' as const,
   semiCodec: t.Int,
   semiGraphQLType: GraphQLInt,
 });
 
-const boolean = new SemiBrick({
-  kind: 'scalar',
+const boolean = new ScalarSemiBrick({
   name: 'Boolean' as const,
   semiCodec: t.boolean,
   semiGraphQLType: GraphQLBoolean,
 });
 
 const scalars = {
-  id: Brick.lift(id),
-  string: Brick.lift(string),
-  float: Brick.lift(float),
-  int: Brick.lift(int),
-  boolean: Brick.lift(boolean),
+  id: id.lift(),
+  string: string.lift(),
+  float: float.lift(),
+  int: int.lift(),
+  boolean: boolean.lift(),
 };
 
 export interface AnySemiBrick extends SemiBrick<any, any, any, any> {}
