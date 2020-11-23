@@ -561,34 +561,11 @@ type FieldResolveFn<
   context: any,
 ) => SB['bricks'][K]['B_A'] | Promise<SB['bricks'][K]['B_A']>;
 
-interface IOutputFieldConfig<
-  SB extends OutputObjectSemiBrick<any, any, any>,
-  K extends keyof SB['bricks'],
-  I extends InputProps
-> {
-  root: SB;
-  fieldBrick: SB['bricks'][K];
-  key: K;
-  args: I;
-  resolve: FieldResolveFn<SB, K, I>;
-}
-
-interface IOutputFieldConfigConstructorArgs<
-  SB extends OutputObjectSemiBrick<any, any, any>,
-  K extends keyof SB['bricks'],
-  I extends InputProps
-> {
-  root: SB;
-  key: K;
-  args: I;
-  resolve: FieldResolveFn<SB, K, I>;
-}
-
 class OutputFieldConfig<
   SB extends OutputObjectSemiBrick<any, any, any>,
   K extends keyof SB['bricks'],
   I extends InputProps
-> implements IOutputFieldConfig<SB, K, I> {
+> {
   public readonly root: SB;
   public readonly fieldBrick: SB['bricks'][K];
   public readonly key: K;
