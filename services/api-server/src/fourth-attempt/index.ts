@@ -78,10 +78,18 @@ export class SemiBrick<
       codec: this.semiCodec,
       graphQLType: new GraphQLNonNull(this.semiGraphQLType),
     });
-    return {
-      ...notNullable,
-      nullable,
+    const nullableOuter = {
+      ...this,
+      ...nullable,
     };
+    const notNullableOuter = {
+      ...this,
+      ...notNullable,
+    };
+    return {
+      ...notNullableOuter,
+      nullable: nullableOuter,
+  };
   };
 }
 
