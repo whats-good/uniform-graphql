@@ -335,8 +335,7 @@ const outputObjectSB = <P extends OutputProps>(params: {
 
 const outputObject = flow(outputObjectSB, (x) => x.lift());
 
-interface AnyUnionableSemiBrick
-  extends SemiBrick<any, any, GraphQLObjectType, 'outputobject'> {}
+interface AnyUnionableSemiBrick extends OutputObjectSemiBrick<any, any, any> {}
 
 class UnionSemiBrick<SBS extends Array<AnyUnionableSemiBrick>, S_A, S_O>
   extends SemiBrick<S_A, S_O, GraphQLUnionType, 'union'>
@@ -515,21 +514,43 @@ const membership = keyOf({
 });
 
 // TODO: find a way so that lifting preserves the extended types.
-const personobject = outputObject({
+const person = outputObject({
   name: 'Person',
   bricks: {
     id: scalars.id,
     firstName: scalars.string,
     lastName: scalars.string,
+  },
+});
+
+const animal = outputObject({
+  name: 'Animal',
+  bricks: {
+    id: scalars.id,
+    nickname: scalars.string,
+    owner: person,
+  },
+});
+
+const bestFriend = union({
+  name: 'BestFriend',
+  semiBricks: [person, animal],
+});
+
+const user = outputObject({
+  name: 'User',
+  bricks: {
+    id: scalars.id,
     membership,
+    bestFriend,
   },
 });
 
 export const rootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
-    enhancedPerson: {
-      type: personobject.graphQLType,
+    user: {
+      type: user.graphQLType,
       resolve: () => {
         return {
           id: '1234',
