@@ -532,8 +532,8 @@ const animal = outputObject({
   },
 });
 
-const bestFriend = union({
-  name: 'BestFriend',
+const Friend = union({
+  name: 'Friend',
   semiBricks: [person, animal],
 });
 
@@ -542,7 +542,8 @@ const user = outputObject({
   bricks: {
     id: scalars.id,
     membership,
-    bestFriend,
+    bestFriend: Friend.nullable,
+    friends: outputList(Friend),
   },
 });
 
