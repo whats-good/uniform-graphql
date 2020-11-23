@@ -562,10 +562,7 @@ class OutputFieldConfig<
   SB extends OutputObjectSemiBrick<any, any, any>,
   K extends keyof SB['bricks'],
   I extends InputProps
-> {
-  public readonly root: SB;
-  public readonly fieldBrick: SB['bricks'][K];
-  public readonly key: K;
+> extends SemiOutputFieldConfig<SB, K> {
   public readonly args: I;
   public readonly resolve: FieldResolveFn<SB, K, I>;
 
@@ -575,12 +572,30 @@ class OutputFieldConfig<
     args: I;
     resolve: FieldResolveFn<SB, K, I>;
   }) {
-    this.root = params.root;
-    this.key = params.key;
+    super({
+      key: params.key,
+      resolvedBrick: params.root.bricks[params.key],
+      root: params.root,
+    });
     this.args = params.args;
     this.resolve = params.resolve;
-    this.fieldBrick = params.root.bricks[params.key];
   }
+
+  public static initFromSemiConfig = <
+    SC extends SemiOutputFieldConfig<any, any>
+  >(
+    sc: SC,
+  ) => <I extends InputProps>(
+    args: I,
+    resolve: FieldResolveFn<SC['root'], SC['key'], I>,
+  ) => {
+    return new OutputFieldConfig({
+      args,
+      key: sc.key,
+      resolve,
+      root: <SC['root']>sc.root,
+    });
+  };
 
   getFieldConfig = () => {
     return {
