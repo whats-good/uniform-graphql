@@ -57,6 +57,14 @@ abstract class SemiBrick<
   public readonly semiCodec: Codec<S_A, S_O>;
   public readonly kind: K;
 
+  protected readonly nullableGraphQLType: S_G;
+  protected readonly nonNullableGraphQLType: GraphQLType;
+  protected readonly nullableCodec: Codec<
+    S_A | null | undefined,
+    S_O | null | undefined
+  >;
+  protected readonly nonNullableCodec: Codec<S_A, S_O>;
+
   constructor(params: {
     name: string;
     semiGraphQLType: S_G;
@@ -67,32 +75,12 @@ abstract class SemiBrick<
     this.semiGraphQLType = params.semiGraphQLType;
     this.semiCodec = params.semiCodec;
     this.kind = params.kind;
-  }
 
-  lift = () => {
-    const nullable = new Brick({
-      ...this,
-      codec: t.union([this.semiCodec, t.undefined, t.null]),
-      graphQLType: this.semiGraphQLType,
-    });
-    const notNullable = new Brick({
-      ...this,
-      codec: this.semiCodec,
-      graphQLType: new GraphQLNonNull(this.semiGraphQLType),
-    });
-    const nullableOuter = {
-      ...this,
-      ...nullable,
-    };
-    const notNullableOuter = {
-      ...this,
-      ...notNullable,
-    };
-    return {
-      ...notNullableOuter,
-      nullable: nullableOuter,
-    };
-  };
+    this.nullableGraphQLType = params.semiGraphQLType;
+    this.nonNullableGraphQLType = new GraphQLNonNull(params.semiGraphQLType);
+    this.nullableCodec = t.union([params.semiCodec, t.undefined, t.null]);
+    this.nonNullableCodec = params.semiCodec;
+  }
 }
 
 class Brick<
