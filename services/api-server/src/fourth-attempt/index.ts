@@ -282,28 +282,29 @@ const inputObject = flow(inputObjectSB, (x) => x.lift());
 
 // TODO: can we add kind
 
-interface OutputFields<A extends InputFields> {
-  [key: string]: {
+interface OutputField<A extends InputFields> {
+  /**
+   * TODO: same problem again. Since this interface is mapped out in the interface below,
+   * reacing into the value from the outside world confuses typescript and we lose generics
+   * and type information. They all get jumbled and merged into a union.
+   */
     resolving: AnyBrick;
     deprecationReason?: string;
     description?: string;
     args?: A;
-  };
+}
+interface OutputFields {
+  [key: string]: OutputField<any>;
 }
 
-class OutputObjectSemiBrick<
-    A extends InputFields,
-    P extends OutputFields<A>,
-    S_A,
-    S_O
-  >
+class OutputObjectSemiBrick<P extends OutputFields, S_A, S_O>
   extends SemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'>
   implements OutputSemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'> {
-  public readonly bricks: P;
+  public readonly fields: P;
   constructor(
     public readonly params: {
       name: string;
-      bricks: P;
+      fields: P;
       semiCodec: Codec<S_A, S_O>;
       semiGraphQLType: GraphQLObjectType;
     },
@@ -314,28 +315,22 @@ class OutputObjectSemiBrick<
       semiGraphQLType: params.semiGraphQLType,
       kind: 'outputobject',
     });
-    this.bricks = params.bricks;
+    this.fields = params.fields;
   }
 }
 
-interface OutputObjectSemiBrickOf<
-  I extends InputFields,
-  P extends OutputFields<I>
-> extends OutputObjectSemiBrick<
-    I,
+interface OutputObjectSemiBrickOf<P extends OutputFields>
+  extends OutputObjectSemiBrick<
     P,
     { [K in keyof P]: TypeOf<P[K]['resolving']> },
     { [K in keyof P]: OutputOf<P[K]['resolving']> }
   > {}
 
-const outputObjectSB = <
-  I extends InputFields,
-  P extends OutputFields<I>
->(params: {
+const outputObjectSB = <P extends OutputFields>(params: {
   name: string;
   description?: string;
   fields: P;
-}): OutputObjectSemiBrickOf<I, P> => {
+}): OutputObjectSemiBrickOf<P> => {
   const codecs = _.mapValues(params.fields, (field) => field.resolving.codec);
   const graphQLFields = _.mapValues(params.fields, (field) => ({
     type: field.resolving.graphQLType,
@@ -353,7 +348,7 @@ const outputObjectSB = <
   });
   return new OutputObjectSemiBrick({
     name: params.name,
-    bricks: params.fields,
+    fields: params.fields,
     semiCodec: t.type(codecs),
     semiGraphQLType,
   });
@@ -361,8 +356,7 @@ const outputObjectSB = <
 
 const outputObject = flow(outputObjectSB, (x) => x.lift());
 
-interface AnyUnionableSemiBrick
-  extends OutputObjectSemiBrick<any, any, any, any> {}
+interface AnyUnionableSemiBrick extends OutputObjectSemiBrick<any, any, any> {}
 
 class UnionSemiBrick<SBS extends Array<AnyUnionableSemiBrick>, S_A, S_O>
   extends SemiBrick<S_A, S_O, GraphQLUnionType, 'union'>

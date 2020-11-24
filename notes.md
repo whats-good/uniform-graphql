@@ -71,3 +71,4 @@
 - look into recursion. it might be a bit of a headache.
 - maybe there's no reason to use io-ts. Could potentially get away with just using the patterns.
 - Important: I need to first recreate the internal GraphQL classes without any convenience methods. Once there's a solid foundation, i can add the convenience stuff.
+- Main problem: Once we create an object with dynamic keys, accessing it will be usually fine, but modifying it while preserving the generics will be a pain. io-ts does this well, but I'm not sure if I can follow their solution here. For example, once I create an outputobject semibrick, reaching into its field bricks to add specialized resolvers will be a problem.
