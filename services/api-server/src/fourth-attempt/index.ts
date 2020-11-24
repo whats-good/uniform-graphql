@@ -288,10 +288,10 @@ interface OutputField<A extends InputFields> {
    * reacing into the value from the outside world confuses typescript and we lose generics
    * and type information. They all get jumbled and merged into a union.
    */
-    resolving: AnyBrick;
-    deprecationReason?: string;
-    description?: string;
-    args?: A;
+  resolving: AnyBrick;
+  deprecationReason?: string;
+  description?: string;
+  args?: A;
 }
 interface OutputFields {
   [key: string]: OutputField<any>;
@@ -586,7 +586,7 @@ const signupArgs = inputObject({
 const root = outputObject({
   name: 'RootQuery',
   fields: {
-    person: { brick: person },
+    person: { resolving: person },
   },
 });
 
