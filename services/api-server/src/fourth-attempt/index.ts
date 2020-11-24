@@ -44,7 +44,7 @@ type OutputKind =
   | 'union';
 
 // TODO: consider creating different kinds of lists (one for input, one for output)
-export class SemiBrick<
+abstract class SemiBrick<
   S_A,
   S_O,
   S_G extends GraphQLNullableType,
@@ -95,7 +95,7 @@ export class SemiBrick<
   };
 }
 
-export class Brick<
+class Brick<
   S_A,
   S_O,
   S_G extends GraphQLNullableType,
