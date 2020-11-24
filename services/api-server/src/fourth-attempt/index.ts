@@ -286,11 +286,15 @@ const inputObject = flow(inputObjectSB, (x) => x.lift());
 
 // TODO: can we add kind
 
-interface OutputProps {
-  [key: string]: AnyOutputBrick;
+interface OutputFields {
+  [key: string]: {
+    brick: AnyBrick;
+    deprecationReason?: string;
+    description?: string;
+  };
 }
 
-class OutputObjectSemiBrick<P extends OutputProps, S_A, S_O>
+class OutputObjectSemiBrick<P extends OutputFields, S_A, S_O>
   extends SemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'>
   implements OutputSemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'> {
   public readonly bricks: P;
@@ -324,28 +328,32 @@ class OutputObjectSemiBrick<P extends OutputProps, S_A, S_O>
   };
 }
 
-interface OutputObjectSemiBrickOfProps<P extends OutputProps>
+interface OutputObjectSemiBrickOfProps<P extends OutputFields>
   extends OutputObjectSemiBrick<
     P,
-    { [K in keyof P]: TypeOf<P[K]> },
-    { [K in keyof P]: OutputOf<P[K]> }
+    { [K in keyof P]: TypeOf<P[K]['brick']> },
+    { [K in keyof P]: OutputOf<P[K]['brick']> }
   > {}
 
-const outputObjectSB = <P extends OutputProps>(params: {
+const outputObjectSB = <P extends OutputFields>(params: {
   name: string;
-  bricks: P;
+  description?: string;
+  fields: P;
 }): OutputObjectSemiBrickOfProps<P> => {
-  const codecs = _.mapValues(params.bricks, (brick) => brick.codec);
-  const graphQLFields = _.mapValues(params.bricks, (brick) => ({
-    type: brick.graphQLType,
+  const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
+  const graphQLFields = _.mapValues(params.fields, (field) => ({
+    type: field.brick.graphQLType,
+    deprecationReason: field.deprecationReason,
+    descripion: field.description,
   }));
   const semiGraphQLType = new GraphQLObjectType({
     name: params.name,
+    description: params.description,
     fields: graphQLFields,
   });
   return new OutputObjectSemiBrick({
     name: params.name,
-    bricks: params.bricks,
+    bricks: params.fields,
     semiCodec: t.type(codecs),
     semiGraphQLType,
   });
@@ -534,19 +542,20 @@ const membership = keyOf({
 // TODO: find a way so that lifting preserves the extended types.
 const person = outputObject({
   name: 'Person',
-  bricks: {
-    id: scalars.id,
-    firstName: scalars.string,
-    lastName: scalars.string,
+  description: 'testing person description',
+  fields: {
+    id: { brick: scalars.id, deprecationReason: 'testing deprecation' },
+    firstName: { brick: scalars.string, description: 'testing description' },
+    lastName: { brick: scalars.string },
   },
 });
 
 const animal = outputObject({
   name: 'Animal',
-  bricks: {
-    id: scalars.id,
-    nickname: scalars.string,
-    owner: person,
+  fields: {
+    id: { brick: scalars.id },
+    nickname: { brick: scalars.string },
+    owner: { brick: person },
   },
 });
 
@@ -557,11 +566,11 @@ const friend = union({
 
 const user = outputObject({
   name: 'User',
-  bricks: {
-    id: scalars.id,
-    membership,
-    bestFriend: friend.nullable,
-    friends: outputList(friend),
+  fields: {
+    id: { brick: scalars.id },
+    membership: { brick: membership },
+    bestFriend: { brick: friend.nullable },
+    friends: { brick: outputList(friend) },
   },
 });
 
