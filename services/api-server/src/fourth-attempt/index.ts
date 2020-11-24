@@ -284,7 +284,7 @@ const inputObject = flow(inputObjectSB, (x) => x.lift());
 
 interface OutputFields<A extends InputFields> {
   [key: string]: {
-    brick: AnyBrick;
+    resolving: AnyBrick;
     deprecationReason?: string;
     description?: string;
     args?: A;
@@ -292,8 +292,8 @@ interface OutputFields<A extends InputFields> {
 }
 
 class OutputObjectSemiBrick<
-    I extends InputFields,
-    P extends OutputFields<I>,
+    A extends InputFields,
+    P extends OutputFields<A>,
     S_A,
     S_O
   >
@@ -324,8 +324,8 @@ interface OutputObjectSemiBrickOf<
 > extends OutputObjectSemiBrick<
     I,
     P,
-    { [K in keyof P]: TypeOf<P[K]['brick']> },
-    { [K in keyof P]: OutputOf<P[K]['brick']> }
+    { [K in keyof P]: TypeOf<P[K]['resolving']> },
+    { [K in keyof P]: OutputOf<P[K]['resolving']> }
   > {}
 
 const outputObjectSB = <
@@ -336,9 +336,9 @@ const outputObjectSB = <
   description?: string;
   fields: P;
 }): OutputObjectSemiBrickOf<I, P> => {
-  const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
+  const codecs = _.mapValues(params.fields, (field) => field.resolving.codec);
   const graphQLFields = _.mapValues(params.fields, (field) => ({
-    type: field.brick.graphQLType,
+    type: field.resolving.graphQLType,
     deprecationReason: field.deprecationReason,
     descripion: field.description,
     args: _.mapValues(field.args, (arg) => ({
@@ -533,7 +533,7 @@ const person = outputObject({
   description: 'testing person description',
   fields: {
     id: {
-      brick: scalars.id,
+      resolving: scalars.id,
       deprecationReason: 'testing deprecation',
       args: {
         kerem: {
@@ -541,8 +541,11 @@ const person = outputObject({
         },
       },
     },
-    firstName: { brick: scalars.string, description: 'testing description' },
-    lastName: { brick: scalars.string },
+    firstName: {
+      resolving: scalars.string,
+      description: 'testing description',
+    },
+    lastName: { resolving: scalars.string },
   },
 });
 
@@ -558,9 +561,9 @@ const someInput = inputObject({
 const animal = outputObject({
   name: 'Animal',
   fields: {
-    id: { brick: scalars.id },
-    nickname: { brick: scalars.string },
-    owner: { brick: person },
+    id: { resolving: scalars.id },
+    nickname: { resolving: scalars.string },
+    owner: { resolving: person },
   },
 });
 
@@ -572,10 +575,10 @@ const friend = union({
 const user = outputObject({
   name: 'User',
   fields: {
-    id: { brick: scalars.id },
-    membership: { brick: membership },
-    bestFriend: { brick: friend.nullable },
-    friends: { brick: outputList(friend) },
+    id: { resolving: scalars.id },
+    membership: { resolving: membership },
+    bestFriend: { resolving: friend.nullable },
+    friends: { resolving: outputList(friend) },
   },
 });
 
