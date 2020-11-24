@@ -27,13 +27,13 @@ type Kind =
   | 'scalar' // done
   | 'enum' // done
   | 'outputobject' // done
-  | 'outputlist'
+  | 'outputlist' // done
   | 'interface' // TODO: implement
   | 'union' // done
   | 'inputobject' // done
   | 'inputlist'; // done
 
-type InputKind = 'scalar' | 'enum' | 'inputobject' | 'inputlist'; // TODO: the list items themselves should be 'inputable'
+type InputKind = 'scalar' | 'enum' | 'inputobject' | 'inputlist';
 
 type OutputKind =
   | 'scalar'
