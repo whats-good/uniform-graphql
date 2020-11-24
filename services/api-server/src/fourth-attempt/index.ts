@@ -229,7 +229,9 @@ interface AnyInputBrick
   extends Brick<any, any, GraphQLInputType, any, any, any, InputKind> {}
 
 interface InputProps {
-  [key: string]: AnyInputBrick;
+  [key: string]: {
+    brick: AnyInputBrick;
+  };
 }
 
 export class InputObjectSemiBrick<
@@ -257,18 +259,18 @@ export class InputObjectSemiBrick<
 export interface InputObjectSemiBrickOfProps<P extends InputProps>
   extends InputObjectSemiBrick<
     P,
-    { [K in keyof P]: TypeOf<P[K]> },
-    { [K in keyof P]: OutputOf<P[K]> }
+    { [K in keyof P]: TypeOf<P[K]['brick']> },
+    { [K in keyof P]: OutputOf<P[K]['brick']> }
   > {}
 
 const inputObjectSB = <P extends InputProps>(params: {
   name: string;
-  bricks: P;
+  fields: P;
 }): InputObjectSemiBrickOfProps<P> => {
-  const codecs = _.mapValues(params.bricks, (brick) => brick.codec);
+  const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
   // TODO: how do we add more than just `type` here?
-  const graphQLFields = _.mapValues(params.bricks, (brick) => ({
-    type: brick.graphQLType,
+  const graphQLFields = _.mapValues(params.fields, (field) => ({
+    type: field.brick.graphQLType,
   }));
   const semiGraphQLType = new GraphQLInputObjectType({
     name: params.name,
@@ -276,7 +278,7 @@ const inputObjectSB = <P extends InputProps>(params: {
   });
   return new InputObjectSemiBrick({
     name: params.name,
-    bricks: params.bricks,
+    bricks: params.fields,
     semiCodec: t.type(codecs),
     semiGraphQLType,
   });
@@ -480,14 +482,9 @@ const keyofS = <D extends { [key: string]: unknown }>(params: {
 
 export const keyOf = flow(keyofS, (x) => x.lift());
 
-// TODO: how difficult would it be to compute the enum from an array of literals?
-
 // TODO: how do we do recursive definitions?
 // TODO: also, how do we do non-nullable recursives? Do we do a Task?
 
-t.array;
-
-// TODO: differentiate between input and output types later
 export class OutputListSemiBrick<
   S_A,
   S_O,
@@ -550,6 +547,15 @@ const person = outputObject({
   },
 });
 
+const someInput = inputObject({
+  name: 'SomeInput',
+  fields: {
+    id: {
+      brick: scalars.id,
+    },
+  },
+});
+
 const animal = outputObject({
   name: 'Animal',
   fields: {
@@ -571,6 +577,13 @@ const user = outputObject({
     membership: { brick: membership },
     bestFriend: { brick: friend.nullable },
     friends: { brick: outputList(friend) },
+  },
+});
+
+const signupArgs = inputObject({
+  name: 'SignupArgs',
+  fields: {
+    firstName: { brick: scalars.string },
   },
 });
 
@@ -601,6 +614,9 @@ export const rootQuery = new GraphQLObjectType({
           id: {
             type: GraphQLID,
             args: {
+              abc: {
+                type: GraphQLString,
+              },
               scalarArg: {
                 type: GraphQLString,
               },
@@ -609,6 +625,7 @@ export const rootQuery = new GraphQLObjectType({
                   name: 'InputObjectArg',
                   fields: {
                     first: {
+                      // TODO: these should also be extendible
                       type: GraphQLString,
                     },
                     second: {
