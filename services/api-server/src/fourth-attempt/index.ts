@@ -228,14 +228,14 @@ export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 interface AnyInputBrick
   extends Brick<any, any, GraphQLInputType, any, any, any, InputKind> {}
 
-interface InputProps {
+interface InputFields {
   [key: string]: {
     brick: AnyInputBrick;
   };
 }
 
 export class InputObjectSemiBrick<
-  P extends InputProps,
+  P extends InputFields,
   S_A,
   S_O
 > extends SemiBrick<S_A, S_O, GraphQLInputObjectType, 'inputobject'> {
@@ -256,14 +256,14 @@ export class InputObjectSemiBrick<
   }
 }
 
-export interface InputObjectSemiBrickOfProps<P extends InputProps>
+export interface InputObjectSemiBrickOfProps<P extends InputFields>
   extends InputObjectSemiBrick<
     P,
     { [K in keyof P]: TypeOf<P[K]['brick']> },
     { [K in keyof P]: OutputOf<P[K]['brick']> }
   > {}
 
-const inputObjectSB = <P extends InputProps>(params: {
+const inputObjectSB = <P extends InputFields>(params: {
   name: string;
   fields: P;
 }): InputObjectSemiBrickOfProps<P> => {
@@ -288,15 +288,21 @@ const inputObject = flow(inputObjectSB, (x) => x.lift());
 
 // TODO: can we add kind
 
-interface OutputFields {
+interface OutputFields<A extends InputFields> {
   [key: string]: {
     brick: AnyBrick;
     deprecationReason?: string;
     description?: string;
+    args?: A;
   };
 }
 
-class OutputObjectSemiBrick<P extends OutputFields, S_A, S_O>
+class OutputObjectSemiBrick<
+    I extends InputFields,
+    P extends OutputFields<I>,
+    S_A,
+    S_O
+  >
   extends SemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'>
   implements OutputSemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'> {
   public readonly bricks: P;
@@ -330,23 +336,33 @@ class OutputObjectSemiBrick<P extends OutputFields, S_A, S_O>
   };
 }
 
-interface OutputObjectSemiBrickOfProps<P extends OutputFields>
-  extends OutputObjectSemiBrick<
+interface OutputObjectSemiBrickOf<
+  I extends InputFields,
+  P extends OutputFields<I>
+> extends OutputObjectSemiBrick<
+    I,
     P,
     { [K in keyof P]: TypeOf<P[K]['brick']> },
     { [K in keyof P]: OutputOf<P[K]['brick']> }
   > {}
 
-const outputObjectSB = <P extends OutputFields>(params: {
+const outputObjectSB = <
+  I extends InputFields,
+  P extends OutputFields<I>
+>(params: {
   name: string;
   description?: string;
   fields: P;
-}): OutputObjectSemiBrickOfProps<P> => {
+}): OutputObjectSemiBrickOf<I, P> => {
   const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
   const graphQLFields = _.mapValues(params.fields, (field) => ({
     type: field.brick.graphQLType,
     deprecationReason: field.deprecationReason,
     descripion: field.description,
+    args: _.mapValues(field.args, (arg) => ({
+      // TODO: reuse this part, and add the other stuff in here.
+      type: arg.brick.graphQLType,
+    })),
   }));
   const semiGraphQLType = new GraphQLObjectType({
     name: params.name,
@@ -363,7 +379,8 @@ const outputObjectSB = <P extends OutputFields>(params: {
 
 const outputObject = flow(outputObjectSB, (x) => x.lift());
 
-interface AnyUnionableSemiBrick extends OutputObjectSemiBrick<any, any, any> {}
+interface AnyUnionableSemiBrick
+  extends OutputObjectSemiBrick<any, any, any, any> {}
 
 class UnionSemiBrick<SBS extends Array<AnyUnionableSemiBrick>, S_A, S_O>
   extends SemiBrick<S_A, S_O, GraphQLUnionType, 'union'>
@@ -541,7 +558,15 @@ const person = outputObject({
   name: 'Person',
   description: 'testing person description',
   fields: {
-    id: { brick: scalars.id, deprecationReason: 'testing deprecation' },
+    id: {
+      brick: scalars.id,
+      deprecationReason: 'testing deprecation',
+      args: {
+        kerem: {
+          brick: scalars.id,
+        },
+      },
+    },
     firstName: { brick: scalars.string, description: 'testing description' },
     lastName: { brick: scalars.string },
   },
@@ -587,57 +612,11 @@ const signupArgs = inputObject({
   },
 });
 
-export const rootQuery = new GraphQLObjectType({
-  name: 'RootQueryType',
+const root = outputObject({
+  name: 'RootQuery',
   fields: {
-    user: {
-      type: user.graphQLType,
-      args: undefined,
-      resolve: () => {
-        return {
-          id: '1234',
-          firstName: 'kerem',
-          lastName: 'kazan',
-        };
-      },
-    },
-    keremUser: user.resolverize(),
-    otherPerson: {
-      args: {
-        higherArg: {
-          type: GraphQLString,
-        },
-      },
-      type: new GraphQLObjectType({
-        name: 'OtherPerson',
-        fields: {
-          id: {
-            type: GraphQLID,
-            args: {
-              abc: {
-                type: GraphQLString,
-              },
-              scalarArg: {
-                type: GraphQLString,
-              },
-              inputObjectArg: {
-                type: new GraphQLInputObjectType({
-                  name: 'InputObjectArg',
-                  fields: {
-                    first: {
-                      // TODO: these should also be extendible
-                      type: GraphQLString,
-                    },
-                    second: {
-                      type: GraphQLString,
-                    },
-                  },
-                }),
-              },
-            },
-          },
-        },
-      }),
-    },
+    person: { brick: person },
   },
 });
+
+export const rootQuery = root.semiGraphQLType;

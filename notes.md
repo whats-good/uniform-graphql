@@ -67,5 +67,6 @@
 - maybe i should use graphql-typdefs and codegen to have my types, instead of this elaborate fp system
 - watch this 40 minute tutorial: https://www.youtube.com/watch?v=wqm5ibtCSf0
 - study the `infer` keyword.
-- need to probably start over. this time, do the GraphQL classes one by one, and add no convenience methods.
 - look into recursion. it might be a bit of a headache.
+- maybe there's no reason to use io-ts. Could potentially get away with just using the patterns.
+- Important: I need to first recreate the internal GraphQL classes without any convenience methods. Once there's a solid foundation, i can add the convenience stuff.
