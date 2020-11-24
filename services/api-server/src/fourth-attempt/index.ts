@@ -123,13 +123,16 @@ class Brick<
   }
 }
 
-interface BrickOf<SB extends SemiBrick<any, any, any, any>>
-  extends Brick<
+interface BrickOf<
+  SB extends SemiBrick<any, any, any, any>,
+  B_A extends SB['S_A'] | null | undefined,
+  B_O extends SB['S_O'] | null | undefined
+> extends Brick<
     SB['S_A'],
     SB['S_O'],
     SB['semiGraphQLType'],
-    SB['S_A'] | null | undefined,
-    SB['S_O'] | null | undefined,
+    B_A,
+    B_O,
     SB['semiGraphQLType'] | typeof GraphQLNonNull,
     SB['kind']
   > {}
@@ -146,7 +149,7 @@ interface OutputSemiBrick<
 interface AnyOutputSemiBrick
   extends OutputSemiBrick<any, any, any, OutputKind> {}
 
-interface AnyOutputBrick extends BrickOf<AnyOutputSemiBrick> {}
+interface AnyOutputBrick extends BrickOf<AnyOutputSemiBrick, any, any> {}
 
 class ScalarSemiBrick<S_A, S_O, S_G extends GraphQLScalarType>
   extends SemiBrick<S_A, S_O, S_G, 'scalar'>
