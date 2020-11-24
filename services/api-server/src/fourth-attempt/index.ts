@@ -101,7 +101,7 @@ class Brick<
   S_G extends GraphQLNullableType,
   B_A,
   B_O,
-  B_G extends GraphQLType,
+  B_G extends S_G | GraphQLNonNull<any>, // TODO: is this bad?
   K extends Kind
 > extends SemiBrick<S_A, S_O, S_G, K> {
   public readonly B_A!: B_A;
@@ -123,18 +123,14 @@ class Brick<
   }
 }
 
-interface BrickOf<
-  SB extends SemiBrick<any, any, any, any>,
-  B_A,
-  B_O,
-  B_G extends GraphQLType
-> extends Brick<
+interface BrickOf<SB extends SemiBrick<any, any, any, any>>
+  extends Brick<
     SB['S_A'],
     SB['S_O'],
     SB['semiGraphQLType'],
-    B_A,
-    B_O,
-    B_G,
+    SB['S_A'] | null | undefined,
+    SB['S_O'] | null | undefined,
+    SB['semiGraphQLType'] | typeof GraphQLNonNull,
     SB['kind']
   > {}
 
@@ -150,7 +146,7 @@ interface OutputSemiBrick<
 interface AnyOutputSemiBrick
   extends OutputSemiBrick<any, any, any, OutputKind> {}
 
-interface AnyOutputBrick extends BrickOf<AnyOutputSemiBrick, any, any, any> {}
+interface AnyOutputBrick extends BrickOf<AnyOutputSemiBrick> {}
 
 class ScalarSemiBrick<S_A, S_O, S_G extends GraphQLScalarType>
   extends SemiBrick<S_A, S_O, S_G, 'scalar'>
