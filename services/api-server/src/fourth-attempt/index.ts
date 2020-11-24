@@ -150,9 +150,7 @@ interface OutputSemiBrick<
   S_O,
   S_G extends GraphQLOutputType,
   K extends OutputKind
-> extends SemiBrick<S_A, S_O, S_G, K> {
-  resolverize(): null;
-}
+> extends SemiBrick<S_A, S_O, S_G, K> {}
 
 interface AnyOutputSemiBrick
   extends OutputSemiBrick<any, any, any, OutputKind> {}
@@ -171,10 +169,6 @@ class ScalarSemiBrick<S_A, S_O, S_G extends GraphQLScalarType>
       ...params,
       kind: 'scalar',
     });
-  }
-
-  resolverize() {
-    return null;
   }
 }
 
@@ -322,18 +316,6 @@ class OutputObjectSemiBrick<
     });
     this.bricks = params.bricks;
   }
-
-  resolverize = (): any => {
-    return {
-      type: this.semiGraphQLType,
-      args: {
-        id: {
-          type: GraphQLID,
-        },
-      },
-      resolve: () => {},
-    };
-  };
 }
 
 interface OutputObjectSemiBrickOf<
@@ -398,10 +380,6 @@ class UnionSemiBrick<SBS extends Array<AnyUnionableSemiBrick>, S_A, S_O>
       kind: 'union',
     });
     this.semiBricks = params.semiBricks;
-  }
-
-  resolverize() {
-    return null;
   }
 }
 
@@ -468,10 +446,6 @@ class EnumSemiBrick<D extends { [key: string]: unknown }>
       kind: 'enum',
       semiGraphQLType: params.semiGraphQLType,
     });
-  }
-
-  resolverize() {
-    return null;
   }
 }
 
