@@ -559,7 +559,7 @@ const root = outputObject({
 
 export const rootQuery = root.semiGraphQLType;
 
-class FieldConfig<B extends AnyOutputBrick, A extends InputFields> {
+class OutputFieldConfig<B extends AnyOutputBrick, A extends InputFields> {
   public readonly brick: B;
   public readonly args: A;
   constructor(params: { brick: B; args: A }) {
@@ -569,7 +569,7 @@ class FieldConfig<B extends AnyOutputBrick, A extends InputFields> {
 }
 
 interface FieldConfigsMap {
-  [key: string]: FieldConfig<any, any>;
+  [key: string]: OutputFieldConfig<any, any>;
 }
 
 type ArgsTypeOf<T extends InputFields> = {
@@ -583,11 +583,18 @@ type FieldResolverOf<T extends FieldConfigsMap> = {
   ) => T[K]['brick']['B_A'];
 };
 
-function fieldResolverize<F extends FieldConfigsMap>(
-  fieldConfigsMap: F,
-  resolvers: Partial<FieldResolverOf<F>>,
-) {
-  return resolvers;
+type FieldResolversMapOf<F extends FieldConfigsMap> = Partial<
+  FieldResolverOf<F>
+>;
+
+class FieldResolvers<F extends FieldConfigsMap> {
+  public readonly fieldConfigs: F;
+  public readonly resolvers: FieldResolversMapOf<F>;
+
+  constructor(params: { fieldConfigs: F; resolvers: FieldResolversMapOf<F> }) {
+    this.fieldConfigs = params.fieldConfigs;
+    this.resolvers = params.resolvers;
+  }
 }
 
 /**
@@ -600,28 +607,29 @@ function fieldResolverize<F extends FieldConfigsMap>(
  */
 
 const fieldConfigs = {
-  id: new FieldConfig({
+  id: new OutputFieldConfig({
     brick: scalars.id,
     args: { a1: { brick: scalars.string } },
   }),
-  firstName: new FieldConfig({
+  firstName: new OutputFieldConfig({
     brick: scalars.string,
     args: { a2: { brick: scalars.int }, a3: { brick: scalars.boolean } },
   }),
-  lastName: new FieldConfig({ brick: scalars.string, args: {} }),
+  lastName: new OutputFieldConfig({ brick: scalars.string, args: {} }),
 };
 
-fieldResolverize(fieldConfigs, {
-  id: (root, args) => {
-    args.a1;
-    return '1';
-  },
-  firstName: (root, args) => {
-    args.a2;
-    return '1234';
-  },
-  lastName: (root) => {
-    return 'kaz';
+const fieldResolvers = new FieldResolvers({
+  fieldConfigs,
+  resolvers: {
+    id: (root, args) => {
+      return '1';
+    },
+    firstName: (root, args) => {
+      return '1234';
+    },
+    lastName: (root) => {
+      return 'kaz';
+    },
   },
 });
 
