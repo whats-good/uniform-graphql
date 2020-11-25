@@ -20,13 +20,15 @@
     "apollo-server-express": "2.19.0",
     "express": "4.17.1",
     "body-parser": "1.19.0",
-    "graphql-type-json": "0.3.2"
+    "graphql-type-json": "0.3.2",
+    "lodash": "4.17.20"
   },
   "devDependencies": {
     "eslint": "file:../../node_modules/eslint",
     "tsc": "file:../../node_modules/tsc",
     "typescript": "file:../../node_modules/typescript",
-    "ts-node": "file:../../node_modules/ts-node"
+    "ts-node": "file:../../node_modules/ts-node",
+    "@types/lodash": "4.14.165"
   },
   "author": "Kerem Kazan",
   "license": "ISC"
