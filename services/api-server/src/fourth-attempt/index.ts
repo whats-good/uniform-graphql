@@ -284,22 +284,24 @@ const inputObject = flow(inputObjectSB, (x) => x.lift());
 
 // TODO: can we add kind
 
-interface OutputField<A extends InputFields> {
-  /**
-   * TODO: same problem again. Since this interface is mapped out in the interface below,
-   * reacing into the value from the outside world confuses typescript and we lose generics
-   * and type information. They all get jumbled and merged into a union.
-   */
-  resolving: AnyBrick;
-  deprecationReason?: string;
-  description?: string;
-  args: A | undefined;
-}
-interface OutputFields {
-  [key: string]: OutputField<any>;
+class OutputFieldConfig<B extends AnyOutputBrick, A extends InputFields> {
+  public readonly brick: B;
+  public readonly args: A;
+  constructor(params: { brick: B; args: A }) {
+    this.brick = params.brick;
+    this.args = params.args;
+  }
 }
 
-class OutputObjectSemiBrick<P extends OutputFields, S_A, S_O>
+interface FieldConfigsMap {
+  [key: string]: OutputFieldConfig<any, any>;
+}
+
+type ArgsTypeOf<T extends InputFields> = {
+  [K in keyof T]: T[K]['brick']['B_A'];
+};
+
+class OutputObjectSemiBrick<P extends FieldConfigsMap, S_A, S_O>
   extends SemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'>
   implements OutputSemiBrick<S_A, S_O, GraphQLObjectType, 'outputobject'> {
   public readonly fields: P;
@@ -321,23 +323,23 @@ class OutputObjectSemiBrick<P extends OutputFields, S_A, S_O>
   }
 }
 
-interface OutputObjectSemiBrickOf<P extends OutputFields>
+interface OutputObjectSemiBrickOf<P extends FieldConfigsMap>
   extends OutputObjectSemiBrick<
     P,
-    { [K in keyof P]: TypeOf<P[K]['resolving']> },
-    { [K in keyof P]: OutputOf<P[K]['resolving']> }
+    { [K in keyof P]: TypeOf<P[K]['brick']> },
+    { [K in keyof P]: OutputOf<P[K]['brick']> }
   > {}
 
-const outputObjectSB = <P extends OutputFields>(params: {
+const outputObjectSB = <P extends FieldConfigsMap>(params: {
   name: string;
   description?: string;
   fields: P;
 }): OutputObjectSemiBrickOf<P> => {
-  const codecs = _.mapValues(params.fields, (field) => field.resolving.codec);
+  const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
   const graphQLFields = _.mapValues(params.fields, (field) => ({
-    type: field.resolving.graphQLType,
-    deprecationReason: field.deprecationReason,
-    descripion: field.description,
+    type: field.brick.graphQLType,
+    // deprecationReason: field.deprecationReason,
+    // descripion: field.description,
     args: _.mapValues(field.args, (arg) => ({
       // TODO: reuse this part, and add the other stuff in here.
       type: arg.brick.graphQLType,
@@ -523,59 +525,6 @@ const membership = keyOf({
   },
 });
 
-// TODO: find a way so that lifting preserves the extended types.
-const person = outputObject({
-  name: 'Person',
-  description: 'testing person description',
-  fields: {
-    membership: {
-      resolving: membership,
-      args: undefined,
-    },
-    id: {
-      resolving: scalars.id,
-      deprecationReason: 'testing deprecation',
-      args: {
-        kerem: {
-          brick: scalars.id,
-        },
-      },
-    },
-    firstName: {
-      resolving: scalars.string,
-      description: 'testing description',
-      args: undefined,
-    },
-    lastName: { resolving: scalars.string, args: undefined },
-  },
-});
-
-const root = outputObject({
-  name: 'RootQuery',
-  fields: {
-    person: { resolving: person, args: undefined },
-  },
-});
-
-export const rootQuery = root.semiGraphQLType;
-
-class OutputFieldConfig<B extends AnyOutputBrick, A extends InputFields> {
-  public readonly brick: B;
-  public readonly args: A;
-  constructor(params: { brick: B; args: A }) {
-    this.brick = params.brick;
-    this.args = params.args;
-  }
-}
-
-interface FieldConfigsMap {
-  [key: string]: OutputFieldConfig<any, any>;
-}
-
-type ArgsTypeOf<T extends InputFields> = {
-  [K in keyof T]: T[K]['brick']['B_A'];
-};
-
 type FieldResolverOf<T extends FieldConfigsMap> = {
   [K in keyof T]: (
     root: T,
@@ -587,6 +536,7 @@ type FieldResolversMapOf<F extends FieldConfigsMap> = Partial<
   FieldResolverOf<F>
 >;
 
+// TODO: make this one take in the outputobjectsemibrick
 class FieldResolvers<F extends FieldConfigsMap> {
   public readonly fieldConfigs: F;
   public readonly resolvers: FieldResolversMapOf<F>;
@@ -596,6 +546,35 @@ class FieldResolvers<F extends FieldConfigsMap> {
     this.resolvers = params.resolvers;
   }
 }
+
+const person = outputObject({
+  name: 'Person',
+  description: 'testing person description',
+  fields: {
+    id: new OutputFieldConfig({
+      brick: scalars.id,
+      args: { a1: { brick: scalars.string } },
+    }),
+    firstName: new OutputFieldConfig({
+      brick: scalars.string,
+      args: { a2: { brick: scalars.int }, a3: { brick: scalars.boolean } },
+    }),
+    lastName: new OutputFieldConfig({ brick: scalars.string, args: {} }),
+    membership: new OutputFieldConfig({
+      brick: membership,
+      args: { something: { brick: scalars.int } },
+    }),
+  },
+});
+
+const root = outputObject({
+  name: 'RootQuery',
+  fields: {
+    person: { brick: person, args: undefined },
+  },
+});
+
+export const rootQuery = root.semiGraphQLType;
 
 /**
  * TODO: Find a way to let the developers declare that it's okay to not return a nonNullable field
@@ -619,7 +598,7 @@ const fieldConfigs = {
 };
 
 const fieldResolvers = new FieldResolvers({
-  fieldConfigs,
+  fieldConfigs: person.fields,
   resolvers: {
     id: (root, args) => {
       return '1';
@@ -630,48 +609,10 @@ const fieldResolvers = new FieldResolvers({
     lastName: (root) => {
       return 'kaz';
     },
+    membership: (root, args) => {
+      args.something;
+      // return root.membership;
+      return 'enterprise' as const;
+    },
   },
 });
-
-// interface HasBricks {
-//   [key: string]: {
-//     brick: AnyOutputBrick;
-//   };
-// }
-
-// interface Referential<T> extends HasBricks {
-//   [key: string]: {
-//     brick: AnyOutputBrick;
-//     resolve: (root: Referential<T>) => null;
-//   };
-// }
-
-// type GetBricks<T extends HasBricks> = {
-//   [K in keyof T]: T[K]['brick']['B_A'];
-// };
-
-// type FurtherReferential<T extends Referential<T>> = {
-//   [K in keyof T]: {
-//     brick: AnyOutputBrick;
-//     resolve: (root: GetBricks<T>) => null;
-//   };
-// };
-
-// class RefClass<T> {
-//   constructor(public t: FurtherReferential<Referential<T>>) {}
-// }
-
-// const r = new RefClass({
-//   id: {
-//     brick: scalars.id,
-//     resolve: (root) => {
-//       return null;
-//     },
-//   },
-//   firstName: {
-//     brick: scalars.string,
-//     resolve: (root) => {
-//       return null;
-//     },
-//   },
-// });
