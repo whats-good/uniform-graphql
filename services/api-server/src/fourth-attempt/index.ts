@@ -21,6 +21,7 @@ import {
 } from 'graphql';
 import * as t from 'io-ts';
 import { rightIO } from 'fp-ts/lib/StateReaderTaskEither';
+import { argsToArgsConfig } from 'graphql/type/definition';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
@@ -558,45 +559,40 @@ const root = outputObject({
 
 export const rootQuery = root.semiGraphQLType;
 
-interface FieldMap {
-  [key: string]: {
-    brick: AnyOutputBrick;
-    args: InputFields;
-  };
+class Field<B extends AnyOutputBrick, A extends InputFields> {
+  public readonly brick: B;
+  public readonly args: A;
+  constructor(params: { brick: B; args: A }) {
+    this.brick = params.brick;
+    this.args = params.args;
+  }
 }
 
-// const fieldsNotWorking: FieldMap = {
-//   id: { brick: scalars.id, args: { a1: { brick: scalars.string } } },
-//   firstName: {
-//     brick: scalars.string,
-//     args: { a2: { brick: scalars.int }, a3: { brick: scalars.boolean } },
-//   },
-//   lastName: { brick: scalars.string, args: {} },
-// };
+interface FieldProps {
+  [key: string]: Field<any, any>;
+}
 
-const fieldsWorking = {
-  id: { brick: scalars.id, args: { a1: { brick: scalars.string } } },
-  firstName: {
-    brick: scalars.string,
-    args: { a2: { brick: scalars.int }, a3: { brick: scalars.boolean } },
-  },
-  lastName: { brick: scalars.string, args: {} },
-};
+class FieldMap<F extends FieldProps> {
+  public readonly fields: F;
+  constructor(params: { fields: F }) {
+    this.fields = params.fields;
+  }
+}
 
 type ArgsTypeOf<T extends InputFields> = {
   [K in keyof T]: T[K]['brick']['B_A'];
 };
 
-type BrickFunctionsOf<T extends FieldMap> = {
+type FieldResolverOf<T extends FieldProps> = {
   [K in keyof T]: (
     root: T,
     args: ArgsTypeOf<T[K]['args']>,
   ) => T[K]['brick']['B_A'];
 };
 
-function fieldResolverize<F extends FieldMap>(
-  bricks: F,
-  resolvers: Partial<BrickFunctionsOf<F>>,
+function fieldResolverize<F extends FieldMap<any>>(
+  fieldProps: F,
+  resolvers: Partial<FieldResolverOf<F['fields']>>,
 ) {
   return resolvers;
 }
@@ -609,11 +605,28 @@ function fieldResolverize<F extends FieldMap>(
  * a second generic, or a conditional type that sets the `root.X` of that field to a Maybe<X> for the
  * field resolvers.
  */
-fieldResolverize(fieldsWorking, {
+
+const fieldMap = new FieldMap({
+  fields: {
+    id: new Field({
+      brick: scalars.id,
+      args: { a1: { brick: scalars.string } },
+    }),
+    firstName: new Field({
+      brick: scalars.string,
+      args: { a2: { brick: scalars.int }, a3: { brick: scalars.boolean } },
+    }),
+    lastName: new Field({ brick: scalars.string, args: {} }),
+  },
+});
+
+fieldResolverize(fieldMap, {
   id: (root, args) => {
+    args.a1;
     return '1';
   },
-  firstName: (root) => {
+  firstName: (root, args) => {
+    args.a3;
     return '1234';
   },
   lastName: (root) => {
