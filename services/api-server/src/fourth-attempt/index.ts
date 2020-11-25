@@ -20,6 +20,7 @@ import {
   GraphQLUnionType,
 } from 'graphql';
 import * as t from 'io-ts';
+import { rightIO } from 'fp-ts/lib/StateReaderTaskEither';
 
 type Codec<A, O> = t.Type<A, O, unknown>;
 
@@ -564,11 +565,11 @@ type Root<T> = {
   };
 };
 
-class Referential<P> {
+class Referential_1<P> {
   constructor(public readonly root: Root<P>) {}
 }
 
-const d = new Referential({
+const d = new Referential_1({
   id: {
     resolving: scalars.string,
     resolver: (root) => {
@@ -607,15 +608,15 @@ const brickMap = {
 
 type D = BrickOutputOf<typeof brickMap>;
 
-interface Referential2<T> {
+interface Referential_2<T> {
   [key: string]: {
     brick: AnyOutputBrick;
-    resolve: (root: Referential2<T>) => null;
+    resolve: (root: Referential_2<T>) => null;
   };
 }
 
 class Kerem<P extends BrickMap> {
-  constructor(public x: Referential2<P>) {}
+  constructor(public x: Referential_2<P>) {}
 }
 
 const k = new Kerem({
@@ -630,3 +631,46 @@ const k = new Kerem({
     resolve: (root) => null,
   },
 });
+
+// interface HasBricks {
+//   [key: string]: {
+//     brick: AnyOutputBrick;
+//   };
+// }
+
+// interface Referential<T> extends HasBricks {
+//   [key: string]: {
+//     brick: AnyOutputBrick;
+//     resolve: (root: Referential<T>) => null;
+//   };
+// }
+
+// type GetBricks<T extends HasBricks> = {
+//   [K in keyof T]: T[K]['brick']['B_A'];
+// };
+
+// type FurtherReferential<T extends Referential<T>> = {
+//   [K in keyof T]: {
+//     brick: AnyOutputBrick;
+//     resolve: (root: GetBricks<T>) => null;
+//   };
+// };
+
+// class RefClass<T> {
+//   constructor(public t: FurtherReferential<Referential<T>>) {}
+// }
+
+// const r = new RefClass({
+//   id: {
+//     brick: scalars.id,
+//     resolve: (root) => {
+//       return null;
+//     },
+//   },
+//   firstName: {
+//     brick: scalars.string,
+//     resolve: (root) => {
+//       return null;
+//     },
+//   },
+// });
