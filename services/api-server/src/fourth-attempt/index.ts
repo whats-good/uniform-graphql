@@ -291,7 +291,7 @@ interface OutputField<A extends InputFields> {
   resolving: AnyBrick;
   deprecationReason?: string;
   description?: string;
-  args?: A;
+  args: A | undefined;
 }
 interface OutputFields {
   [key: string]: OutputField<any>;
@@ -553,38 +553,48 @@ const root = outputObject({
   fields: {
     person: { resolving: person, args: undefined },
   },
-  },
 });
 
 export const rootQuery = root.semiGraphQLType;
 
-const friend = union({
-  name: 'Friend',
-  semiBricks: [person, animal],
-});
+interface ISelfReferential {
+  root: this;
+}
 
-const user = outputObject({
-  name: 'User',
-  fields: {
-    id: { resolving: scalars.id },
-    membership: { resolving: membership },
-    bestFriend: { resolving: friend.nullable },
-    friends: { resolving: outputList(friend) },
+interface Root<T> {
+  [key: string]: {
+    props: {
+      x: number;
+      y: (root: Root<T>) => null;
+    };
+  };
+}
+
+type Root2<T> = {
+  [K in keyof T]: {
+    resolving: AnyOutputBrick;
+    resolver: (root: Root2<T>) => null;
+  };
+};
+
+class Referential<P> {
+  constructor(public readonly root: Root2<P>) {}
+}
+
+const d = new Referential({
+  id: {
+    resolving: scalars.string,
+    resolver: (root) => null,
+  },
+  firstName: {
+    resolving: scalars.id,
+    resolver: (root) => null,
+  },
+  lastName: {
+    resolving: scalars.float,
+    resolver: (root) => {
+      root.lastName;
+      return null;
+    },
   },
 });
-
-const signupArgs = inputObject({
-  name: 'SignupArgs',
-  fields: {
-    firstName: { brick: scalars.string },
-  },
-});
-
-const root = outputObject({
-  name: 'RootQuery',
-  fields: {
-    person: { resolving: person },
-  },
-});
-
-export const rootQuery = root.semiGraphQLType;
