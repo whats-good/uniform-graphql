@@ -594,14 +594,22 @@ type BrickFunctionsOf<T extends FieldMap> = {
   ) => T[K]['brick']['B_A'];
 };
 
-function resolverize<F extends FieldMap>(
+function fieldResolverize<F extends FieldMap>(
   bricks: F,
   resolvers: Partial<BrickFunctionsOf<F>>,
 ) {
   return resolvers;
 }
 
-resolverize(fieldsWorking, {
+/**
+ * TODO: Find a way to let the developers declare that it's okay to not return a nonNullable field
+ * on the initial pass, as long as they give a fieldResolver that will eventually resolve that
+ * field. The main challenge in doing so is ensuring that the fields dont appear to be accessible
+ * through "root", even though they were returned null from the top. This could be handled by giving
+ * a second generic, or a conditional type that sets the `root.X` of that field to a Maybe<X> for the
+ * field resolvers.
+ */
+fieldResolverize(fieldsWorking, {
   id: (root, args) => {
     return '1';
   },
