@@ -586,34 +586,30 @@ const fieldsWorking = {
 type ArgsTypeOf<T extends InputFields> = {
   [K in keyof T]: T[K]['brick']['B_A'];
 };
-// T
-
-// TODO: it's working now. it probably didnt work before due to the lift function or loss of generic via class types
 
 type BrickFunctionsOf<T extends FieldMap> = {
-  [K in keyof T]: {
-    // brick: T[K]['brick'];
-    resolve: (root: T, args: ArgsTypeOf<T[K]['args']>) => T[K]['brick']['B_A'];
-  };
+  [K in keyof T]: (
+    root: T,
+    args: ArgsTypeOf<T[K]['args']>,
+  ) => T[K]['brick']['B_A'];
 };
 
-function f<F extends FieldMap>(
+function resolverize<F extends FieldMap>(
   bricks: F,
-  brickFunctions: Partial<BrickFunctionsOf<F>>,
+  resolvers: Partial<BrickFunctionsOf<F>>,
 ) {
-  return brickFunctions;
+  return resolvers;
 }
 
-f(fieldsWorking, {
-  id: {
-    resolve: (root, args) => {
-      return '1';
-    },
+resolverize(fieldsWorking, {
+  id: (root, args) => {
+    return '1';
   },
-  firstName: {
-    resolve: (root) => {
-      return '1234';
-    },
+  firstName: (root) => {
+    return '1234';
+  },
+  lastName: (root) => {
+    return 'kaz';
   },
 });
 
