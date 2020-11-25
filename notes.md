@@ -42,6 +42,7 @@
 - GraphQL resolution: Starts from query level, where root is undefined. Then, for each node that was returned from the resolver function at the query level, which also happen to have field resolvers, runs said field resolvers while putting the previously returned node as root. For each sibling field resolver, the root remains unchanged.
 - Fields that may not exist (i.e ? fields) wont show up on generic lookups.
 - The power of classes in Typescript comes from the fact that you can initialize a generic class without ever typing the generics, whereas types and interfaces require you to fill them in.
+- The second cast add a type to a handwritten object with keys and generic values, it'll lose all the generic inference. So the question is, how do we make sure that an object conforms to a type while not restricting it to it?
 
 # TODOS
 

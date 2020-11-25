@@ -558,77 +558,62 @@ const root = outputObject({
 
 export const rootQuery = root.semiGraphQLType;
 
-type Root<T> = {
-  [K in keyof T]: {
-    resolving: AnyOutputBrick;
-    resolver: (root: Root<T>) => null;
-  };
-};
-
-class Referential_1<P> {
-  constructor(public readonly root: Root<P>) {}
-}
-
-const d = new Referential_1({
-  id: {
-    resolving: scalars.string,
-    resolver: (root) => {
-      root.kerem.kazan;
-    },
-  },
-  firstName: {
-    resolving: scalars.id,
-    resolver: (root) => null,
-  },
-  lastName: {
-    resolving: scalars.float,
-    resolver: (root) => {
-      root.lastName;
-      return null;
-    },
-  },
-});
-
-interface BrickMap {
+interface FieldMap {
   [key: string]: {
     brick: AnyOutputBrick;
+    args: InputFields;
   };
 }
 
-type BrickOutputOf<T extends BrickMap> = {
-  [K in keyof T]: T[K]['brick']['S_A'];
-};
+// const fieldsNotWorking: FieldMap = {
+//   id: { brick: scalars.id, args: { a1: { brick: scalars.string } } },
+//   firstName: {
+//     brick: scalars.string,
+//     args: { a2: { brick: scalars.int }, a3: { brick: scalars.boolean } },
+//   },
+//   lastName: { brick: scalars.string, args: {} },
+// };
 
-// TODO: how does this one work? I'm mapping over the keys and getting differentiated generics???
-const brickMap = {
-  isMember: { brick: scalars.boolean },
-  id: { brick: scalars.id },
-  firstName: { brick: scalars.string },
-};
-
-type D = BrickOutputOf<typeof brickMap>;
-
-interface Referential_2<T> {
-  [key: string]: {
-    brick: AnyOutputBrick;
-    resolve: (root: Referential_2<T>) => null;
-  };
-}
-
-class Kerem<P extends BrickMap> {
-  constructor(public x: Referential_2<P>) {}
-}
-
-const k = new Kerem({
-  id: {
-    brick: scalars.id,
-    resolve: (root) => {
-      return null;
-    },
-  },
+const fieldsWorking = {
+  id: { brick: scalars.id, args: { a1: { brick: scalars.string } } },
   firstName: {
     brick: scalars.string,
-    resolve: (root) => null,
+    args: { a2: { brick: scalars.int }, a3: { brick: scalars.boolean } },
+  },
+  lastName: { brick: scalars.string, args: {} },
+};
+
+type ArgsTypeOf<T extends InputFields> = {
+  [K in keyof T]: T[K]['brick']['B_A'];
+};
+// T
+
+// TODO: it's working now. it probably didnt work before due to the lift function or loss of generic via class types
+
+type BrickFunctionsOf<T extends FieldMap> = {
+  [K in keyof T]: {
+    // brick: T[K]['brick'];
+    resolve: (root: T, args: ArgsTypeOf<T[K]['args']>) => T[K]['brick']['B_A'];
+  };
+};
+
+function f<F extends FieldMap>(
+  bricks: F,
+  brickFunctions: Partial<BrickFunctionsOf<F>>,
+) {
+  return brickFunctions;
+}
+
+f(fieldsWorking, {
+  id: {
+    resolve: (root, args) => {
+      return '1';
+    },
+  },
+  firstName: {
+    resolve: (root) => {
+      return '1234';
+    },
   },
 });
 
