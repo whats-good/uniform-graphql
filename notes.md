@@ -40,6 +40,7 @@
 
 - We can use "any" in function arguments but still manage to get down to specifics if we use type level programming in return types: `const f = <B extends AnySemiBrick>(b: B): SemiBrickType<B>`
 - GraphQL resolution: Starts from query level, where root is undefined. Then, for each node that was returned from the resolver function at the query level, which also happen to have field resolvers, runs said field resolvers while putting the previously returned node as root. For each sibling field resolver, the root remains unchanged.
+- Fields that may not exist (i.e ? fields) wont show up on generic lookups.
 
 # TODOS
 

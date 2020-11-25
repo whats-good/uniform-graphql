@@ -526,6 +526,10 @@ const person = outputObject({
   name: 'Person',
   description: 'testing person description',
   fields: {
+    membership: {
+      resolving: membership,
+      args: undefined,
+    },
     id: {
       resolving: scalars.id,
       deprecationReason: 'testing deprecation',
@@ -538,28 +542,21 @@ const person = outputObject({
     firstName: {
       resolving: scalars.string,
       description: 'testing description',
+      args: undefined,
     },
-    lastName: { resolving: scalars.string },
+    lastName: { resolving: scalars.string, args: undefined },
   },
 });
 
-const someInput = inputObject({
-  name: 'SomeInput',
+const root = outputObject({
+  name: 'RootQuery',
   fields: {
-    id: {
-      brick: scalars.id,
-    },
+    person: { resolving: person, args: undefined },
+  },
   },
 });
 
-const animal = outputObject({
-  name: 'Animal',
-  fields: {
-    id: { resolving: scalars.id },
-    nickname: { resolving: scalars.string },
-    owner: { resolving: person },
-  },
-});
+export const rootQuery = root.semiGraphQLType;
 
 const friend = union({
   name: 'Friend',
