@@ -571,7 +571,9 @@ class Referential<P> {
 const d = new Referential({
   id: {
     resolving: scalars.string,
-    resolver: (root) => null,
+    resolver: (root) => {
+      root.kerem.kazan;
+    },
   },
   firstName: {
     resolving: scalars.id,
@@ -583,5 +585,48 @@ const d = new Referential({
       root.lastName;
       return null;
     },
+  },
+});
+
+interface BrickMap {
+  [key: string]: {
+    brick: AnyOutputBrick;
+  };
+}
+
+type BrickOutputOf<T extends BrickMap> = {
+  [K in keyof T]: T[K]['brick']['S_A'];
+};
+
+// TODO: how does this one work? I'm mapping over the keys and getting differentiated generics???
+const brickMap = {
+  isMember: { brick: scalars.boolean },
+  id: { brick: scalars.id },
+  firstName: { brick: scalars.string },
+};
+
+type D = BrickOutputOf<typeof brickMap>;
+
+interface Referential2<T> {
+  [key: string]: {
+    brick: AnyOutputBrick;
+    resolve: (root: Referential2<T>) => null;
+  };
+}
+
+class Kerem<P extends BrickMap> {
+  constructor(public x: Referential2<P>) {}
+}
+
+const k = new Kerem({
+  id: {
+    brick: scalars.id,
+    resolve: (root) => {
+      return null;
+    },
+  },
+  firstName: {
+    brick: scalars.string,
+    resolve: (root) => null,
   },
 });
