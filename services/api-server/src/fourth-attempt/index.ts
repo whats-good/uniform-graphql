@@ -559,7 +559,7 @@ const root = outputObject({
 
 export const rootQuery = root.semiGraphQLType;
 
-class Field<B extends AnyOutputBrick, A extends InputFields> {
+class FieldConfig<B extends AnyOutputBrick, A extends InputFields> {
   public readonly brick: B;
   public readonly args: A;
   constructor(params: { brick: B; args: A }) {
@@ -568,31 +568,24 @@ class Field<B extends AnyOutputBrick, A extends InputFields> {
   }
 }
 
-interface FieldProps {
-  [key: string]: Field<any, any>;
-}
-
-class FieldMap<F extends FieldProps> {
-  public readonly fields: F;
-  constructor(params: { fields: F }) {
-    this.fields = params.fields;
-  }
+interface FieldConfigsMap {
+  [key: string]: FieldConfig<any, any>;
 }
 
 type ArgsTypeOf<T extends InputFields> = {
   [K in keyof T]: T[K]['brick']['B_A'];
 };
 
-type FieldResolverOf<T extends FieldProps> = {
+type FieldResolverOf<T extends FieldConfigsMap> = {
   [K in keyof T]: (
     root: T,
     args: ArgsTypeOf<T[K]['args']>,
   ) => T[K]['brick']['B_A'];
 };
 
-function fieldResolverize<F extends FieldMap<any>>(
-  fieldProps: F,
-  resolvers: Partial<FieldResolverOf<F['fields']>>,
+function fieldResolverize<F extends FieldConfigsMap>(
+  fieldConfigsMap: F,
+  resolvers: Partial<FieldResolverOf<F>>,
 ) {
   return resolvers;
 }
@@ -606,27 +599,25 @@ function fieldResolverize<F extends FieldMap<any>>(
  * field resolvers.
  */
 
-const fieldMap = new FieldMap({
-  fields: {
-    id: new Field({
-      brick: scalars.id,
-      args: { a1: { brick: scalars.string } },
-    }),
-    firstName: new Field({
-      brick: scalars.string,
-      args: { a2: { brick: scalars.int }, a3: { brick: scalars.boolean } },
-    }),
-    lastName: new Field({ brick: scalars.string, args: {} }),
-  },
-});
+const fieldConfigs = {
+  id: new FieldConfig({
+    brick: scalars.id,
+    args: { a1: { brick: scalars.string } },
+  }),
+  firstName: new FieldConfig({
+    brick: scalars.string,
+    args: { a2: { brick: scalars.int }, a3: { brick: scalars.boolean } },
+  }),
+  lastName: new FieldConfig({ brick: scalars.string, args: {} }),
+};
 
-fieldResolverize(fieldMap, {
+fieldResolverize(fieldConfigs, {
   id: (root, args) => {
     args.a1;
     return '1';
   },
   firstName: (root, args) => {
-    args.a3;
+    args.a2;
     return '1234';
   },
   lastName: (root) => {
