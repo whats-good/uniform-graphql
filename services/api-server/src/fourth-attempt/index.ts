@@ -557,28 +557,15 @@ const root = outputObject({
 
 export const rootQuery = root.semiGraphQLType;
 
-interface ISelfReferential {
-  root: this;
-}
-
-interface Root<T> {
-  [key: string]: {
-    props: {
-      x: number;
-      y: (root: Root<T>) => null;
-    };
-  };
-}
-
-type Root2<T> = {
+type Root<T> = {
   [K in keyof T]: {
     resolving: AnyOutputBrick;
-    resolver: (root: Root2<T>) => null;
+    resolver: (root: Root<T>) => null;
   };
 };
 
 class Referential<P> {
-  constructor(public readonly root: Root2<P>) {}
+  constructor(public readonly root: Root<P>) {}
 }
 
 const d = new Referential({
