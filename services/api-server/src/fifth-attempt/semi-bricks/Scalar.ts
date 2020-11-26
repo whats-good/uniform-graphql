@@ -8,7 +8,7 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { SemiBrick, Brick, Codec } from './Brick';
+import { SemiBrick, Brick, Codec } from '../Brick';
 
 export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
   implements SemiBrick<SB_A, SB_O, SB_G, 'scalar'> {
@@ -27,7 +27,7 @@ export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
     this.semiGraphQLType = params.semiGraphQLType;
   }
 
-  public readonly scalarity = 'some string';
+  public readonly scalarity = 'some string'; // TODO: remove
 
   nullable(): Brick<
     SB_A | null | undefined,
