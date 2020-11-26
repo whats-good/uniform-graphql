@@ -15,9 +15,9 @@ export type Kind =
 
 export interface SemiBrick<
   K extends Kind,
+  SB_G extends GraphQLNullableType,
   SB_A,
-  SB_O,
-  SB_G extends GraphQLNullableType
+  SB_O
 > {
   readonly name: string;
   readonly semiCodec: Codec<SB_A, SB_O>;
@@ -28,14 +28,14 @@ export interface SemiBrick<
     SB_O | null | undefined,
     SB_G,
     K,
-    SemiBrick<K, SB_A, SB_O, SB_G>
+    SemiBrick<K, SB_G, SB_A, SB_O>
   >;
   nonNullable(): Brick<
     SB_A,
     SB_O,
     GraphQLNonNull<any>,
     K,
-    SemiBrick<K, SB_A, SB_O, SB_G>
+    SemiBrick<K, SB_G, SB_A, SB_G>
   >;
 }
 
