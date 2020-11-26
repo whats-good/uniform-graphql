@@ -1,5 +1,13 @@
 import * as t from 'io-ts';
-import { GraphQLScalarType, GraphQLNonNull, GraphQLID } from 'graphql';
+import {
+  GraphQLScalarType,
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLString,
+  GraphQLFloat,
+  GraphQLInt,
+  GraphQLBoolean,
+} from 'graphql';
 import { SemiBrick, Brick, Codec } from './Brick';
 
 export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
@@ -54,14 +62,40 @@ export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
   }
 }
 
-const id = new ScalarSemiBrick({
-  name: 'ID',
-  semiCodec: t.union([t.string, t.number]),
-  semiGraphQLType: GraphQLID,
-});
+export const scalars = {
+  id: new ScalarSemiBrick({
+    name: 'ID',
+    semiCodec: t.union([t.string, t.number]),
+    semiGraphQLType: GraphQLID,
+  }),
 
-const nullableScalar = id.nullable();
-const notNullableScalar = id.nonNullable();
+  string: new ScalarSemiBrick({
+    name: 'String',
+    semiCodec: t.string,
+    semiGraphQLType: GraphQLString,
+  }),
+
+  float: new ScalarSemiBrick({
+    name: 'Float',
+    semiCodec: t.number,
+    semiGraphQLType: GraphQLFloat,
+  }),
+
+  int: new ScalarSemiBrick({
+    name: 'Int',
+    semiCodec: t.Int,
+    semiGraphQLType: GraphQLInt,
+  }),
+
+  boolean: new ScalarSemiBrick({
+    name: 'Boolean',
+    semiCodec: t.Int,
+    semiGraphQLType: GraphQLBoolean,
+  }),
+};
+
+const nullableScalar = scalars.id.nullable();
+const notNullableScalar = scalars.id.nonNullable();
 nullableScalar.semiBrick.scalarity;
 notNullableScalar.semiBrick.scalarity;
 const a = nullableScalar.codec.encode(null);
