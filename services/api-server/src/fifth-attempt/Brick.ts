@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLNullableType, GraphQLType } from 'graphql';
 import * as t from 'io-ts';
 
-export type Codec<A, O> = t.Type<A, O, unknown>;
+export type Codec<A, O = A, I = unknown> = t.Type<A, O, I>;
 
 export type Kind =
   | 'scalar'
@@ -17,25 +17,25 @@ export interface SemiBrick<
   K extends Kind,
   SB_G extends GraphQLNullableType,
   SB_A,
-  SB_O
+  SB_O = SB_A
 > {
   readonly name: string;
   readonly semiCodec: Codec<SB_A, SB_O>;
   readonly semiGraphQLType: SB_G;
   readonly kind: K;
   nullable(): Brick<
-    SB_A | null | undefined,
-    SB_O | null | undefined,
-    SB_G,
     K,
-    SemiBrick<K, SB_G, SB_A, SB_O>
+    SB_G,
+    SemiBrick<K, SB_G, SB_A, SB_O>,
+    SB_A | null | undefined,
+    SB_O | null | undefined
   >;
   nonNullable(): Brick<
-    SB_A,
-    SB_O,
-    GraphQLNonNull<any>,
     K,
-    SemiBrick<K, SB_G, SB_A, SB_G>
+    GraphQLNonNull<any>,
+    SemiBrick<K, SB_G, SB_A, SB_G>,
+    SB_A,
+    SB_O
   >;
 }
 
@@ -46,11 +46,11 @@ export type SemiGraphQLTypeOf<SB extends AnySemiBrick> = SB['semiGraphQLType'];
 export type KindOf<SB extends AnySemiBrick> = SB['kind'];
 
 export class Brick<
-  B_A,
-  B_O,
-  B_G extends GraphQLType,
   K extends Kind,
-  SB extends AnySemiBrick<K>
+  B_G extends GraphQLType,
+  SB extends AnySemiBrick<K>,
+  B_A,
+  B_O = B_A
 > {
   public readonly name: string;
   public readonly kind: K;
