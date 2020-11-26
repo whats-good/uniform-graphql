@@ -23,6 +23,7 @@ export interface SemiBrick<
   readonly semiCodec: Codec<SB_A, SB_O>;
   readonly semiGraphQLType: SB_G;
   readonly kind: K;
+
   nullable(): Brick<
     K,
     SB_G,
@@ -30,10 +31,11 @@ export interface SemiBrick<
     SB_A | null | undefined,
     SB_O | null | undefined
   >;
+
   nonNullable(): Brick<
     K,
     GraphQLNonNull<any>,
-    SemiBrick<K, SB_G, SB_A, SB_G>,
+    SemiBrick<K, SB_G, SB_A, SB_O>,
     SB_A,
     SB_O
   >;

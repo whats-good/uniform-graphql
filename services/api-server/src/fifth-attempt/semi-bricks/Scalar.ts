@@ -10,8 +10,8 @@ import {
 } from 'graphql';
 import { SemiBrick, Brick, Codec } from '../Brick';
 
-export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
-  implements SemiBrick<SB_A, SB_O, SB_G, 'scalar'> {
+export class ScalarSemiBrick<SB_G extends GraphQLScalarType, SB_A, SB_O = SB_A>
+  implements SemiBrick<'scalar', SB_G, SB_A, SB_O> {
   public readonly name: string;
   public readonly semiCodec: Codec<SB_A, SB_O>;
   public readonly semiGraphQLType: SB_G;
@@ -30,11 +30,11 @@ export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
   public readonly scalarity = 'some string'; // TODO: remove
 
   nullable(): Brick<
-    SB_A | null | undefined,
-    SB_O | null | undefined,
-    SB_G,
     'scalar',
-    ScalarSemiBrick<SB_A, SB_O, SB_G>
+    SB_G,
+    ScalarSemiBrick<SB_G, SB_A, SB_O>,
+    SB_A | null | undefined,
+    SB_O | null | undefined
   > {
     return new Brick({
       name: this.name,
@@ -46,11 +46,11 @@ export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
   }
 
   nonNullable(): Brick<
-    SB_A,
-    SB_O,
-    GraphQLNonNull<any>,
     'scalar',
-    ScalarSemiBrick<SB_A, SB_O, SB_G>
+    GraphQLNonNull<any>,
+    ScalarSemiBrick<SB_G, SB_A, SB_O>,
+    SB_A,
+    SB_O
   > {
     return new Brick({
       name: this.name,
