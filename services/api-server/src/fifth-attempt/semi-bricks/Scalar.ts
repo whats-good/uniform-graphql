@@ -1,21 +1,30 @@
 import * as t from 'io-ts';
 import {
   GraphQLScalarType,
-  GraphQLNonNull,
   GraphQLID,
   GraphQLString,
   GraphQLFloat,
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { SemiBrick, Brick, Codec } from '../Brick';
+import {
+  SemiBrick,
+  Brick,
+  Codec,
+  NullableBrickOf,
+  NonNullableBrickOf,
+} from '../Brick';
 
 export class ScalarSemiBrick<SB_G extends GraphQLScalarType, SB_A, SB_O = SB_A>
   implements SemiBrick<'scalar', SB_G, SB_A, SB_O> {
+  public readonly kind = 'scalar' as const;
   public readonly name: string;
   public readonly semiCodec: Codec<SB_A, SB_O>;
   public readonly semiGraphQLType: SB_G;
-  public readonly kind = 'scalar' as const;
+  public readonly nullable: NullableBrickOf<ScalarSemiBrick<SB_G, SB_A, SB_O>>;
+  public readonly nonNullable: NonNullableBrickOf<
+    ScalarSemiBrick<SB_G, SB_A, SB_O>
+  >;
 
   constructor(params: {
     name: string;
@@ -25,29 +34,11 @@ export class ScalarSemiBrick<SB_G extends GraphQLScalarType, SB_A, SB_O = SB_A>
     this.name = params.name;
     this.semiCodec = params.semiCodec;
     this.semiGraphQLType = params.semiGraphQLType;
+    this.nullable = Brick.initNullable(this);
+    this.nonNullable = Brick.initNonNullable(this);
   }
 
   public readonly scalarity = 'some string'; // TODO: remove
-
-  nullable(): Brick<
-    'scalar',
-    SB_G,
-    ScalarSemiBrick<SB_G, SB_A, SB_O>,
-    SB_A | null | undefined,
-    SB_O | null | undefined
-  > {
-    return Brick.initNullable(this);
-  }
-
-  nonNullable(): Brick<
-    'scalar',
-    GraphQLNonNull<any>,
-    ScalarSemiBrick<SB_G, SB_A, SB_O>,
-    SB_A,
-    SB_O
-  > {
-    return Brick.initNonNullable(this);
-  }
 }
 
 export const scalars = {
@@ -82,8 +73,8 @@ export const scalars = {
   }),
 };
 
-const nullableScalar = scalars.id.nullable();
-const notNullableScalar = scalars.id.nonNullable();
+const nullableScalar = scalars.id.nullable;
+const notNullableScalar = scalars.id.nonNullable;
 nullableScalar.semiBrick.scalarity;
 notNullableScalar.semiBrick.scalarity;
 const a = nullableScalar.codec.encode(null);

@@ -24,15 +24,14 @@ export interface SemiBrick<
   readonly semiGraphQLType: SB_G;
   readonly kind: K;
 
-  nullable(): Brick<
+  readonly nullable: Brick<
     K,
     SB_G,
     SemiBrick<K, SB_G, SB_A, SB_O>,
     SB_A | null | undefined,
     SB_O | null | undefined
   >;
-
-  nonNullable(): Brick<
+  readonly nonNullable: Brick<
     K,
     GraphQLNonNull<any>,
     SemiBrick<K, SB_G, SB_A, SB_O>,
