@@ -40,11 +40,17 @@ interface SemiBrick<
   nullable(): Brick<
     SB_A | null | undefined,
     SB_O | null | undefined,
-    any,
+    SB_G,
     K,
     SemiBrick<SB_A, SB_O, SB_G, K>
   >;
-  nonNullable(): Brick<SB_A, SB_O, any, K, SemiBrick<SB_A, SB_O, SB_G, K>>;
+  nonNullable(): Brick<
+    SB_A,
+    SB_O,
+    GraphQLNonNull<any>,
+    K,
+    SemiBrick<SB_A, SB_O, SB_G, K>
+  >;
 }
 
 type AnySemiBrick<K extends Kind = any> = SemiBrick<any, any, any, K>;
@@ -99,7 +105,7 @@ export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
   nullable(): Brick<
     SB_A | null | undefined,
     SB_O | null | undefined,
-    GraphQLScalarType,
+    SB_G,
     'scalar',
     ScalarSemiBrick<SB_A, SB_O, SB_G>
   > {
