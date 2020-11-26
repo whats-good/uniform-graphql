@@ -36,13 +36,7 @@ export class ScalarSemiBrick<SB_G extends GraphQLScalarType, SB_A, SB_O = SB_A>
     SB_A | null | undefined,
     SB_O | null | undefined
   > {
-    return new Brick({
-      name: this.name,
-      codec: t.union([t.null, t.undefined, this.semiCodec]),
-      graphQLType: this.semiGraphQLType,
-      kind: this.kind,
-      semiBrick: this,
-    });
+    return Brick.initNullable(this);
   }
 
   nonNullable(): Brick<
@@ -52,13 +46,7 @@ export class ScalarSemiBrick<SB_G extends GraphQLScalarType, SB_A, SB_O = SB_A>
     SB_A,
     SB_O
   > {
-    return new Brick({
-      name: this.name,
-      codec: this.semiCodec,
-      graphQLType: new GraphQLNonNull(this.semiGraphQLType),
-      kind: this.kind,
-      semiBrick: this,
-    });
+    return Brick.initNonNullable(this);
   }
 }
 
