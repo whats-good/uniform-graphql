@@ -1,10 +1,4 @@
-import {
-  GraphQLID,
-  GraphQLNonNull,
-  GraphQLNullableType,
-  GraphQLScalarType,
-  GraphQLType,
-} from 'graphql';
+import { GraphQLNonNull, GraphQLNullableType, GraphQLType } from 'graphql';
 import * as t from 'io-ts';
 
 export type Codec<A, O> = t.Type<A, O, unknown>;
@@ -20,10 +14,10 @@ export type Kind =
   | 'inputlist';
 
 export interface SemiBrick<
+  K extends Kind,
   SB_A,
   SB_O,
-  SB_G extends GraphQLNullableType,
-  K extends Kind
+  SB_G extends GraphQLNullableType
 > {
   readonly name: string;
   readonly semiCodec: Codec<SB_A, SB_O>;
@@ -34,18 +28,18 @@ export interface SemiBrick<
     SB_O | null | undefined,
     SB_G,
     K,
-    SemiBrick<SB_A, SB_O, SB_G, K>
+    SemiBrick<K, SB_A, SB_O, SB_G>
   >;
   nonNullable(): Brick<
     SB_A,
     SB_O,
     GraphQLNonNull<any>,
     K,
-    SemiBrick<SB_A, SB_O, SB_G, K>
+    SemiBrick<K, SB_A, SB_O, SB_G>
   >;
 }
 
-export type AnySemiBrick<K extends Kind = any> = SemiBrick<any, any, any, K>;
+export type AnySemiBrick<K extends Kind = any> = SemiBrick<K, any, any, any>;
 export type SemiTypeOf<SB extends AnySemiBrick> = SB['semiCodec']['_A'];
 export type SemiOutputTypeOf<SB extends AnySemiBrick> = SB['semiCodec']['_O'];
 export type SemiGraphQLTypeOf<SB extends AnySemiBrick> = SB['semiGraphQLType'];
