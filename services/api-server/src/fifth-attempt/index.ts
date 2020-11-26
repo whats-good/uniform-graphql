@@ -42,31 +42,14 @@ interface SemiBrick<
 
 type AnySemiBrick<K extends Kind = any> = SemiBrick<any, any, any, K>;
 
-const lift = <
-  SB_A,
-  SB_O,
-  SB_G extends GraphQLType,
-  K extends Kind,
-  SB extends SemiBrick<SB_A, SB_O, SB_G, K>
->(
-  sb: SB,
-) => {
-  return {
-    nullable: new Brick({
-      name: sb.name,
-      codec: t.union([sb.semiCodec, t.undefined, t.null]),
-      graphQLType: sb.semiGraphQLType,
-      kind: sb.kind,
-      semiBrick: sb,
-    }),
-    nonNullable: new Brick({
-      name: sb.name,
-      codec: sb.semiCodec,
-      graphQLType: new GraphQLNonNull(sb.semiGraphQLType),
-      kind: sb.kind,
-      semiBrick: sb,
-    }),
-  };
+const nullable = <SB extends AnySemiBrick>(sb: SB) => {
+  return new Brick({
+    name: sb.name,
+    codec: t.union([sb.semiCodec, t.undefined, t.null]),
+    graphQLType: sb.semiGraphQLType,
+    kind: sb.kind,
+    semiBrick: sb,
+  });
 };
 
 class Brick<
@@ -147,13 +130,6 @@ export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
       semiBrick: this,
     });
   }
-
-  lift() {
-    return {
-      nullable: this.nullable(),
-      nonNullable: this.nonNullable(),
-    };
-  }
 }
 
 const id = new ScalarSemiBrick({
@@ -162,14 +138,10 @@ const id = new ScalarSemiBrick({
   semiGraphQLType: GraphQLID,
 });
 
-const x = id.lift();
-const y = lift<
-  typeof id['semiCodec']['_A'],
-  typeof id['semiCodec']['_O'],
-  typeof id['semiGraphQLType'],
-  typeof id['kind'],
-  typeof id
->(id);
+const x = id.nullable();
+x.semiBrick.scalarity;
+const a = x.codec.encode('yo');
 
-x.nonNullable.semiBrick.scalarity;
-y.nonNullable.semiBrick.scalarity;
+const y = nullable(id);
+y.semiBrick.scalarity;
+const b = y.codec.encode('yo');
