@@ -1,4 +1,3 @@
-import { taskEitherSeq } from 'fp-ts/lib/TaskEither';
 import {
   GraphQLID,
   GraphQLNonNull,
@@ -20,7 +19,7 @@ type Kind =
   | 'outputlist'
   | 'inputlist';
 
-interface AbstractBrick<
+interface SemiBrick<
   SB_A,
   SB_O,
   SB_G extends GraphQLNullableType,
@@ -30,13 +29,6 @@ interface AbstractBrick<
   readonly semiCodec: Codec<SB_A, SB_O>;
   readonly semiGraphQLType: SB_G;
   readonly kind: K;
-}
-interface SemiBrick<
-  SB_A,
-  SB_O,
-  SB_G extends GraphQLNullableType,
-  K extends Kind
-> extends AbstractBrick<SB_A, SB_O, SB_G, K> {
   nullable(): Brick<
     SB_A | null | undefined,
     SB_O | null | undefined,
@@ -54,6 +46,10 @@ interface SemiBrick<
 }
 
 type AnySemiBrick<K extends Kind = any> = SemiBrick<any, any, any, K>;
+type SemiTypeOf<SB extends AnySemiBrick> = SB['semiCodec']['_A'];
+type SemiOutputTypeOf<SB extends AnySemiBrick> = SB['semiCodec']['_O'];
+type SemiGraphQLTypeOf<SB extends AnySemiBrick> = SB['semiGraphQLType'];
+type KindOf<SB extends AnySemiBrick> = SB['kind'];
 
 class Brick<
   B_A,
@@ -144,5 +140,6 @@ const id = new ScalarSemiBrick({
 const nullableScalar = id.nullable();
 const notNullableScalar = id.nonNullable();
 nullableScalar.semiBrick.scalarity;
+notNullableScalar.semiBrick.scalarity;
 const a = nullableScalar.codec.encode(null);
 const b = notNullableScalar.codec.encode('a');
