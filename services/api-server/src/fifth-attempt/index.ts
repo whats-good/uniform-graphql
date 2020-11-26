@@ -37,20 +37,17 @@ interface SemiBrick<
   SB_G extends GraphQLNullableType,
   K extends Kind
 > extends AbstractBrick<SB_A, SB_O, SB_G, K> {
-  nullable(): Brick<any, any, any, K, SemiBrick<SB_A, SB_O, SB_G, K>>;
+  nullable(): Brick<
+    SB_A | null | undefined,
+    SB_O | null | undefined,
+    any,
+    K,
+    SemiBrick<SB_A, SB_O, SB_G, K>
+  >;
+  nonNullable(): Brick<SB_A, SB_O, any, K, SemiBrick<SB_A, SB_O, SB_G, K>>;
 }
 
 type AnySemiBrick<K extends Kind = any> = SemiBrick<any, any, any, K>;
-
-const nullable = <SB extends AnySemiBrick>(sb: SB) => {
-  return new Brick({
-    name: sb.name,
-    codec: t.union([sb.semiCodec, t.undefined, t.null]),
-    graphQLType: sb.semiGraphQLType,
-    kind: sb.kind,
-    semiBrick: sb,
-  });
-};
 
 class Brick<
   B_A,
@@ -138,10 +135,8 @@ const id = new ScalarSemiBrick({
   semiGraphQLType: GraphQLID,
 });
 
-const x = id.nullable();
-x.semiBrick.scalarity;
-const a = x.codec.encode('yo');
-
-const y = nullable(id);
-y.semiBrick.scalarity;
-const b = y.codec.encode('yo');
+const nullableScalar = id.nullable();
+const notNullableScalar = id.nonNullable();
+nullableScalar.semiBrick.scalarity;
+const a = nullableScalar.codec.encode(null);
+const b = notNullableScalar.codec.encode('a');
