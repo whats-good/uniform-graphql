@@ -1,5 +1,6 @@
 import { taskEitherSeq } from 'fp-ts/lib/TaskEither';
 import {
+  GraphQLID,
   GraphQLNonNull,
   GraphQLNullableType,
   GraphQLScalarType,
@@ -30,7 +31,6 @@ interface AbstractBrick<
   readonly semiGraphQLType: SB_G;
   readonly kind: K;
 }
-
 interface SemiBrick<
   SB_A,
   SB_O,
@@ -40,12 +40,41 @@ interface SemiBrick<
   nullable(): Brick<any, any, any, K, SemiBrick<SB_A, SB_O, SB_G, K>>;
 }
 
+type AnySemiBrick<K extends Kind = any> = SemiBrick<any, any, any, K>;
+
+const lift = <
+  SB_A,
+  SB_O,
+  SB_G extends GraphQLType,
+  K extends Kind,
+  SB extends SemiBrick<SB_A, SB_O, SB_G, K>
+>(
+  sb: SB,
+) => {
+  return {
+    nullable: new Brick({
+      name: sb.name,
+      codec: t.union([sb.semiCodec, t.undefined, t.null]),
+      graphQLType: sb.semiGraphQLType,
+      kind: sb.kind,
+      semiBrick: sb,
+    }),
+    nonNullable: new Brick({
+      name: sb.name,
+      codec: sb.semiCodec,
+      graphQLType: new GraphQLNonNull(sb.semiGraphQLType),
+      kind: sb.kind,
+      semiBrick: sb,
+    }),
+  };
+};
+
 class Brick<
   B_A,
   B_O,
   B_G extends GraphQLType,
   K extends Kind,
-  SB extends SemiBrick<any, any, any, K>
+  SB extends AnySemiBrick<K>
 > {
   public readonly name: string;
   public readonly kind: K;
@@ -85,6 +114,8 @@ export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
     this.semiGraphQLType = params.semiGraphQLType;
   }
 
+  public readonly scalarity = 'some string';
+
   nullable(): Brick<
     SB_A | null | undefined,
     SB_O | null | undefined,
@@ -116,4 +147,29 @@ export class ScalarSemiBrick<SB_A, SB_O, SB_G extends GraphQLScalarType>
       semiBrick: this,
     });
   }
+
+  lift() {
+    return {
+      nullable: this.nullable(),
+      nonNullable: this.nonNullable(),
+    };
+  }
 }
+
+const id = new ScalarSemiBrick({
+  name: 'ID',
+  semiCodec: t.union([t.string, t.number]),
+  semiGraphQLType: GraphQLID,
+});
+
+const x = id.lift();
+const y = lift<
+  typeof id['semiCodec']['_A'],
+  typeof id['semiCodec']['_O'],
+  typeof id['semiGraphQLType'],
+  typeof id['kind'],
+  typeof id
+>(id);
+
+x.nonNullable.semiBrick.scalarity;
+y.nonNullable.semiBrick.scalarity;
