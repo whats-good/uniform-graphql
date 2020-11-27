@@ -40,7 +40,8 @@ export interface OutputFieldConfig<
   readonly args: A;
   readonly description?: string;
   readonly deprecationReason?: string;
-  // TODO: consider adding a resolve function here
+  readonly resolve?: unknown;
+  // TODO: consider refining this
 }
 
 export interface OutputFieldConfigMap {
@@ -106,6 +107,7 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
           description: field.description,
           deprecationReason: field.deprecationReason,
           args: graphQLArgs,
+          resolve: field.resolve as any, // TODO: consider not doing any here
         };
       }),
     });
