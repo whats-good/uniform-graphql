@@ -3,6 +3,7 @@ import { scalars } from './semi-bricks/Scalar';
 import { EnumSemiBrick } from './semi-bricks/Enum';
 import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
 import { QueryResolver } from './semi-bricks/QueryResolver';
+import { fieldResolverize } from './semi-bricks/FieldResolver';
 
 const membership = EnumSemiBrick.init({
   name: 'Membership',
@@ -34,7 +35,7 @@ export const person = OutputObjectSemiBrick.init({
   description: 'description for person',
   fields: {
     id: {
-      brick: scalars.id.nonNullable,
+      brick: scalars.id.nullable,
       deprecationReason: 'this field is deprecataed',
       args: {
         x: {
@@ -52,6 +53,21 @@ export const person = OutputObjectSemiBrick.init({
   },
 });
 
+const fieldResolvedPerson = fieldResolverize({
+  semiBrick: person,
+  resolvers: {
+    id: (root, args) => {
+      if (!args.x) {
+        return 'fallback';
+      }
+      if (args.y < 10) {
+        return null;
+      }
+      return args.x > 10 ? root.firstName : `${root.id} - 10`;
+    },
+  },
+});
+
 const rootQuery = OutputObjectSemiBrick.init({
   name: 'RootQuery',
   fields: {
@@ -64,7 +80,7 @@ const rootQuery = OutputObjectSemiBrick.init({
       },
     },
     person: {
-      brick: person.nonNullable,
+      brick: fieldResolvedPerson.nonNullable,
       args: {
         flag: {
           brick: scalars.boolean.nonNullable,
