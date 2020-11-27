@@ -10,8 +10,8 @@ export type Kind =
   | 'union' // done
   | 'enum' // done
   | 'inputobject' // done
-  | 'outputlist'
-  | 'inputlist';
+  | 'outputlist' // done
+  | 'inputlist'; // done
 
 export interface SemiBrick<
   K extends Kind,

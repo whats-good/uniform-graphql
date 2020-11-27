@@ -8,6 +8,7 @@ import {
   Codec,
   NullableBrickOf,
   NonNullableBrickOf,
+  AnySemiBrick,
 } from '../Brick';
 
 interface InputFieldConfig {
@@ -23,6 +24,7 @@ interface InputFieldConfigMap {
 
 type InputKind = 'scalar' | 'enum' | 'inputlist' | 'inputobject';
 export type AnyInputBrick = AnyBrick<InputKind>;
+export type AnyInputSemiBrick = AnySemiBrick<InputKind>;
 
 type TMap<F extends InputFieldConfigMap> = {
   [K in keyof F]: F[K]['brick']['codec']['_A'];

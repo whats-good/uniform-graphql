@@ -5,6 +5,7 @@ import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
 import { fieldResolverize, queryResolverize } from './resolver';
 import { UnionSemiBrick } from './semi-bricks/Union';
 import { OutputListSemiBrick } from './semi-bricks/OutputList';
+import { InputListSemiBrick } from './semi-bricks/InputList';
 
 const membership = EnumSemiBrick.init({
   name: 'Membership',
@@ -118,6 +119,11 @@ const rootQuery = OutputObjectSemiBrick.init({
         numPeople: {
           brick: scalars.float.nonNullable,
         },
+        listArg: {
+          brick: InputListSemiBrick.init({
+            listOf: membership,
+          }).nonNullable,
+        },
       },
     },
   },
@@ -147,9 +153,10 @@ const rootQueryResolver = queryResolverize({
     // TODO: make the brick to resolve somehow accessible. something like via the info param.
     people: (root, args) => {
       const toReturn: typeof rootQuery['fields']['people']['brick']['codec']['_A'] = [];
+      const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
       for (let i = 0; i < args.numPeople; i++) {
         toReturn.push({
-          firstName: `some-name-${i}`,
+          firstName: `some-name-${i}-${m}`,
           id: i,
         });
       }
