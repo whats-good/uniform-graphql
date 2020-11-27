@@ -36,7 +36,7 @@ export const person = OutputObjectSemiBrick.init({
   name: 'Person',
   description: 'description for person',
   fields: {
-    id: new OutputFieldConfig({
+    id: {
       brick: scalars.id.nonNullable,
       deprecationReason: 'this field is deprecataed',
       args: {
@@ -47,30 +47,38 @@ export const person = OutputObjectSemiBrick.init({
           brick: scalars.float.nonNullable,
         },
       },
-    }),
-    k: new OutputFieldConfig({
-      brick: scalars.float.nullable,
+    },
+    firstName: {
+      brick: scalars.string.nullable,
       args: {},
-    }),
+    },
   },
 });
 
-export const root = new GraphQLObjectType({
+const rootQuery = OutputObjectSemiBrick.init({
   name: 'RootQuery',
-  fields: () => ({
+  fields: {
     something: {
-      type: GraphQLString,
+      brick: scalars.string.nullable,
       args: {
         inputObjectArg: {
-          type: someInput.nonNullable.graphQLType,
+          brick: someInput.nonNullable,
         },
       },
     },
     person: {
-      type: person.nonNullable.graphQLType,
+      brick: person.nonNullable,
+      args: {
+        flag: {
+          brick: scalars.boolean.nonNullable,
+        },
+      },
     },
-  }),
+  },
 });
+
+// TODO: note to self: root queries are not allowed to be nonNullable.
+export const root = rootQuery.nullable.graphQLType;
 
 const nullableScalar = scalars.id.nullable;
 const nonNullableScalar = scalars.id.nonNullable;

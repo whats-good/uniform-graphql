@@ -32,26 +32,14 @@ type OutputKind =
 export type AnyOutputBrick = AnyBrick<OutputKind>;
 
 // TODO: add context stuff later
-export class OutputFieldConfig<
+export interface OutputFieldConfig<
   B extends AnyOutputBrick,
   A extends OutputFieldConfigArgumentMap
 > {
-  public readonly brick: B;
-  public readonly description?: string;
-  public readonly deprecationReason?: string;
-  public readonly args: A;
-
-  constructor(params: {
-    brick: B;
-    description?: string;
-    deprecationReason?: string;
-    args: A;
-  }) {
-    this.brick = params.brick;
-    this.args = params.args;
-    this.description = params.description;
-    this.args = params.args;
-  }
+  readonly brick: B;
+  readonly description?: string;
+  readonly deprecationReason?: string;
+  readonly args: A;
 }
 
 export interface OutputFieldConfigMap {
