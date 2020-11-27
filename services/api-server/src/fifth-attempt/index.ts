@@ -2,8 +2,7 @@ import { InputObjectSemiBrick } from './semi-bricks/InputObject';
 import { scalars } from './semi-bricks/Scalar';
 import { EnumSemiBrick } from './semi-bricks/Enum';
 import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
-import { QueryResolver } from './semi-bricks/QueryResolver';
-import { fieldResolverize } from './semi-bricks/FieldResolver';
+import { fieldResolverize, queryResolverize } from './resolver';
 
 const membership = EnumSemiBrick.init({
   name: 'Membership',
@@ -90,7 +89,7 @@ const rootQuery = OutputObjectSemiBrick.init({
   },
 });
 
-const rootQueryResolver = QueryResolver.init({
+const rootQueryResolver = queryResolverize({
   semiBrick: rootQuery,
   resolvers: {
     person: (_, args) => {
@@ -106,7 +105,7 @@ const rootQueryResolver = QueryResolver.init({
 });
 
 // TODO: note to self: root queries are not allowed to be nonNullable.
-export const root = rootQueryResolver.graphQLType;
+export const root = rootQueryResolver.semiGraphQLType;
 
 const nullableScalar = scalars.id.nullable;
 const nonNullableScalar = scalars.id.nonNullable;
