@@ -4,7 +4,17 @@ import {
   OutputFieldConfigMap,
   OutputFieldConfigArgumentMap,
   TMap,
+  AnyOutputBrick,
 } from './semi-bricks/OutputObject';
+
+// type Thunk<T> = () => T;
+
+type ResolverReturnType<T> = T | Promise<T>; // TODO: add thunk support later
+type ResolverReturnTypeOf<B extends AnyOutputBrick> = ResolverReturnType<
+  B['codec']['_A']
+>;
+
+// TODO: add Context and info later
 
 type ArgTMap<T extends OutputFieldConfigArgumentMap> = {
   [K in keyof T]: T[K]['brick']['codec']['_A'];
@@ -15,14 +25,14 @@ type FieldResolversOf<T extends OutputFieldConfigMap> = {
   [K in keyof T]: (
     root: TMap<T>,
     args: ArgTMap<T[K]['args']>,
-  ) => T[K]['brick']['codec']['_A'];
+  ) => ResolverReturnTypeOf<T[K]['brick']>;
 };
 
 type QueryResolversOf<T extends OutputFieldConfigMap> = {
   [K in keyof T]: (
     root: void,
     args: ArgTMap<T[K]['args']>,
-  ) => T[K]['brick']['codec']['_A'];
+  ) => ResolverReturnTypeOf<T[K]['brick']>;
 };
 
 export const fieldResolverize = <F extends OutputFieldConfigMap>(params: {
