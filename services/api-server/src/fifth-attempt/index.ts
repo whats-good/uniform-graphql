@@ -1,11 +1,8 @@
-import { GraphQLObjectType, GraphQLString } from 'graphql';
 import { InputObjectSemiBrick } from './semi-bricks/InputObject';
 import { scalars } from './semi-bricks/Scalar';
 import { EnumSemiBrick } from './semi-bricks/Enum';
-import {
-  OutputFieldConfig,
-  OutputObjectSemiBrick,
-} from './semi-bricks/OutputObject';
+import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
+import { QueryResolver } from './semi-bricks/QueryResolver';
 
 const membership = EnumSemiBrick.init({
   name: 'Membership',
@@ -77,8 +74,23 @@ const rootQuery = OutputObjectSemiBrick.init({
   },
 });
 
+const rootQueryResolver = QueryResolver.init({
+  semiBrick: rootQuery,
+  resolvers: {
+    person: (_, args) => {
+      return {
+        firstName: 'kerem',
+        id: 1,
+      };
+    },
+    something: (_, args) => {
+      return 'yo';
+    },
+  },
+});
+
 // TODO: note to self: root queries are not allowed to be nonNullable.
-export const root = rootQuery.nullable.graphQLType;
+export const root = rootQueryResolver.graphQLType;
 
 const nullableScalar = scalars.id.nullable;
 const nonNullableScalar = scalars.id.nonNullable;
