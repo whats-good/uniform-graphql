@@ -1,4 +1,4 @@
-import { GraphQLEnumType, GraphQLEnumValueConfig } from 'graphql';
+import { GraphQLEnumType } from 'graphql';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import {
@@ -41,18 +41,14 @@ export class EnumSemiBrick<D extends StringKeys>
     name: string;
     keys: D;
   }): EnumSemiBrick<D> {
-    const values = _.mapValues(
-      params.keys,
-      (_, key: string): GraphQLEnumValueConfig => ({
-        value: key,
-        deprecationReason: 'some deprecation reason',
-        description: 'some description', // TODO: get back here and expose these fields
-      }),
-    );
     const semiGraphQLType = new GraphQLEnumType({
       name: params.name,
       description: 'some description', // TODO: get bcak here and expose these fields
-      values,
+      values: _.mapValues(params.keys, (_, key: string) => ({
+        value: key,
+        deprecationReason: 'some deprecation reason',
+        description: 'some description', // TODO: get back here and expose these fields
+      })),
     });
     return new EnumSemiBrick({
       name: params.name,
