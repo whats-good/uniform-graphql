@@ -12,22 +12,22 @@ type ArgTMap<T extends OutputFieldConfigArgumentMap> = {
 };
 
 // TODO: later on, enable the root to be something else, but always force a return on the field.
-type ResolversOf<T extends OutputObjectSemiBrick<OutputFieldConfigMap>> = {
-  [K in keyof T['fields']]: (
-    root: TMap<T['fields']>,
-    args: ArgTMap<T['fields'][K]['args']>,
-  ) => T['fields'][K]['brick']['codec']['_A'];
+type ResolversOf<T extends OutputFieldConfigMap> = {
+  [K in keyof T]: (
+    root: TMap<T>,
+    args: ArgTMap<T[K]['args']>,
+  ) => T[K]['brick']['codec']['_A'];
 };
 
-export class FieldResolver<SB extends OutputObjectSemiBrick<any>> {
-  public readonly semiBrick: SB;
-  public readonly resolvers: Partial<ResolversOf<SB>>;
+export class FieldResolver<F extends OutputFieldConfigMap> {
+  public readonly semiBrick: OutputObjectSemiBrick<F>;
+  public readonly resolvers: Partial<ResolversOf<F>>;
   public readonly graphQLType: GraphQLObjectType;
 
   private constructor(params: {
-    semiBrick: SB;
-    resolvers: Partial<ResolversOf<SB>>;
-    graphQLType: GraphQLObjectType;
+    semiBrick: FieldResolver<F>['semiBrick'];
+    resolvers: FieldResolver<F>['resolvers'];
+    graphQLType: FieldResolver<F>['graphQLType'];
   }) {
     this.semiBrick = params.semiBrick;
     this.resolvers = params.resolvers;
@@ -37,10 +37,10 @@ export class FieldResolver<SB extends OutputObjectSemiBrick<any>> {
   // TODO: there's very little difference between query resolvers and field resolvers. see how we can combine them.
   // TODO: technically speaking, we're creating a new semibrick here.
   // TODO: for field resolvers, there will come a point where we'll have to update existing instances to include the resolvers.
-  public static init<SB extends OutputObjectSemiBrick<any>>(params: {
-    semiBrick: SB;
-    resolvers: Partial<ResolversOf<SB>>;
-  }): FieldResolver<SB> {
+  public static init<F extends OutputFieldConfigMap>(params: {
+    semiBrick: OutputObjectSemiBrick<F>;
+    resolvers: Partial<ResolversOf<F>>;
+  }): FieldResolver<F> {
     return new FieldResolver({
       semiBrick: params.semiBrick,
       resolvers: params.resolvers,
