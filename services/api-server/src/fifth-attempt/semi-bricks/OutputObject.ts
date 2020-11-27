@@ -37,9 +37,10 @@ export interface OutputFieldConfig<
   A extends OutputFieldConfigArgumentMap
 > {
   readonly brick: B;
+  readonly args: A;
   readonly description?: string;
   readonly deprecationReason?: string;
-  readonly args: A;
+  // TODO: consider adding a resolve function here
 }
 
 export interface OutputFieldConfigMap {
@@ -53,7 +54,7 @@ export type TMap<F extends OutputFieldConfigMap> = {
   [K in keyof F]: F[K]['brick']['codec']['_A'];
 };
 
-type OMap<F extends OutputFieldConfigMap> = {
+export type OMap<F extends OutputFieldConfigMap> = {
   [K in keyof F]: F[K]['brick']['codec']['_O'];
 };
 
@@ -67,7 +68,8 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
   public readonly nullable: NullableBrickOf<OutputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<OutputObjectSemiBrick<F>>;
 
-  private constructor(params: {
+  // TODO: consider making it private or abstract
+  constructor(params: {
     name: string;
     semiCodec: Codec<TMap<F>, OMap<F>>;
     semiGraphQLType: GraphQLObjectType;
