@@ -13,6 +13,7 @@ interface StringKeys {
   [key: string]: unknown;
 }
 
+// TODO: expose the enum values as a public property.
 export class EnumSemiBrick<D extends StringKeys>
   implements SemiBrick<'enum', GraphQLEnumType, keyof D> {
   public readonly kind = 'enum' as const;
@@ -60,10 +61,3 @@ export class EnumSemiBrick<D extends StringKeys>
     });
   }
 }
-
-const membership = EnumSemiBrick.init({
-  name: 'Membership',
-  keys: { free: null, paid: null, enterprise: null }, // TODO: enable the dev to give values to the values too.
-});
-
-membership.nullable.semiBrick.semiCodec.encode('enterprise');
