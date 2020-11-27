@@ -2,6 +2,10 @@ import { GraphQLObjectType, GraphQLString } from 'graphql';
 import { InputObjectSemiBrick } from './semi-bricks/InputObject';
 import { scalars } from './semi-bricks/Scalar';
 import { EnumSemiBrick } from './semi-bricks/Enum';
+import {
+  OutputFieldConfig,
+  OutputObjectSemiBrick,
+} from './semi-bricks/OutputObject';
 
 const membership = EnumSemiBrick.init({
   name: 'Membership',
@@ -28,6 +32,29 @@ export const someInput = InputObjectSemiBrick.init({
   },
 });
 
+export const person = OutputObjectSemiBrick.init({
+  name: 'Person',
+  description: 'description for person',
+  fields: {
+    id: new OutputFieldConfig({
+      brick: scalars.id.nonNullable,
+      deprecationReason: 'this field is deprecataed',
+      args: {
+        x: {
+          brick: scalars.id.nullable,
+        },
+        y: {
+          brick: scalars.float.nonNullable,
+        },
+      },
+    }),
+    k: new OutputFieldConfig({
+      brick: scalars.float.nullable,
+      args: {},
+    }),
+  },
+});
+
 export const root = new GraphQLObjectType({
   name: 'RootQuery',
   fields: () => ({
@@ -38,6 +65,9 @@ export const root = new GraphQLObjectType({
           type: someInput.nonNullable.graphQLType,
         },
       },
+    },
+    person: {
+      type: person.nonNullable.graphQLType,
     },
   }),
 });
@@ -52,5 +82,11 @@ const c = someInput.fields.firstName.brick.codec.encode('b');
 const d = someInput.semiCodec.encode({
   id: '1',
   firstName: 'kerem',
-  membership: 'free' as const,
+  membership: 'free',
 });
+// TODO: make OMap appears here, and makes the type less readable
+const e = person.nullable.codec.encode(null);
+
+const f = person.fields.id.args.y.brick.semiBrick.nonNullable.codec.encode(
+  1234,
+);

@@ -32,16 +32,33 @@ type OutputKind =
 export type AnyOutputBrick = AnyBrick<OutputKind>;
 
 // TODO: add context stuff later
-// TODO: maybe this should become a class
-export interface OutputFieldConfig<AF extends OutputFieldConfigArgumentMap> {
-  brick: AnyOutputBrick;
-  description?: string;
-  deprecationReason?: string;
-  // args?: AF;
+export class OutputFieldConfig<
+  B extends AnyOutputBrick,
+  A extends OutputFieldConfigArgumentMap
+> {
+  public readonly brick: B;
+  public readonly description?: string;
+  public readonly deprecationReason?: string;
+  public readonly args: A;
+
+  constructor(params: {
+    brick: B;
+    description?: string;
+    deprecationReason?: string;
+    args: A;
+  }) {
+    this.brick = params.brick;
+    this.args = params.args;
+    this.description = params.description;
+    this.args = params.args;
+  }
 }
 
 export interface OutputFieldConfigMap {
-  [key: string]: OutputFieldConfig<any>;
+  [key: string]: OutputFieldConfig<
+    AnyOutputBrick,
+    OutputFieldConfigArgumentMap
+  >;
 }
 
 type TMap<F extends OutputFieldConfigMap> = {
@@ -85,12 +102,22 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
     const semiGraphQLType = new GraphQLObjectType({
       name: params.name,
       description: params.description,
-      fields: _.mapValues(params.fields, (field) => ({
-        type: field.brick.graphQLType,
-        deprecationReason: field.deprecationReason,
-        description: field.description,
-        // TODO: handle args bricks
-      })),
+      fields: _.mapValues(params.fields, (field) => {
+        const { args } = field;
+        const graphQLArgs = _.mapValues(args, (arg) => {
+          return {
+            type: arg.brick.graphQLType,
+            description: arg.description,
+            deprecationReason: arg.deprecationReason,
+          };
+        });
+        return {
+          type: field.brick.graphQLType,
+          description: field.description,
+          deprecationReason: field.deprecationReason,
+          args: graphQLArgs,
+        };
+      }),
     });
     return new OutputObjectSemiBrick({
       name: params.name,
