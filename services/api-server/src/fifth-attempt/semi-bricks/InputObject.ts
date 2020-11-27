@@ -1,16 +1,14 @@
-import { GraphQLID, GraphQLInputObjectType, GraphQLString } from 'graphql';
+import { GraphQLInputObjectType } from 'graphql';
 import _ from 'lodash';
 import * as t from 'io-ts';
 import {
   Brick,
   SemiBrick,
-  AnySemiBrick,
   AnyBrick,
   Codec,
   NullableBrickOf,
   NonNullableBrickOf,
 } from '../Brick';
-import { scalars } from './Scalar';
 
 interface InputFieldConfig {
   brick: AnyInputBrick;
@@ -24,11 +22,7 @@ interface InputFieldConfigMap {
 }
 
 type InputKind = 'scalar' | 'enum' | 'inputlist' | 'inputobject';
-type AnyInputBrick = AnyBrick<InputKind>;
-
-type InputObjectCodecsMapFromConfigsMap<F extends InputFieldConfigMap> = {
-  [K in keyof F]: F[K]['brick']['codec'];
-};
+export type AnyInputBrick = AnyBrick<InputKind>;
 
 type TMap<F extends InputFieldConfigMap> = {
   [K in keyof F]: F[K]['brick']['codec']['_A'];
@@ -38,7 +32,6 @@ type OMap<F extends InputFieldConfigMap> = {
   [K in keyof F]: F[K]['brick']['codec']['_O'];
 };
 
-// TODO: is there a way to tie SB_A to the fields?
 export class InputObjectSemiBrick<F extends InputFieldConfigMap>
   implements
     SemiBrick<'inputobject', GraphQLInputObjectType, TMap<F>, OMap<F>> {
@@ -50,7 +43,7 @@ export class InputObjectSemiBrick<F extends InputFieldConfigMap>
   public readonly nullable: NullableBrickOf<InputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<InputObjectSemiBrick<F>>;
 
-  constructor(params: {
+  private constructor(params: {
     name: string;
     semiCodec: Codec<TMap<F>, OMap<F>>;
     semiGraphQLType: GraphQLInputObjectType;
@@ -68,10 +61,7 @@ export class InputObjectSemiBrick<F extends InputFieldConfigMap>
     name: string;
     fields: F;
   }): InputObjectSemiBrick<F> {
-    const codecs: InputObjectCodecsMapFromConfigsMap<F> = _.mapValues(
-      params.fields,
-      (field) => field.brick.codec,
-    );
+    const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
     const semiGraphQLType = new GraphQLInputObjectType({
       name: params.name,
       fields: _.mapValues(params.fields, (field) => ({
