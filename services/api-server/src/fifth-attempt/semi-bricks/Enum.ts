@@ -14,6 +14,7 @@ interface StringKeys {
 }
 
 // TODO: expose the enum values as a public property.
+// TODO: allow the developer to make the enums actually enumerable
 export class EnumSemiBrick<D extends StringKeys>
   implements SemiBrick<'enum', GraphQLEnumType, keyof D> {
   public readonly kind = 'enum' as const;
@@ -39,14 +40,15 @@ export class EnumSemiBrick<D extends StringKeys>
 
   public static init<D extends StringKeys>(params: {
     name: string;
+    description?: string;
     keys: D;
   }): EnumSemiBrick<D> {
     const semiGraphQLType = new GraphQLEnumType({
       name: params.name,
-      description: 'some description', // TODO: get bcak here and expose these fields
+      description: params.description,
       values: _.mapValues(params.keys, (_, key: string) => ({
         value: key,
-        deprecationReason: 'some deprecation reason',
+        deprecationReason: 'some deprecation reason', // TODO: get back here and expose these fields
         description: 'some description', // TODO: get back here and expose these fields
       })),
     });
