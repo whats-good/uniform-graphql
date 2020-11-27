@@ -3,6 +3,7 @@ import * as t from 'io-ts';
 import _ from 'lodash';
 import {
   AnyBrick,
+  AnySemiBrick,
   Brick,
   Codec,
   NonNullableBrickOf,
@@ -32,6 +33,7 @@ type OutputKind =
   | 'outputlist';
 
 export type AnyOutputBrick = AnyBrick<OutputKind>;
+export type AnyOutputSemiBrick = AnySemiBrick<OutputKind>;
 
 // TODO: add context stuff later
 export interface OutputFieldConfig<

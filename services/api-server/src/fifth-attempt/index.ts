@@ -3,6 +3,8 @@ import { scalars } from './semi-bricks/Scalar';
 import { EnumSemiBrick } from './semi-bricks/Enum';
 import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
 import { fieldResolverize, queryResolverize } from './resolver';
+import { UnionSemiBrick } from './semi-bricks/Union';
+import { OutputListSemiBrick } from './semi-bricks/OutputList';
 
 const membership = EnumSemiBrick.init({
   name: 'Membership',
@@ -35,7 +37,7 @@ export const person = OutputObjectSemiBrick.init({
   fields: {
     id: {
       brick: scalars.id.nullable,
-      deprecationReason: 'this field is deprecataed',
+      // deprecationReason: 'this field is deprecataed',
       args: {
         x: {
           brick: scalars.id.nullable,
@@ -62,9 +64,27 @@ const fieldResolvedPerson = fieldResolverize({
       if (args.y < 10) {
         return null;
       }
-      return args.x > 10 ? root.firstName : `${root.id} - 10`;
+      return args.x > 10
+        ? root.firstName
+        : `${root.id} - ${args.x} - ${args.y}`;
     },
   },
+});
+
+export const animal = OutputObjectSemiBrick.init({
+  name: 'Animal',
+  description: 'description for animal',
+  fields: {
+    owner: {
+      brick: fieldResolvedPerson.nullable,
+      args: {},
+    },
+  },
+});
+
+export const bestFriend = UnionSemiBrick.init({
+  name: 'BestFriend',
+  semiBricks: [fieldResolvedPerson, animal],
 });
 
 const rootQuery = OutputObjectSemiBrick.init({
@@ -86,9 +106,24 @@ const rootQuery = OutputObjectSemiBrick.init({
         },
       },
     },
+    bestFriend: {
+      brick: bestFriend.nonNullable,
+      args: {},
+    },
+    people: {
+      brick: OutputListSemiBrick.init({
+        listOf: fieldResolvedPerson,
+      }).nonNullable,
+      args: {
+        numPeople: {
+          brick: scalars.float.nonNullable,
+        },
+      },
+    },
   },
 });
 
+// TODO: see if we can do the rootquery resolver without creating the root first.
 const rootQueryResolver = queryResolverize({
   semiBrick: rootQuery,
   resolvers: {
@@ -100,6 +135,25 @@ const rootQueryResolver = queryResolverize({
     },
     something: (_, args) => {
       return 'yo';
+    },
+    bestFriend: async (_, __) => {
+      return {
+        owner: {
+          id: 'this is the id',
+          firstName: 'this is the name',
+        },
+      };
+    },
+    // TODO: make the brick to resolve somehow accessible. something like via the info param.
+    people: (root, args) => {
+      const toReturn: typeof rootQuery['fields']['people']['brick']['codec']['_A'] = [];
+      for (let i = 0; i < args.numPeople; i++) {
+        toReturn.push({
+          firstName: `some-name-${i}`,
+          id: i,
+        });
+      }
+      return toReturn;
     },
   },
 });
