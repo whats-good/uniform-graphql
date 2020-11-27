@@ -43,6 +43,11 @@
 - Fields that may not exist (i.e ? fields) wont show up on generic lookups.
 - The power of classes in Typescript comes from the fact that you can initialize a generic class without ever typing the generics, whereas types and interfaces require you to fill them in.
 - The second cast add a type to a handwritten object with keys and generic values, it'll lose all the generic inference. So the question is, how do we make sure that an object conforms to a type while not restricting it to it?
+- GraphQL schema will have a runtime error if an object doesnt implement its interfaces
+- For an interface to be correctly implemented, the args should match as well as the return types.
+- It appears that interface level resolvers never run.
+- In order to make interfaces work, we might have to make the brick names as generics, and force resolvers to pick a name. The problem is, how do we find the correct object's name? We don't have them at compile time for interfaces. We do have them for unions, so we still need to do it.
+  but still, how do we do it for interfaces?
 
 # TODOS
 

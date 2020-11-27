@@ -48,8 +48,9 @@ export class EnumSemiBrick<D extends StringKeys>
       description: params.description,
       values: _.mapValues(params.keys, (_, key: string) => ({
         value: key,
-        deprecationReason: 'some deprecation reason', // TODO: get back here and expose these fields
-        description: 'some description', // TODO: get back here and expose these fields
+        // TODO: expose deprecation reason via the values of the given keys
+        // deprecationReason: 'some deprecation reason',
+        // description: 'some description',
       })),
     });
     return new EnumSemiBrick({

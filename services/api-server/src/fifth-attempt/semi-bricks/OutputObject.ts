@@ -64,6 +64,7 @@ export type OMap<F extends OutputFieldConfigMap> = {
 };
 
 export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
+// TODO: add an optional "interfaces" field here
 export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
   implements SemiBrick<'outputobject', GraphQLObjectType, TMap<F>, OMap<F>> {
   public readonly kind = 'outputobject' as const;
