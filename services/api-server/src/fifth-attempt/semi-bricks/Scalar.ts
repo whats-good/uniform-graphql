@@ -72,10 +72,3 @@ export const scalars = {
     semiGraphQLType: GraphQLBoolean,
   }),
 };
-
-const nullableScalar = scalars.id.nullable;
-const notNullableScalar = scalars.id.nonNullable;
-nullableScalar.semiBrick.scalarity;
-notNullableScalar.semiBrick.scalarity;
-const a = nullableScalar.codec.encode(null);
-const b = notNullableScalar.codec.encode('a');

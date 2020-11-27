@@ -41,10 +41,23 @@ export interface SemiBrick<
 }
 
 export type AnySemiBrick<K extends Kind = any> = SemiBrick<K, any, any, any>;
+export type AnyBrick<K extends Kind = any> = Brick<
+  K,
+  any,
+  AnySemiBrick<K>,
+  any,
+  any
+>;
+interface Kinded {
+  kind: Kind;
+}
+export type KindOf<T extends Kinded> = T['kind'];
 export type SemiTypeOf<SB extends AnySemiBrick> = SB['semiCodec']['_A'];
 export type SemiOutputTypeOf<SB extends AnySemiBrick> = SB['semiCodec']['_O'];
 export type SemiGraphQLTypeOf<SB extends AnySemiBrick> = SB['semiGraphQLType'];
-export type KindOf<SB extends AnySemiBrick> = SB['kind'];
+export type TypeOf<B extends AnyBrick> = B['codec']['_A'];
+export type OutputTypeOf<B extends AnyBrick> = B['codec']['_O'];
+export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
 
 export type NullableBrickOf<SB extends AnySemiBrick> = Brick<
   KindOf<SB>,

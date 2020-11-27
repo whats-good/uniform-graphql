@@ -2,10 +2,10 @@ import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import { GraphQLSchema } from 'graphql';
 import _ from 'lodash';
-import { rootQuery } from './fourth-attempt/';
+import { root } from './fifth-attempt';
 
 const schema = new GraphQLSchema({
-  query: rootQuery,
+  query: root,
 });
 
 const apolloServer = new ApolloServer({
