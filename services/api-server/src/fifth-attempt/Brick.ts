@@ -28,8 +28,8 @@ export interface SemiBrick<
     K,
     SB_G,
     SemiBrick<K, SB_G, SB_A, SB_O>,
-    SB_A | null | undefined,
-    SB_O | null | undefined
+    SB_A | null | undefined, // TODO: consider adding void here, to help with non-returning resolvers
+    SB_O | null | undefined // TODO: consider adding void here, to help with non-returning resolvers
   >;
   readonly nonNullable: Brick<
     K,
