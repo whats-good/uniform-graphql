@@ -49,7 +49,7 @@ export interface OutputFieldConfigMap {
   >;
 }
 
-type TMap<F extends OutputFieldConfigMap> = {
+export type TMap<F extends OutputFieldConfigMap> = {
   [K in keyof F]: F[K]['brick']['codec']['_A'];
 };
 
