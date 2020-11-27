@@ -39,6 +39,7 @@ export const fieldResolverize = <F extends OutputFieldConfigMap>(params: {
   semiBrick: OutputObjectSemiBrick<F>;
   resolvers: Partial<FieldResolversOf<F>>;
 }): typeof params['semiBrick'] => {
+  // TODO: this seems to cause bugs by creating multiple instances of the root type.
   return OutputObjectSemiBrick.init({
     ...params.semiBrick,
     fields: _.mapValues(params.semiBrick.fields, (field, key) => ({
@@ -52,6 +53,7 @@ export const queryResolverize = <F extends OutputFieldConfigMap>(params: {
   semiBrick: OutputObjectSemiBrick<F>;
   resolvers: QueryResolversOf<F>;
 }): typeof params['semiBrick'] => {
+  // TODO: this seems to cause bugs by creating multiple instances of the root type.
   return OutputObjectSemiBrick.init({
     ...params.semiBrick,
     fields: _.mapValues(params.semiBrick.fields, (field, key) => ({

@@ -4,12 +4,12 @@ import * as t from 'io-ts';
 export type Codec<A, O = A, I = unknown> = t.Type<A, O, I>;
 
 export type Kind =
-  | 'scalar'
-  | 'outputobject'
+  | 'scalar' // done
+  | 'outputobject' // done
   | 'interface'
-  | 'union'
-  | 'enum'
-  | 'inputobject'
+  | 'union' // done
+  | 'enum' // done
+  | 'inputobject' // done
   | 'outputlist'
   | 'inputlist';
 

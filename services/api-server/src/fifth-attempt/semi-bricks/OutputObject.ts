@@ -11,6 +11,8 @@ import {
 } from '../Brick';
 import { AnyInputBrick } from './InputObject';
 
+// TODO: can we do recursive output objects?
+
 export interface ArgumentConfig {
   brick: AnyInputBrick;
   description?: string;
@@ -59,6 +61,7 @@ export type OMap<F extends OutputFieldConfigMap> = {
   [K in keyof F]: F[K]['brick']['codec']['_O'];
 };
 
+export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
 export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
   implements SemiBrick<'outputobject', GraphQLObjectType, TMap<F>, OMap<F>> {
   public readonly kind = 'outputobject' as const;
