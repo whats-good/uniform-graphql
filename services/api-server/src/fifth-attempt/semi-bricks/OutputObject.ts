@@ -10,8 +10,9 @@ import {
   NullableBrickOf,
   SemiBrick,
 } from '../Brick';
-import { ResolverFnOf } from '../resolver';
+import { ResolverFnOf as AnyResolverFnOf } from '../resolver';
 import { AnyInputBrick } from './InputObject';
+import { InterfaceSemiBrick } from './Interface';
 
 // TODO: can we do recursive output objects?
 
@@ -65,6 +66,11 @@ export type OMap<F extends OutputFieldConfigMap> = {
 };
 
 export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
+
+// We need this to guarantee uniqueness of registered interfaces
+export interface InterfaceSemiBrickMap {
+  [key: string]: InterfaceSemiBrick<any, any>;
+}
 // TODO: add an optional "interfaces" field here
 export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
   implements SemiBrick<'outputobject', GraphQLObjectType, TMap<F>, OMap<F>> {
@@ -72,6 +78,7 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
   public readonly name: string;
   public readonly semiCodec: Codec<TMap<F>, OMap<F>>;
   public readonly fields: F;
+  public readonly interfaces: InterfaceSemiBrickMap = {};
 
   public readonly nullable: NullableBrickOf<OutputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<OutputObjectSemiBrick<F>>;
@@ -91,6 +98,9 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
   public readonly getSemiGraphQLType = (): GraphQLObjectType => {
     return new GraphQLObjectType({
       name: this.name,
+      interfaces: Object.values(this.interfaces).map((sb) =>
+        sb.getSemiGraphQLType(),
+      ),
       fields: _.mapValues(this.fields, (field) => {
         const { args } = field;
         const graphQLArgs = _.mapValues(args, (arg) => {
@@ -111,9 +121,17 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
     });
   };
 
+  // TODO: how can i make sure that this output object actually implements this interface?
+  // TODO: i need to flatten the entire tree of interfaces that this interface itself may be extending, and register all of them here.
+  public implements = <I extends OutputFieldConfigMap>(
+    sb: InterfaceSemiBrick<I, any>,
+  ): void => {
+    this.interfaces[sb.name] = sb;
+  };
+
   public setFieldResolver = <K extends keyof F>(
     key: K,
-    resolve: ResolverFnOf<F, K>,
+    resolve: AnyResolverFnOf<F, K>,
   ): void => {
     this.fields[key].resolve = resolve;
   };

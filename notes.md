@@ -50,6 +50,8 @@
   but still, how do we do it for interfaces?
 - The order at which implemented interfaces get listed doesnt matter, as long as the entire tree of interfaces also appear in the list
 - You cant list the same interface more than once. This means that we'll probably need to add unique identifiers to our interfaces
+- The "implementor" is not allowed to extend the fields of an interface. They need to match 1:1. TODO: See if nullability works the same way.
+- implementors should be a key-value pair, not an array. And brick names should be part of their generics, otherwise it wont show.
 
 # TODOS
 
