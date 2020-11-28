@@ -6,6 +6,8 @@ import { fieldResolverize, queryResolverize } from './resolver';
 import { UnionSemiBrick } from './semi-bricks/Union';
 import { OutputListSemiBrick } from './semi-bricks/OutputList';
 import { InputListSemiBrick } from './semi-bricks/InputList';
+import { GraphQLID, GraphQLObjectType } from 'graphql';
+import { InterfaceSemiBrick } from './semi-bricks/Interface';
 
 const membership = EnumSemiBrick.init({
   name: 'Membership',
@@ -166,7 +168,43 @@ const rootQueryResolver = queryResolverize({
 });
 
 // TODO: note to self: root queries are not allowed to be nonNullable.
-export const root = rootQueryResolver.semiGraphQLType;
+// export const root = rootQueryResolver.semiGraphQLType;
+
+const someInterface = InterfaceSemiBrick.init({
+  name: 'SomeInterface',
+  fields: {
+    someField: {
+      brick: scalars.id.nullable,
+      args: {},
+    },
+  },
+});
+
+export const root = new GraphQLObjectType({
+  name: 'root',
+  fields: {
+    person: {
+      type: new GraphQLObjectType({
+        name: 'Person',
+        fields: {
+          someField: {
+            type: GraphQLID,
+          },
+        },
+        interfaces: [someInterface.semiGraphQLType],
+      }),
+    },
+    someObject: {
+      type: someInterface.semiGraphQLType,
+      resolve: () => {
+        return {
+          __typename: 'Person',
+          someField: 'some id',
+        };
+      },
+    },
+  },
+});
 
 const nullableScalar = scalars.id.nullable;
 const nonNullableScalar = scalars.id.nonNullable;
