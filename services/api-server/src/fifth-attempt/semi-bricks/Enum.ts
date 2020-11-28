@@ -20,43 +20,40 @@ export class EnumSemiBrick<D extends StringKeys>
   public readonly kind = 'enum' as const;
   public readonly name: string;
   public readonly semiCodec: Codec<keyof D>;
-  public readonly semiGraphQLType: GraphQLEnumType;
+  public readonly keys: D;
+
   public readonly nullable: NullableBrickOf<EnumSemiBrick<D>>;
   public readonly nonNullable: NonNullableBrickOf<EnumSemiBrick<D>>;
 
-  public readonly enumFlag = 'enumFLag'; // TODO: remove
-
-  constructor(params: {
-    name: string;
-    semiCodec: Codec<keyof D>;
-    semiGraphQLType: GraphQLEnumType;
-  }) {
+  constructor(params: { name: string; semiCodec: Codec<keyof D>; keys: D }) {
     this.name = params.name;
     this.semiCodec = params.semiCodec;
-    this.semiGraphQLType = params.semiGraphQLType;
+    this.keys = params.keys;
     this.nullable = Brick.initNullable(this);
     this.nonNullable = Brick.initNonNullable(this);
   }
 
-  public static init<D extends StringKeys>(params: {
-    name: string;
-    description?: string;
-    keys: D;
-  }): EnumSemiBrick<D> {
-    const semiGraphQLType = new GraphQLEnumType({
-      name: params.name,
-      description: params.description,
-      values: _.mapValues(params.keys, (_, key: string) => ({
+  public readonly getSemiGraphQLType = (): GraphQLEnumType => {
+    return new GraphQLEnumType({
+      name: this.name,
+      values: _.mapValues(this.keys, (_, key: string) => ({
         value: key,
         // TODO: expose deprecation reason via the values of the given keys
         // deprecationReason: 'some deprecation reason',
         // description: 'some description',
       })),
     });
+  };
+
+  public static init<D extends StringKeys>(params: {
+    name: string;
+    description?: string;
+    keys: D;
+  }): EnumSemiBrick<D> {
     return new EnumSemiBrick({
       name: params.name,
+      keys: params.keys,
       semiCodec: t.keyof(params.keys),
-      semiGraphQLType,
     });
   }
 }

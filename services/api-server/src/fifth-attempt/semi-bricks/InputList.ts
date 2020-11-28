@@ -18,7 +18,6 @@ export class InputListSemiBrick<SB extends AnyInputSemiBrick>
   public readonly kind = 'inputlist';
   public readonly name: string;
   public readonly semiCodec: Codec<ListTypeOf<SB>>;
-  public readonly semiGraphQLType: GraphQLList<any>;
   public readonly listOf: SB;
   public readonly nonNullable: NonNullableBrickOf<InputListSemiBrick<SB>>;
   public readonly nullable: NullableBrickOf<InputListSemiBrick<SB>>;
@@ -26,16 +25,18 @@ export class InputListSemiBrick<SB extends AnyInputSemiBrick>
   private constructor(params: {
     name: string;
     semiCodec: InputListSemiBrick<SB>['semiCodec'];
-    semiGraphQLType: InputListSemiBrick<SB>['semiGraphQLType'];
     listOf: SB;
   }) {
     this.name = params.name;
     this.semiCodec = params.semiCodec;
-    this.semiGraphQLType = params.semiGraphQLType;
     this.listOf = params.listOf;
     this.nonNullable = Brick.initNonNullable(this);
     this.nullable = Brick.initNullable(this);
   }
+
+  public readonly getSemiGraphQLType = (): GraphQLList<any> => {
+    return new GraphQLList(this.listOf.getSemiGraphQLType());
+  };
 
   public static init<SB extends AnyInputSemiBrick>(params: {
     listOf: SB;
@@ -44,7 +45,6 @@ export class InputListSemiBrick<SB extends AnyInputSemiBrick>
       name: `InputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
       semiCodec: t.array(params.listOf.semiCodec),
-      semiGraphQLType: new GraphQLList(params.listOf.semiGraphQLType),
     });
   }
 }

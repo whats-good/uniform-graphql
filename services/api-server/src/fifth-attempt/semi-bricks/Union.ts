@@ -24,34 +24,36 @@ export class UnionSemiBrick<SBS extends UnitableSemiBricks>
   public readonly kind = 'union' as const;
   public readonly name: string;
   public readonly semiCodec: Codec<UtdTypes<SBS>, UtdOutTypes<SBS>>;
-  public readonly semiGraphQLType: GraphQLUnionType;
+  public readonly semiBricks: SBS;
+
   public readonly nullable: NullableBrickOf<UnionSemiBrick<SBS>>;
   public readonly nonNullable: NonNullableBrickOf<UnionSemiBrick<SBS>>;
-  public readonly semiBricks: SBS;
 
   private constructor(params: {
     name: string;
     semiBricks: SBS;
     semiCodec: UnionSemiBrick<SBS>['semiCodec'];
-    semiGraphQLType: GraphQLUnionType;
   }) {
     this.name = params.name;
     this.semiCodec = params.semiCodec;
-    this.semiGraphQLType = params.semiGraphQLType;
+    this.semiBricks = params.semiBricks;
+
     this.nullable = Brick.initNullable(this);
     this.nonNullable = Brick.initNonNullable(this);
-    this.semiBricks = params.semiBricks;
   }
+
+  public readonly getSemiGraphQLType = (): GraphQLUnionType => {
+    return new GraphQLUnionType({
+      name: this.name,
+      types: this.semiBricks.map((sb) => sb.getSemiGraphQLType()),
+    });
+  };
 
   public static init<SBS extends UnitableSemiBricks>(params: {
     name: string;
     semiBricks: SBS;
   }): UnionSemiBrick<SBS> {
     const [firstSb, secondSb, ...rest] = params.semiBricks;
-    const gql = new GraphQLUnionType({
-      name: params.name,
-      types: params.semiBricks.map(({ semiGraphQLType }) => semiGraphQLType),
-    });
     return new UnionSemiBrick({
       name: params.name,
       semiBricks: params.semiBricks,
@@ -60,7 +62,6 @@ export class UnionSemiBrick<SBS extends UnitableSemiBricks>
         secondSb.semiCodec,
         ...rest.map(({ semiCodec }) => semiCodec),
       ]),
-      semiGraphQLType: gql,
     });
   }
 }

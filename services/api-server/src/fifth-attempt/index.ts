@@ -36,7 +36,6 @@ export const someInput = InputObjectSemiBrick.init({
 
 export const person = OutputObjectSemiBrick.init({
   name: 'Person',
-  description: 'description for person',
   fields: {
     id: {
       brick: scalars.id.nullable,
@@ -76,7 +75,6 @@ const fieldResolvedPerson = fieldResolverize({
 
 export const animal = OutputObjectSemiBrick.init({
   name: 'Animal',
-  description: 'description for animal',
   fields: {
     owner: {
       brick: fieldResolvedPerson.nullable,
@@ -93,14 +91,14 @@ export const bestFriend = UnionSemiBrick.init({
 const rootQuery = OutputObjectSemiBrick.init({
   name: 'RootQuery',
   fields: {
-    something: {
-      brick: scalars.string.nullable,
-      args: {
-        inputObjectArg: {
-          brick: someInput.nonNullable,
-        },
-      },
-    },
+    // something: {
+    //   brick: scalars.string.nullable,
+    //   args: {
+    //     inputObjectArg: {
+    //       brick: someInput.nonNullable,
+    //     },
+    //   },
+    // },
     person: {
       brick: fieldResolvedPerson.nonNullable,
       args: {
@@ -109,25 +107,25 @@ const rootQuery = OutputObjectSemiBrick.init({
         },
       },
     },
-    bestFriend: {
-      brick: bestFriend.nonNullable,
-      args: {},
-    },
-    people: {
-      brick: OutputListSemiBrick.init({
-        listOf: fieldResolvedPerson,
-      }).nonNullable,
-      args: {
-        numPeople: {
-          brick: scalars.float.nonNullable,
-        },
-        listArg: {
-          brick: InputListSemiBrick.init({
-            listOf: membership,
-          }).nonNullable,
-        },
-      },
-    },
+    // bestFriend: {
+    //   brick: bestFriend.nonNullable,
+    //   args: {},
+    // },
+    // people: {
+    //   brick: OutputListSemiBrick.init({
+    //     listOf: fieldResolvedPerson,
+    //   }).nonNullable,
+    //   args: {
+    //     numPeople: {
+    //       brick: scalars.float.nonNullable,
+    //     },
+    //     listArg: {
+    //       brick: InputListSemiBrick.init({
+    //         listOf: membership,
+    //       }).nonNullable,
+    //     },
+    //   },
+    // },
   },
 });
 
@@ -141,34 +139,34 @@ const rootQueryResolver = queryResolverize({
         id: 1,
       };
     },
-    something: (_, args) => {
-      return 'yo';
-    },
-    bestFriend: async (_, __) => {
-      return {
-        owner: {
-          id: 'this is the id',
-          firstName: 'this is the name',
-        },
-      };
-    },
-    // TODO: make the brick to resolve somehow accessible. something like via the info param.
-    people: (root, args) => {
-      const toReturn: typeof rootQuery['fields']['people']['brick']['codec']['_A'] = [];
-      const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
-      for (let i = 0; i < args.numPeople; i++) {
-        toReturn.push({
-          firstName: `some-name-${i}-${m}`,
-          id: i,
-        });
-      }
-      return toReturn;
-    },
+    // something: (_, args) => {
+    //   return 'yo';
+    // },
+    // bestFriend: async (_, __) => {
+    //   return {
+    //     owner: {
+    //       id: 'this is the id',
+    //       firstName: 'this is the name',
+    //     },
+    //   };
+    // },
+    // // TODO: make the brick to resolve somehow accessible. something like via the info param.
+    // people: (root, args) => {
+    //   const toReturn: typeof rootQuery['fields']['people']['brick']['codec']['_A'] = [];
+    //   const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
+    //   for (let i = 0; i < args.numPeople; i++) {
+    //     toReturn.push({
+    //       firstName: `some-name-${i}-${m}`,
+    //       id: i,
+    //     });
+    //   }
+    //   return toReturn;
+    // },
   },
 });
 
 // TODO: note to self: root queries are not allowed to be nonNullable.
-// export const root = rootQueryResolver.semiGraphQLType;
+export const root = rootQueryResolver.getSemiGraphQLType();
 
 const someInterface = InterfaceSemiBrick.init({
   name: 'SomeInterface',
@@ -180,39 +178,39 @@ const someInterface = InterfaceSemiBrick.init({
   },
 });
 
-export const root = new GraphQLObjectType({
-  name: 'root',
-  fields: {
-    obj: {
-      type: obj,
-    },
-    // person: {
-    //   type: new GraphQLObjectType({
-    //     name: 'Person',
-    //     fields: {
-    //       someField: {
-    //         type: GraphQLID,
-    //       },
-    //     },
-    //     interfaces: [someInterface.semiGraphQLType],
-    //   }),
-    // },
-    // someObject: {
-    //   type: someInterface.semiGraphQLType,
-    //   resolve: () => {
-    //     return {
-    //       __typename: 'Person',
-    //       someField: 'some id',
-    //     };
-    //   },
-    // },
-  },
-});
+// export const root = new GraphQLObjectType({
+//   name: 'root',
+//   fields: {
+//     obj: {
+//       type: obj,
+//     },
+//     // person: {
+//     //   type: new GraphQLObjectType({
+//     //     name: 'Person',
+//     //     fields: {
+//     //       someField: {
+//     //         type: GraphQLID,
+//     //       },
+//     //     },
+//     //     interfaces: [someInterface.semiGraphQLType],
+//     //   }),
+//     // },
+//     // someObject: {
+//     //   type: someInterface.semiGraphQLType,
+//     //   resolve: () => {
+//     //     return {
+//     //       __typename: 'Person',
+//     //       someField: 'some id',
+//     //     };
+//     //   },
+//     // },
+//   },
+// });
 
 const nullableScalar = scalars.id.nullable;
 const nonNullableScalar = scalars.id.nonNullable;
-nullableScalar.semiBrick.scalarity;
-nonNullableScalar.semiBrick.scalarity;
+nullableScalar.semiBrick;
+nonNullableScalar.semiBrick;
 const a = nullableScalar.codec.encode(null);
 const b = nonNullableScalar.codec.encode('a');
 const c = someInput.fields.firstName.brick.codec.encode('b');

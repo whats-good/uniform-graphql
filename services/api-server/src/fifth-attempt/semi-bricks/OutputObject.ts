@@ -70,46 +70,37 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
   public readonly kind = 'outputobject' as const;
   public readonly name: string;
   public readonly semiCodec: Codec<TMap<F>, OMap<F>>;
-  public readonly semiGraphQLType: GraphQLObjectType;
   public readonly fields: F;
+
   public readonly nullable: NullableBrickOf<OutputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<OutputObjectSemiBrick<F>>;
 
-  // TODO: consider making it private or abstract
   constructor(params: {
     name: string;
     semiCodec: Codec<TMap<F>, OMap<F>>;
-    semiGraphQLType: GraphQLObjectType;
     fields: F;
   }) {
     this.name = params.name;
     this.semiCodec = params.semiCodec;
-    this.semiGraphQLType = params.semiGraphQLType;
+    this.fields = params.fields;
     this.nullable = Brick.initNullable(this);
     this.nonNullable = Brick.initNonNullable(this);
-    this.fields = params.fields;
   }
 
-  public static init<F extends OutputFieldConfigMap>(params: {
-    name: string;
-    fields: F;
-    description?: string;
-  }): OutputObjectSemiBrick<F> {
-    const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    const semiGraphQLType = new GraphQLObjectType({
-      name: params.name,
-      description: params.description,
-      fields: _.mapValues(params.fields, (field) => {
+  public readonly getSemiGraphQLType = (): GraphQLObjectType => {
+    return new GraphQLObjectType({
+      name: this.name,
+      fields: _.mapValues(this.fields, (field) => {
         const { args } = field;
         const graphQLArgs = _.mapValues(args, (arg) => {
           return {
-            type: arg.brick.graphQLType,
+            type: arg.brick.getGraphQLType(),
             description: arg.description,
             deprecationReason: arg.deprecationReason,
           };
         });
         return {
-          type: field.brick.graphQLType,
+          type: field.brick.getGraphQLType(),
           description: field.description,
           deprecationReason: field.deprecationReason,
           args: graphQLArgs,
@@ -117,11 +108,17 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
         };
       }),
     });
+  };
+
+  public static init<F extends OutputFieldConfigMap>(params: {
+    name: string;
+    fields: F;
+  }): OutputObjectSemiBrick<F> {
+    const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
     return new OutputObjectSemiBrick({
       name: params.name,
       fields: params.fields,
       semiCodec: t.type(codecs),
-      semiGraphQLType,
     });
   }
 }

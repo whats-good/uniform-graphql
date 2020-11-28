@@ -40,7 +40,6 @@ export class InputObjectSemiBrick<F extends InputFieldConfigMap>
   public readonly kind = 'inputobject' as const;
   public readonly name: string;
   public readonly semiCodec: Codec<TMap<F>, OMap<F>>;
-  public readonly semiGraphQLType: GraphQLInputObjectType;
   public readonly fields: F;
   public readonly nullable: NullableBrickOf<InputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<InputObjectSemiBrick<F>>;
@@ -48,35 +47,35 @@ export class InputObjectSemiBrick<F extends InputFieldConfigMap>
   private constructor(params: {
     name: string;
     semiCodec: Codec<TMap<F>, OMap<F>>;
-    semiGraphQLType: GraphQLInputObjectType;
     fields: F;
   }) {
     this.name = params.name;
+    this.fields = params.fields;
     this.semiCodec = params.semiCodec;
-    this.semiGraphQLType = params.semiGraphQLType;
     this.nullable = Brick.initNullable(this);
     this.nonNullable = Brick.initNonNullable(this);
-    this.fields = params.fields;
   }
+
+  public readonly getSemiGraphQLType = (): GraphQLInputObjectType => {
+    return new GraphQLInputObjectType({
+      name: this.name,
+      fields: _.mapValues(this.fields, (field) => ({
+        type: field.brick.getGraphQLType(),
+        deprecationReason: field.deprecationReason,
+        description: field.description,
+      })),
+    });
+  };
 
   public static init<F extends InputFieldConfigMap>(params: {
     name: string;
     fields: F;
   }): InputObjectSemiBrick<F> {
     const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    const semiGraphQLType = new GraphQLInputObjectType({
-      name: params.name,
-      fields: _.mapValues(params.fields, (field) => ({
-        type: field.brick.graphQLType,
-        deprecationReason: field.deprecationReason,
-        description: field.description,
-      })),
-    });
     return new InputObjectSemiBrick({
       name: params.name,
       fields: params.fields,
       semiCodec: t.type(codecs),
-      semiGraphQLType,
     });
   }
 }

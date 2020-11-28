@@ -38,7 +38,7 @@ export class ScalarSemiBrick<SB_G extends GraphQLScalarType, SB_A, SB_O = SB_A>
     this.nonNullable = Brick.initNonNullable(this);
   }
 
-  public readonly scalarity = 'some string'; // TODO: remove
+  public readonly getSemiGraphQLType = (): SB_G => this.semiGraphQLType;
 }
 
 export const scalars = {
