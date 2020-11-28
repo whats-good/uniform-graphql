@@ -21,7 +21,7 @@ export interface SemiBrick<
 > {
   readonly name: string;
   readonly semiCodec: Codec<SB_A, SB_O>;
-  readonly semiGraphQLType: SB_G;
+  readonly getSemiGraphQLType: () => SB_G;
   readonly kind: K;
 
   readonly nullable: Brick<
@@ -54,10 +54,12 @@ interface Kinded {
 export type KindOf<T extends Kinded> = T['kind'];
 export type SemiTypeOf<SB extends AnySemiBrick> = SB['semiCodec']['_A'];
 export type SemiOutputTypeOf<SB extends AnySemiBrick> = SB['semiCodec']['_O'];
-export type SemiGraphQLTypeOf<SB extends AnySemiBrick> = SB['semiGraphQLType'];
+export type SemiGraphQLTypeOf<SB extends AnySemiBrick> = ReturnType<
+  SB['getSemiGraphQLType']
+>;
 export type TypeOf<B extends AnyBrick> = B['codec']['_A'];
 export type OutputTypeOf<B extends AnyBrick> = B['codec']['_O'];
-export type GraphQLTypeOf<B extends AnyBrick> = B['graphQLType'];
+export type GraphQLTypeOf<B extends AnyBrick> = ReturnType<B['getGraphQLType']>;
 
 export type NullableBrickOf<SB extends AnySemiBrick> = Brick<
   KindOf<SB>,
@@ -85,20 +87,20 @@ export class Brick<
   public readonly name: string;
   public readonly kind: K;
   public readonly codec: Codec<B_A, B_O>;
-  public readonly graphQLType: B_G;
   public readonly semiBrick: SB;
+  public readonly getGraphQLType: () => B_G;
 
   constructor(params: {
     name: string;
     kind: K;
     codec: Codec<B_A, B_O>;
-    graphQLType: B_G;
+    getGraphQLType: () => B_G;
     semiBrick: SB;
   }) {
     this.name = params.name;
     this.kind = params.kind;
     this.codec = params.codec;
-    this.graphQLType = params.graphQLType;
+    this.getGraphQLType = params.getGraphQLType;
     this.semiBrick = params.semiBrick;
   }
 
@@ -107,7 +109,7 @@ export class Brick<
       name: sb.name,
       kind: sb.kind,
       codec: t.union([sb.semiCodec, t.null, t.undefined]),
-      graphQLType: sb.semiGraphQLType,
+      getGraphQLType: sb.getSemiGraphQLType,
       semiBrick: sb,
     });
   }
@@ -118,7 +120,7 @@ export class Brick<
     return new Brick({
       name: sb.name,
       codec: sb.semiCodec,
-      graphQLType: new GraphQLNonNull(sb.semiGraphQLType),
+      getGraphQLType: () => new GraphQLNonNull(sb.getSemiGraphQLType()),
       kind: sb.kind,
       semiBrick: sb,
     });
