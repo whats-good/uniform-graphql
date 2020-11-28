@@ -29,7 +29,7 @@ type OutputKind =
   | 'enum'
   | 'union'
   | 'outputobject'
-  | 'interface'
+  | 'interface' // TODO: should i allow output objects to take interfaces and interface lists as a field? probabaly not
   | 'outputlist';
 
 export type AnyOutputBrick = AnyBrick<OutputKind>;

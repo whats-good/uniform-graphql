@@ -1,4 +1,9 @@
-import { GraphQLID, GraphQLInterfaceType, GraphQLString } from 'graphql';
+import {
+  GraphQLID,
+  GraphQLInterfaceType,
+  GraphQLObjectType,
+  GraphQLString,
+} from 'graphql';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import { OMap, OutputFieldConfigMap, TMap } from './OutputObject';
@@ -74,5 +79,49 @@ export class InterfaceSemiBrick<F extends OutputFieldConfigMap>
     });
   }
 }
+
+const firstInterface = new GraphQLInterfaceType({
+  name: 'FirstInterface',
+  fields: {
+    firstName: {
+      type: GraphQLString,
+    },
+  },
+});
+
+const secondInterface = new GraphQLInterfaceType({
+  name: 'SecondInterface',
+  fields: {
+    lastName: {
+      type: GraphQLString,
+    },
+  },
+});
+
+const secondLayer = new GraphQLInterfaceType({
+  name: 'SecondLayer',
+  interfaces: [firstInterface, secondInterface],
+  fields: {
+    firstName: {
+      type: GraphQLString,
+    },
+    lastName: {
+      type: GraphQLString,
+    },
+  },
+});
+
+export const obj = new GraphQLObjectType({
+  name: 'Obj',
+  fields: {
+    firstName: {
+      type: GraphQLString,
+    },
+    lastName: {
+      type: GraphQLString,
+    },
+  },
+  interfaces: [secondLayer, firstInterface, secondInterface, firstInterface],
+});
 
 // // TODO: for an interface to be implemented, all its interfaces should be listed. just implementing them isnt enough.

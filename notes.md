@@ -48,6 +48,8 @@
 - It appears that interface level resolvers never run.
 - In order to make interfaces work, we might have to make the brick names as generics, and force resolvers to pick a name. The problem is, how do we find the correct object's name? We don't have them at compile time for interfaces. We do have them for unions, so we still need to do it.
   but still, how do we do it for interfaces?
+- The order at which implemented interfaces get listed doesnt matter, as long as the entire tree of interfaces also appear in the list
+- You cant list the same interface more than once. This means that we'll probably need to add unique identifiers to our interfaces
 
 # TODOS
 

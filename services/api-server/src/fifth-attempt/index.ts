@@ -6,8 +6,8 @@ import { fieldResolverize, queryResolverize } from './resolver';
 import { UnionSemiBrick } from './semi-bricks/Union';
 import { OutputListSemiBrick } from './semi-bricks/OutputList';
 import { InputListSemiBrick } from './semi-bricks/InputList';
-import { GraphQLID, GraphQLObjectType } from 'graphql';
-import { InterfaceSemiBrick } from './semi-bricks/Interface';
+import { GraphQLObjectType } from 'graphql';
+import { InterfaceSemiBrick, obj } from './semi-bricks/Interface';
 
 const membership = EnumSemiBrick.init({
   name: 'Membership',
@@ -183,26 +183,29 @@ const someInterface = InterfaceSemiBrick.init({
 export const root = new GraphQLObjectType({
   name: 'root',
   fields: {
-    person: {
-      type: new GraphQLObjectType({
-        name: 'Person',
-        fields: {
-          someField: {
-            type: GraphQLID,
-          },
-        },
-        interfaces: [someInterface.semiGraphQLType],
-      }),
+    obj: {
+      type: obj,
     },
-    someObject: {
-      type: someInterface.semiGraphQLType,
-      resolve: () => {
-        return {
-          __typename: 'Person',
-          someField: 'some id',
-        };
-      },
-    },
+    // person: {
+    //   type: new GraphQLObjectType({
+    //     name: 'Person',
+    //     fields: {
+    //       someField: {
+    //         type: GraphQLID,
+    //       },
+    //     },
+    //     interfaces: [someInterface.semiGraphQLType],
+    //   }),
+    // },
+    // someObject: {
+    //   type: someInterface.semiGraphQLType,
+    //   resolve: () => {
+    //     return {
+    //       __typename: 'Person',
+    //       someField: 'some id',
+    //     };
+    //   },
+    // },
   },
 });
 
