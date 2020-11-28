@@ -56,7 +56,7 @@ export const person = OutputObjectSemiBrick.init({
   },
 });
 
-const fieldResolvedPerson = fieldResolverize({
+fieldResolverize({
   semiBrick: person,
   resolvers: {
     id: (root, args) => {
@@ -77,7 +77,7 @@ export const animal = OutputObjectSemiBrick.init({
   name: 'Animal',
   fields: {
     owner: {
-      brick: fieldResolvedPerson.nullable,
+      brick: person.nullable,
       args: {},
     },
   },
@@ -85,10 +85,10 @@ export const animal = OutputObjectSemiBrick.init({
 
 export const bestFriend = UnionSemiBrick.init({
   name: 'BestFriend',
-  semiBricks: [fieldResolvedPerson, animal],
+  semiBricks: [person, animal],
 });
 
-const rootQuery = OutputObjectSemiBrick.init({
+export const root = OutputObjectSemiBrick.init({
   name: 'RootQuery',
   fields: {
     // something: {
@@ -100,7 +100,7 @@ const rootQuery = OutputObjectSemiBrick.init({
     //   },
     // },
     person: {
-      brick: fieldResolvedPerson.nonNullable,
+      brick: person.nonNullable,
       args: {
         flag: {
           brick: scalars.boolean.nonNullable,
@@ -130,8 +130,8 @@ const rootQuery = OutputObjectSemiBrick.init({
 });
 
 // TODO: see if we can do the rootquery resolver without creating the root first.
-const rootQueryResolver = queryResolverize({
-  semiBrick: rootQuery,
+queryResolverize({
+  semiBrick: root,
   resolvers: {
     person: (_, args) => {
       return {
@@ -166,7 +166,6 @@ const rootQueryResolver = queryResolverize({
 });
 
 // TODO: note to self: root queries are not allowed to be nonNullable.
-export const root = rootQueryResolver.getSemiGraphQLType();
 
 const someInterface = InterfaceSemiBrick.init({
   name: 'SomeInterface',

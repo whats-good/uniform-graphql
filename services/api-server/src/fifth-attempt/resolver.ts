@@ -35,29 +35,26 @@ type QueryResolversOf<T extends OutputFieldConfigMap> = {
   ) => ResolverReturnTypeOf<T[K]['brick']>;
 };
 
-// TODO: lock it down to avoid further resolving
+export type ResolverFnOf<T extends OutputFieldConfigMap, K extends keyof T> = (
+  root: any,
+  args: T[K]['args'],
+) => ResolverReturnTypeOf<T[K]['brick']>;
+
 export const fieldResolverize = <F extends OutputFieldConfigMap>(params: {
   semiBrick: OutputObjectSemiBrick<F>;
   resolvers: Partial<FieldResolversOf<F>>;
-}): typeof params['semiBrick'] => {
-  return OutputObjectSemiBrick.init({
-    ...params.semiBrick,
-    fields: _.mapValues(params.semiBrick.fields, (field, key) => ({
-      ...field,
-      resolve: params.resolvers[key] || undefined,
-    })),
-  }) as typeof params['semiBrick']; // TODO: see if there's a better way here
+}): void => {
+  Object.entries(params.resolvers).forEach(([key, value]) => {
+    params.semiBrick.setFieldResolver(key, value);
+  });
 };
 
 export const queryResolverize = <F extends OutputFieldConfigMap>(params: {
   semiBrick: OutputObjectSemiBrick<F>;
   resolvers: QueryResolversOf<F>;
-}): typeof params['semiBrick'] => {
-  return OutputObjectSemiBrick.init({
-    ...params.semiBrick,
-    fields: _.mapValues(params.semiBrick.fields, (field, key) => ({
-      ...field,
-      resolve: params.resolvers[key] || undefined,
-    })),
-  }) as typeof params['semiBrick']; // TODO: see if there's a better way here
+}): void => {
+  // TODO: make this DRYer
+  Object.entries(params.resolvers).forEach(([key, value]) => {
+    params.semiBrick.setFieldResolver(key, value);
+  });
 };

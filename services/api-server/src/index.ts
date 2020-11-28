@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { root } from './fifth-attempt';
 
 const schema = new GraphQLSchema({
-  query: root,
+  query: root.getSemiGraphQLType(),
 });
 
 const apolloServer = new ApolloServer({

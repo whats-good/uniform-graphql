@@ -10,6 +10,7 @@ import {
   NullableBrickOf,
   SemiBrick,
 } from '../Brick';
+import { ResolverFnOf } from '../resolver';
 import { AnyInputBrick } from './InputObject';
 
 // TODO: can we do recursive output objects?
@@ -44,7 +45,7 @@ export interface OutputFieldConfig<
   readonly args: A;
   readonly description?: string;
   readonly deprecationReason?: string;
-  readonly resolve?: unknown;
+  resolve?: unknown;
   // TODO: consider refining this
 }
 
@@ -108,6 +109,13 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
         };
       }),
     });
+  };
+
+  public setFieldResolver = <K extends keyof F>(
+    key: K,
+    resolve: ResolverFnOf<F, K>,
+  ): void => {
+    this.fields[key].resolve = resolve;
   };
 
   public static init<F extends OutputFieldConfigMap>(params: {
