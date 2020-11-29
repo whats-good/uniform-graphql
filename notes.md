@@ -92,3 +92,5 @@
 - Make semibrick an abstract class, and have it internally reuse the factory to produce the graphQL types
 - See if there's a way to make the bricks unaware of their factory
 - Create root resolvers via the factory, not by a random output object
+- Can interfaces have other interfaces as their fields?
+- Remove all the out types & the codecs
