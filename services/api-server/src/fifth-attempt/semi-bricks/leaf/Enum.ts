@@ -5,8 +5,8 @@ import {
   Brick,
   NullableBrickOf,
   NonNullableBrickOf,
-} from '../Brick';
-import { SemiBrickFactory } from '../SemiBrickFactory';
+} from '../../Brick';
+import { SemiBrickFactory } from '../../SemiBrickFactory';
 
 export interface StringKeys {
   [key: string]: unknown;

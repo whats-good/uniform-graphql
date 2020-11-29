@@ -6,8 +6,8 @@ import {
   NullableBrickOf,
   SemiBrick,
   SemiTypeOf,
-} from '../Brick';
-import { SemiBrickFactory } from '../SemiBrickFactory';
+} from '../../Brick';
+import { SemiBrickFactory } from '../../SemiBrickFactory';
 import { AnyInputSemiBrick } from './InputObject';
 
 type ListTypeOf<SB extends AnySemiBrick> = Array<SemiTypeOf<SB>>;

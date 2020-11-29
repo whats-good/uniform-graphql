@@ -8,10 +8,10 @@ import {
   NullableBrickOf,
   SemiBrick,
   TypeOf,
-} from '../Brick';
-import { ResolverFnOf as AnyResolverFnOf } from '../resolver';
-import { SemiBrickFactory } from '../SemiBrickFactory';
-import { AnyInputBrick } from './InputObject';
+} from '../../Brick';
+import { ResolverFnOf as AnyResolverFnOf } from '../../resolver';
+import { SemiBrickFactory } from '../../SemiBrickFactory';
+import { AnyInputBrick } from '../input/InputObject';
 import { InterfaceSemiBrick } from './Interface';
 
 // TODO: can we do recursive output objects?

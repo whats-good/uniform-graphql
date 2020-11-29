@@ -5,9 +5,9 @@ import {
   NullableBrickOf,
   SemiBrick,
   SemiTypeOf,
-} from '../Brick';
+} from '../../Brick';
 import { AnyOutputObjectSemiBrick } from './OutputObject';
-import { SemiBrickFactory } from '../SemiBrickFactory';
+import { SemiBrickFactory } from '../../SemiBrickFactory';
 
 export type UnitableSemiBricks = [
   AnyOutputObjectSemiBrick,

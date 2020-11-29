@@ -6,8 +6,8 @@ import {
   SemiBrick,
   NullableBrickOf,
   NonNullableBrickOf,
-} from '../Brick';
-import { SemiBrickFactory } from '../SemiBrickFactory';
+} from '../../Brick';
+import { SemiBrickFactory } from '../../SemiBrickFactory';
 
 // TODO: unions and interfaces will both need a "resolveType" field
 
