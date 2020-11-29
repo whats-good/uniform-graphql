@@ -1,12 +1,11 @@
-import _ from 'lodash';
-import {
-  OutputObjectSemiBrick,
-  OutputFieldConfigMap,
-  OutputFieldConfigArgumentMap,
-  TMap,
-  AnyOutputBrick,
-} from './semi-bricks/OutputObject';
 import { TypeOf } from './Brick';
+import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
+import {
+  AnyOutputBrick,
+  OutputFieldConfigArgumentMap,
+  OutputFieldConfigMap,
+  TMap,
+} from './semi-bricks/struct-types';
 
 // type Thunk<T> = () => T;
 

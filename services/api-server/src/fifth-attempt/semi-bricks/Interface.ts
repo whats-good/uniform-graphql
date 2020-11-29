@@ -1,6 +1,5 @@
 import { GraphQLInterfaceType } from 'graphql';
 import _ from 'lodash';
-import { OutputFieldConfigMap, TMap } from './OutputObject';
 import {
   Brick,
   SemiBrick,
@@ -8,6 +7,7 @@ import {
   NonNullableBrickOf,
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
+import { OutputFieldConfigMap, TMap } from './struct-types';
 
 // TODO: unions and interfaces will both need a "resolveType" field
 

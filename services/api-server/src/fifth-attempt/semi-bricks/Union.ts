@@ -6,8 +6,8 @@ import {
   SemiBrick,
   SemiTypeOf,
 } from '../Brick';
-import { AnyOutputObjectSemiBrick } from './OutputObject';
 import { SemiBrickFactory } from '../SemiBrickFactory';
+import { AnyOutputObjectSemiBrick } from './struct-types';
 
 export type UnitableSemiBricks = [
   AnyOutputObjectSemiBrick,

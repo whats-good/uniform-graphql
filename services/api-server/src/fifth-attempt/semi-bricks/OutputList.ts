@@ -6,8 +6,7 @@ import {
   SemiBrick,
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
-import { AnyOutputSemiBrick } from './OutputObject';
-import { ListTypeOf } from './struct-types';
+import { AnyOutputSemiBrick, ListTypeOf } from './struct-types';
 
 export class OutputListSemiBrick<
   SB extends AnyOutputSemiBrick

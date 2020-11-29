@@ -18,12 +18,12 @@ import {
 } from './semi-bricks/InputObject';
 import { InterfaceSemiBrick } from './semi-bricks/Interface';
 import { OutputListSemiBrick } from './semi-bricks/OutputList';
-import {
-  AnyOutputSemiBrick,
-  OutputFieldConfigMap,
-  OutputObjectSemiBrick,
-} from './semi-bricks/OutputObject';
+import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
 import { ScalarSemiBrick } from './semi-bricks/Scalar';
+import {
+  OutputFieldConfigMap,
+  AnyOutputSemiBrick,
+} from './semi-bricks/struct-types';
 import { UnionSemiBrick, UnitableSemiBricks } from './semi-bricks/Union';
 
 interface SemiBricksMap {
