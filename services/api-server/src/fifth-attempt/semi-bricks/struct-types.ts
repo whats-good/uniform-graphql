@@ -7,7 +7,11 @@ export type ListTypeOf<SB extends AnySemiBrick> = Array<SemiTypeOf<SB>>;
 
 // TODO: can we do recursive output objects?
 
-export interface ArgumentConfig {
+export interface BrickMap<B extends AnyBrick> {
+  brick: B;
+}
+
+export interface ArgumentConfig extends BrickMap<AnyInputBrick> {
   brick: AnyInputBrick;
   description?: string;
   deprecationReason?: string;
