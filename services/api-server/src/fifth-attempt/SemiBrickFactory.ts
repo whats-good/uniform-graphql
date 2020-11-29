@@ -3,6 +3,8 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLList,
+  GraphQLNamedType,
   GraphQLString,
   GraphQLType,
 } from 'graphql';
@@ -44,7 +46,19 @@ export class SemiBrickFactory {
     Object.values(scalar).forEach(this.registerSemiBrick);
   }
 
+  public getAllNamedSemiGraphQLTypes = (): GraphQLNamedType[] => {
+    const allSemiGraphQLTypes = Object.values(this.semiBricks).map((sb) =>
+      sb.getSemiGraphQLType(),
+    );
+    return allSemiGraphQLTypes.filter((x) => !(x instanceof GraphQLList));
+  };
+
   private registerSemiBrick = (sb: AnySemiBrick) => {
+    if (this.semiBricks[sb.name]) {
+      throw new Error(
+        `SemiBrick with name: ${sb.name} already exists. Try a different name.`,
+      );
+    }
     this.semiBricks[sb.name] = sb;
     return sb;
   };

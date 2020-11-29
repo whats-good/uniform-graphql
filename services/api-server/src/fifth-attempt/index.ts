@@ -1,7 +1,7 @@
 import { fieldResolverize, queryResolverize } from './resolver';
 import { SemiBrickFactory } from './SemiBrickFactory';
 
-const fac = new SemiBrickFactory();
+export const fac = new SemiBrickFactory();
 
 const membership = fac.enum({
   name: 'Membership',
@@ -20,7 +20,6 @@ export const someInput = fac.inputObject({
     },
     firstName: {
       brick: fac.scalar().string.nullable,
-      // deprecationReason: 'firstname is deprecated!',
     },
     membership: {
       brick: membership.nonNullable,
@@ -85,14 +84,14 @@ export const bestFriend = fac.union({
 export const root = fac.outputObject({
   name: 'RootQuery',
   fields: {
-    // something: {
-    //   brick: scalars.string.nullable,
-    //   args: {
-    //     inputObjectArg: {
-    //       brick: someInput.nonNullable,
-    //     },
-    //   },
-    // },
+    something: {
+      brick: fac.scalar().string.nullable,
+      args: {
+        inputObjectArg: {
+          brick: someInput.nonNullable,
+        },
+      },
+    },
     animal: {
       brick: animal.nonNullable,
       args: {},
@@ -105,25 +104,25 @@ export const root = fac.outputObject({
         },
       },
     },
-    // bestFriend: {
-    //   brick: bestFriend.nonNullable,
-    //   args: {},
-    // },
-    // people: {
-    //   brick: OutputListSemiBrick.init({
-    //     listOf: fieldResolvedPerson,
-    //   }).nonNullable,
-    //   args: {
-    //     numPeople: {
-    //       brick: scalars.float.nonNullable,
-    //     },
-    //     listArg: {
-    //       brick: InputListSemiBrick.init({
-    //         listOf: membership,
-    //       }).nonNullable,
-    //     },
-    //   },
-    // },
+    bestFriend: {
+      brick: bestFriend.nonNullable,
+      args: {},
+    },
+    people: {
+      brick: fac.outputList({
+        listOf: person,
+      }).nonNullable,
+      args: {
+        numPeople: {
+          brick: fac.scalar().float.nonNullable,
+        },
+        listArg: {
+          brick: fac.inputList({
+            listOf: membership, // TODO: make it take the brick directly, and nothing else
+          }).nonNullable,
+        },
+      },
+    },
   },
 });
 
@@ -145,38 +144,29 @@ queryResolverize({
         },
       };
     },
-    // something: (_, args) => {
-    //   return 'yo';
-    // },
-    // bestFriend: async (_, __) => {
-    //   return {
-    //     owner: {
-    //       id: 'this is the id',
-    //       firstName: 'this is the name',
-    //     },
-    //   };
-    // },
+    something: (_, args) => {
+      return 'yo';
+    },
+    bestFriend: async (_, __) => {
+      return {
+        owner: {
+          id: 'this is the id',
+          firstName: 'this is the name',
+        },
+      };
+    },
     // // TODO: make the brick to resolve somehow accessible. something like via the info param.
-    // people: (root, args) => {
-    //   const toReturn: typeof rootQuery['fields']['people']['brick']['codec']['_A'] = [];
-    //   const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
-    //   for (let i = 0; i < args.numPeople; i++) {
-    //     toReturn.push({
-    //       firstName: `some-name-${i}-${m}`,
-    //       id: i,
-    //     });
-    //   }
-    //   return toReturn;
-    // },
-  },
-});
-
-const someInterface = fac.interface({
-  name: 'SomeInterface',
-  fields: {
-    someField: {
-      brick: fac.scalar().id.nullable,
-      args: {},
+    people: (root, args) => {
+      // TODO: dont use any here
+      const toReturn: any[] = [];
+      const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
+      for (let i = 0; i < args.numPeople; i++) {
+        toReturn.push({
+          firstName: `some-name-${i}-${m}`,
+          id: i,
+        });
+      }
+      return toReturn;
     },
   },
 });

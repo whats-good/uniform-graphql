@@ -1,11 +1,11 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import { GraphQLSchema } from 'graphql';
-import _ from 'lodash';
-import { root } from './fifth-attempt';
+import { root, fac } from './fifth-attempt';
 
 const schema = new GraphQLSchema({
   query: root.getSemiGraphQLType(),
+  types: fac.getAllNamedSemiGraphQLTypes(),
 });
 
 const apolloServer = new ApolloServer({
