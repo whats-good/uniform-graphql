@@ -14,7 +14,7 @@ export type Kind =
   | 'outputlist' // done
   | 'inputlist'; // done
 
-export interface SemiBrick<
+export abstract class SemiBrick<
   K extends Kind,
   SB_G extends GraphQLNullableType,
   SB_A, // TODO: make sure this cant be null or undefined
@@ -22,24 +22,34 @@ export interface SemiBrick<
 > {
   readonly name: string;
   readonly semiCodec: Codec<SB_A, SB_O>;
-  readonly getSemiGraphQLType: () => SB_G;
-  readonly kind: K;
   readonly semiBrickFactory: SemiBrickFactory;
+  abstract kind: K;
+  abstract getSemiGraphQLType(): SB_G;
 
-  readonly nullable: Brick<
+  abstract readonly nullable: Brick<
     K,
     SB_G,
     SemiBrick<K, SB_G, SB_A, SB_O>,
     SB_A | null | undefined, // TODO: consider adding void here, to help with non-returning resolvers
     SB_O | null | undefined // TODO: consider adding void here, to help with non-returning resolvers
   >;
-  readonly nonNullable: Brick<
+  abstract readonly nonNullable: Brick<
     K,
     GraphQLNonNull<any>,
     SemiBrick<K, SB_G, SB_A, SB_O>,
     SB_A,
     SB_O
   >;
+
+  constructor(params: {
+    name: string;
+    semiCodec: Codec<SB_A, SB_O>;
+    semiBrickFactory: SemiBrickFactory;
+  }) {
+    this.name = params.name;
+    this.semiCodec = params.semiCodec;
+    this.semiBrickFactory = params.semiBrickFactory;
+  }
 }
 
 export type AnySemiBrick<K extends Kind = any> = SemiBrick<K, any, any, any>;

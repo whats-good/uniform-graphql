@@ -2,7 +2,6 @@ import { GraphQLInterfaceType } from 'graphql';
 import _ from 'lodash';
 import { OMap, OutputFieldConfigMap, TMap } from './OutputObject';
 import {
-  Codec,
   Brick,
   SemiBrick,
   NullableBrickOf,
@@ -12,11 +11,10 @@ import { SemiBrickFactory } from '../SemiBrickFactory';
 
 // TODO: unions and interfaces will both need a "resolveType" field
 
-export class InterfaceSemiBrick<F extends OutputFieldConfigMap>
-  implements SemiBrick<'interface', GraphQLInterfaceType, TMap<F>, OMap<F>> {
+export class InterfaceSemiBrick<
+  F extends OutputFieldConfigMap
+> extends SemiBrick<'interface', GraphQLInterfaceType, TMap<F>, OMap<F>> {
   public readonly kind = 'interface' as const;
-  public readonly name: string;
-  public readonly semiCodec: Codec<TMap<F>, OMap<F>>;
   public readonly fields: F;
 
   public readonly nullable: NullableBrickOf<InterfaceSemiBrick<F>>;
@@ -24,16 +22,13 @@ export class InterfaceSemiBrick<F extends OutputFieldConfigMap>
   // TODO: add interfaces array here
 
   // TODO: look into GraphQLInterface.resolveType
-  constructor(
-    public semiBrickFactory: SemiBrickFactory,
-    params: {
-      name: string;
-      semiCodec: InterfaceSemiBrick<F>['semiCodec'];
-      fields: F;
-    },
-  ) {
-    this.name = params.name;
-    this.semiCodec = params.semiCodec;
+  constructor(params: {
+    name: string;
+    semiCodec: InterfaceSemiBrick<F>['semiCodec'];
+    fields: F;
+    semiBrickFactory: SemiBrickFactory;
+  }) {
+    super(params);
     this.fields = params.fields;
 
     this.nullable = Brick.initNullable(this);

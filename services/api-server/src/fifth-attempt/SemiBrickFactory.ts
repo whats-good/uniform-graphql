@@ -65,31 +65,36 @@ export class SemiBrickFactory {
 
   // TODO: find a way to avoid doing this delayed execution
   scalar = () => ({
-    id: new ScalarSemiBrick(this, {
+    id: new ScalarSemiBrick({
+      semiBrickFactory: this,
       name: 'ID',
       semiCodec: t.union([t.string, t.number]),
       semiGraphQLType: GraphQLID,
     }),
 
-    string: new ScalarSemiBrick(this, {
+    string: new ScalarSemiBrick({
+      semiBrickFactory: this,
       name: 'String',
       semiCodec: t.string,
       semiGraphQLType: GraphQLString,
     }),
 
-    float: new ScalarSemiBrick(this, {
+    float: new ScalarSemiBrick({
+      semiBrickFactory: this,
       name: 'Float',
       semiCodec: t.number,
       semiGraphQLType: GraphQLFloat,
     }),
 
-    int: new ScalarSemiBrick(this, {
+    int: new ScalarSemiBrick({
+      semiBrickFactory: this,
       name: 'Int',
       semiCodec: t.Int,
       semiGraphQLType: GraphQLInt,
     }),
 
-    boolean: new ScalarSemiBrick(this, {
+    boolean: new ScalarSemiBrick({
+      semiBrickFactory: this,
       name: 'Boolean',
       semiCodec: t.Int,
       semiGraphQLType: GraphQLBoolean,
@@ -101,7 +106,8 @@ export class SemiBrickFactory {
     description?: string;
     keys: D;
   }): EnumSemiBrick<D> => {
-    const sb = new EnumSemiBrick(this, {
+    const sb = new EnumSemiBrick({
+      semiBrickFactory: this,
       name: params.name,
       keys: params.keys,
       semiCodec: t.keyof(params.keys),
@@ -113,7 +119,8 @@ export class SemiBrickFactory {
   inputList = <SB extends AnyInputSemiBrick>(params: {
     listOf: SB;
   }): InputListSemiBrick<SB> => {
-    const sb = new InputListSemiBrick(this, {
+    const sb = new InputListSemiBrick({
+      semiBrickFactory: this,
       name: `InputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
       semiCodec: t.array(params.listOf.semiCodec),
@@ -127,7 +134,8 @@ export class SemiBrickFactory {
     fields: F;
   }): InputObjectSemiBrick<F> => {
     const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    const sb = new InputObjectSemiBrick(this, {
+    const sb = new InputObjectSemiBrick({
+      semiBrickFactory: this,
       name: params.name,
       fields: params.fields,
       semiCodec: t.type(codecs),
@@ -142,7 +150,8 @@ export class SemiBrickFactory {
     description?: string;
   }): InterfaceSemiBrick<F> => {
     const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    const sb = new InterfaceSemiBrick(this, {
+    const sb = new InterfaceSemiBrick({
+      semiBrickFactory: this,
       name: params.name,
       fields: params.fields,
       semiCodec: t.type(codecs),
@@ -154,7 +163,8 @@ export class SemiBrickFactory {
   outputList = <SB extends AnyOutputSemiBrick>(params: {
     listOf: SB;
   }): OutputListSemiBrick<SB> => {
-    const sb = new OutputListSemiBrick(this, {
+    const sb = new OutputListSemiBrick({
+      semiBrickFactory: this,
       name: `OutputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
       semiCodec: t.array(params.listOf.semiCodec),
@@ -168,7 +178,8 @@ export class SemiBrickFactory {
     fields: F;
   }): OutputObjectSemiBrick<F> => {
     const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    const sb = new OutputObjectSemiBrick(this, {
+    const sb = new OutputObjectSemiBrick({
+      semiBrickFactory: this,
       name: params.name,
       fields: params.fields,
       semiCodec: t.type(codecs),
@@ -182,7 +193,8 @@ export class SemiBrickFactory {
     semiBricks: SBS;
   }): UnionSemiBrick<SBS> => {
     const [firstSb, secondSb, ...rest] = params.semiBricks;
-    const sb = new UnionSemiBrick(this, {
+    const sb = new UnionSemiBrick({
+      semiBrickFactory: this,
       name: params.name,
       semiBricks: params.semiBricks,
       semiCodec: t.union([

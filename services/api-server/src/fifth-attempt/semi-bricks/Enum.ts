@@ -15,22 +15,24 @@ export interface StringKeys {
 
 // TODO: expose the enum values as a public property.
 // TODO: allow the developer to make the enums actually enumerable
-export class EnumSemiBrick<D extends StringKeys>
-  implements SemiBrick<'enum', GraphQLEnumType, keyof D> {
+export class EnumSemiBrick<D extends StringKeys> extends SemiBrick<
+  'enum',
+  GraphQLEnumType,
+  keyof D
+> {
   public readonly kind = 'enum' as const;
-  public readonly name: string;
-  public readonly semiCodec: Codec<keyof D>;
   public readonly keys: D;
 
   public readonly nullable: NullableBrickOf<EnumSemiBrick<D>>;
   public readonly nonNullable: NonNullableBrickOf<EnumSemiBrick<D>>;
 
-  constructor(
-    public semiBrickFactory: SemiBrickFactory,
-    params: { name: string; semiCodec: Codec<keyof D>; keys: D },
-  ) {
-    this.name = params.name;
-    this.semiCodec = params.semiCodec;
+  constructor(params: {
+    name: string;
+    semiCodec: Codec<keyof D>;
+    semiBrickFactory: SemiBrickFactory;
+    keys: D;
+  }) {
+    super(params);
     this.keys = params.keys;
     this.nullable = Brick.initNullable(this);
     this.nonNullable = Brick.initNonNullable(this);

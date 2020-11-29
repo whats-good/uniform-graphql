@@ -1,6 +1,5 @@
 import { GraphQLInputObjectType } from 'graphql';
 import _ from 'lodash';
-import * as t from 'io-ts';
 import {
   Brick,
   SemiBrick,
@@ -35,27 +34,22 @@ type OMap<F extends InputFieldConfigMap> = {
   [K in keyof F]: F[K]['brick']['codec']['_O'];
 };
 
-export class InputObjectSemiBrick<F extends InputFieldConfigMap>
-  implements
-    SemiBrick<'inputobject', GraphQLInputObjectType, TMap<F>, OMap<F>> {
+export class InputObjectSemiBrick<
+  F extends InputFieldConfigMap
+> extends SemiBrick<'inputobject', GraphQLInputObjectType, TMap<F>, OMap<F>> {
   public readonly kind = 'inputobject' as const;
-  public readonly name: string;
-  public readonly semiCodec: Codec<TMap<F>, OMap<F>>;
   public readonly fields: F;
   public readonly nullable: NullableBrickOf<InputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<InputObjectSemiBrick<F>>;
 
-  constructor(
-    public semiBrickFactory: SemiBrickFactory,
-    params: {
-      name: string;
-      semiCodec: Codec<TMap<F>, OMap<F>>;
-      fields: F;
-    },
-  ) {
-    this.name = params.name;
+  constructor(params: {
+    semiBrickFactory: SemiBrickFactory;
+    name: string;
+    semiCodec: Codec<TMap<F>, OMap<F>>;
+    fields: F;
+  }) {
+    super(params);
     this.fields = params.fields;
-    this.semiCodec = params.semiCodec;
     this.nullable = Brick.initNullable(this);
     this.nonNullable = Brick.initNonNullable(this);
   }
