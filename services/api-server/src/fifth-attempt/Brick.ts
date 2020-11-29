@@ -1,11 +1,10 @@
 import { GraphQLNonNull, GraphQLNullableType, GraphQLType } from 'graphql';
-import * as t from 'io-ts';
 import { SemiBrickFactory } from './SemiBrickFactory';
 
 export type Kind =
   | 'scalar' // done
   | 'outputobject' // done
-  | 'interface'
+  | 'interface' // TODO: finish this one too
   | 'union' // done
   | 'enum' // done
   | 'inputobject' // done
