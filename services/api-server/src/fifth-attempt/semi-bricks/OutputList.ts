@@ -1,16 +1,13 @@
 import { GraphQLList } from 'graphql';
 import {
-  AnySemiBrick,
   Brick,
   NonNullableBrickOf,
   NullableBrickOf,
   SemiBrick,
-  SemiTypeOf,
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { AnyOutputSemiBrick } from './OutputObject';
-
-type ListTypeOf<SB extends AnySemiBrick> = Array<SemiTypeOf<SB>>;
+import { ListTypeOf } from './struct-types';
 
 export class OutputListSemiBrick<
   SB extends AnyOutputSemiBrick

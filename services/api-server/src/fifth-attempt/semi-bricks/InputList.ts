@@ -1,16 +1,13 @@
 import { GraphQLList } from 'graphql';
 import {
-  AnySemiBrick,
   Brick,
   NonNullableBrickOf,
   NullableBrickOf,
   SemiBrick,
-  SemiTypeOf,
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { AnyInputSemiBrick } from './InputObject';
-
-type ListTypeOf<SB extends AnySemiBrick> = Array<SemiTypeOf<SB>>;
+import { ListTypeOf } from './struct-types';
 
 // TODO: combine the input and output lists into one super class, and then specialize.
 export class InputListSemiBrick<SB extends AnyInputSemiBrick> extends SemiBrick<
