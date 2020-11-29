@@ -2,14 +2,14 @@ import { GraphQLNonNull, GraphQLNullableType, GraphQLType } from 'graphql';
 import { SemiBrickFactory } from './SemiBrickFactory';
 
 export type Kind =
-  | 'scalar' // done
-  | 'outputobject' // done
-  | 'interface' // TODO: finish this one too
-  | 'union' // done
-  | 'enum' // done
-  | 'inputobject' // done
-  | 'outputlist' // done
-  | 'inputlist'; // done
+  | 'scalar'
+  | 'outputobject'
+  | 'interface' // TODO: make the resolvers return with the resolved brick or at least the brick name.
+  | 'union' // TODO: make the resolvers return with the resolved brick or at least the brick name.
+  | 'enum'
+  | 'inputobject'
+  | 'outputlist'
+  | 'inputlist';
 
 export abstract class SemiBrick<
   K extends Kind,
