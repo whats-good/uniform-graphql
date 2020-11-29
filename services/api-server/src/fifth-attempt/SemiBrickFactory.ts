@@ -148,12 +148,13 @@ export class SemiBrickFactory {
   interface = <F extends OutputFieldConfigMap>(params: {
     name: string;
     fields: F;
-    description?: string;
+    implementors: InterfaceSemiBrick<F>['implementors'];
   }): InterfaceSemiBrick<F> => {
     const sb = new InterfaceSemiBrick({
       semiBrickFactory: this,
       name: params.name,
       fields: params.fields,
+      implementors: params.implementors,
     });
     this.registerSemiBrick(sb);
     return sb;

@@ -1,4 +1,5 @@
 // import { TypeOf } from './Brick';
+import { GraphQLInterfaceType } from 'graphql';
 import { fieldResolverize, queryResolverize } from './resolver';
 import { SemiBrickFactory } from './SemiBrickFactory';
 
@@ -33,30 +34,53 @@ export const person = fac.outputObject({
   fields: {
     id: {
       brick: fac.scalar().id.nullable,
-      // deprecationReason: 'this field is deprecataed',
-      args: {
-        x: {
-          brick: fac.scalar().id.nullable,
-        },
-        y: {
-          brick: fac.scalar().float.nonNullable,
-        },
-      },
+      args: {},
     },
     firstName: {
-      brick: fac.scalar().string.nullable,
+      brick: fac.scalar().string.nonNullable,
       args: {},
     },
   },
+});
+const employeeInterface = fac.interface({
+  name: 'EmployeeInterface',
+  fields: {
+    firstName: {
+      brick: fac.scalar().string.nonNullable,
+      args: {},
+    },
+    id: {
+      brick: fac.scalar().id.nullable,
+      args: {},
+    },
+  },
+  implementors: {},
 });
 
 const idInterface = fac.interface({
   name: 'IDInterface',
   fields: {
     id: {
-      brick: fac.scalar().id.nonNullable,
+      brick: fac.scalar().id.nullable,
       args: {},
     },
+  },
+  // TODO: how can i make sure that the brick's key is the same as its name?
+  implementors: {
+    employeeInterface,
+  },
+});
+
+const firstNameInterface = fac.interface({
+  name: 'FirstNameInterface',
+  fields: {
+    firstName: {
+      brick: fac.scalar().string.nonNullable,
+      args: {},
+    },
+  },
+  implementors: {
+    employeeInterface,
   },
 });
 
@@ -64,15 +88,7 @@ fieldResolverize({
   semiBrick: person,
   resolvers: {
     id: (root, args) => {
-      if (!args.x) {
-        return 'fallback';
-      }
-      if (args.y < 10) {
-        return null;
-      }
-      return args.x > 10
-        ? root.firstName
-        : `${root.id} - ${args.x} - ${args.y}`;
+      return root.id;
     },
   },
 });

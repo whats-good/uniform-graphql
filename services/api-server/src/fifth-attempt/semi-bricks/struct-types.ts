@@ -12,6 +12,19 @@ export interface BrickMap<B extends AnyBrick> {
   };
 }
 
+type ExtendsFieldConfigMap<F extends OutputFieldConfigMap> = {
+  [K in keyof F]: F[K];
+};
+
+type Implements<F extends OutputFieldConfigMap> = InterfaceSemiBrick<
+  ExtendsFieldConfigMap<F>
+>;
+
+// TODO: find a way to make sure the sbs implement the interface
+export interface Implementors<F extends OutputFieldConfigMap> {
+  [key: string]: Implements<F>;
+}
+
 export interface ArgumentConfig {
   brick: AnyInputBrick;
   description?: string;

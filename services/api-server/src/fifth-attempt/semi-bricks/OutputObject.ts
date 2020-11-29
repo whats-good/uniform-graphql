@@ -64,6 +64,7 @@ export class OutputObjectSemiBrick<
   };
 
   // TODO: how can i make sure that this output object actually implements this interface?
+  // TODO: how can i guarantee that this object is already inside the "implementors" map of the interface?
   // TODO: i need to flatten the entire tree of interfaces that this interface itself may be extending, and register all of them here.
   public implements = <I extends OutputFieldConfigMap>(
     sb: InterfaceSemiBrick<I>,
