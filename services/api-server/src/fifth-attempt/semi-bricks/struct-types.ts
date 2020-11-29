@@ -23,7 +23,7 @@ export interface OutputFieldConfigArgumentMap extends BrickMap<AnyInputBrick> {
   [key: string]: ArgumentConfig;
 }
 
-type OutputKind =
+export type OutputKind =
   | 'scalar'
   | 'enum'
   | 'union'
@@ -64,3 +64,18 @@ export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
 export interface InterfaceSemiBrickMap {
   [key: string]: InterfaceSemiBrick<any>;
 }
+
+export interface InputFieldConfig {
+  brick: AnyInputBrick;
+  description?: string;
+  deprecationReason?: string;
+  // defaultValue?: any; // TODO: implement
+}
+
+export interface InputFieldConfigMap extends BrickMap<AnyOutputBrick> {
+  [key: string]: InputFieldConfig;
+}
+
+export type InputKind = 'scalar' | 'enum' | 'inputlist' | 'inputobject';
+export type AnyInputBrick = AnyBrick<InputKind>;
+export type AnyInputSemiBrick = AnySemiBrick<InputKind>;

@@ -3,31 +3,11 @@ import _ from 'lodash';
 import {
   Brick,
   SemiBrick,
-  AnyBrick,
   NullableBrickOf,
   NonNullableBrickOf,
-  AnySemiBrick,
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
-
-interface InputFieldConfig {
-  brick: AnyInputBrick;
-  description?: string;
-  deprecationReason?: string;
-  // defaultValue?: any; // TODO: implement
-}
-
-export interface InputFieldConfigMap {
-  [key: string]: InputFieldConfig;
-}
-
-type InputKind = 'scalar' | 'enum' | 'inputlist' | 'inputobject';
-export type AnyInputBrick = AnyBrick<InputKind>;
-export type AnyInputSemiBrick = AnySemiBrick<InputKind>;
-
-type TMap<F extends InputFieldConfigMap> = {
-  [K in keyof F]: F[K]['brick']['B_A'];
-};
+import { InputFieldConfigMap, TMap } from './struct-types';
 
 export class InputObjectSemiBrick<
   F extends InputFieldConfigMap
