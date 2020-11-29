@@ -2,14 +2,12 @@ import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
-  GraphQLInt,
+  // GraphQLInt,
   GraphQLList,
   GraphQLNamedType,
   GraphQLString,
   GraphQLType,
 } from 'graphql';
-import _ from 'lodash';
-import * as t from 'io-ts';
 import { AnySemiBrick, SemiGraphQLTypeOf } from './Brick';
 import { EnumSemiBrick, StringKeys } from './semi-bricks/Enum';
 import { InputListSemiBrick } from './semi-bricks/InputList';
@@ -79,38 +77,33 @@ export class SemiBrickFactory {
 
   // TODO: find a way to avoid doing this delayed execution
   scalar = () => ({
-    id: new ScalarSemiBrick({
+    id: new ScalarSemiBrick<string | number>({
       semiBrickFactory: this,
       name: 'ID',
-      semiCodec: t.union([t.string, t.number]),
       semiGraphQLType: GraphQLID,
     }),
 
-    string: new ScalarSemiBrick({
+    string: new ScalarSemiBrick<string>({
       semiBrickFactory: this,
       name: 'String',
-      semiCodec: t.string,
       semiGraphQLType: GraphQLString,
     }),
 
-    float: new ScalarSemiBrick({
+    float: new ScalarSemiBrick<number>({
       semiBrickFactory: this,
       name: 'Float',
-      semiCodec: t.number,
       semiGraphQLType: GraphQLFloat,
     }),
 
-    int: new ScalarSemiBrick({
-      semiBrickFactory: this,
-      name: 'Int',
-      semiCodec: t.Int,
-      semiGraphQLType: GraphQLInt,
-    }),
+    // int: new ScalarSemiBrick({ // TODO: get back here and reimplement
+    //   semiBrickFactory: this,
+    //   name: 'Int',
+    //   semiGraphQLType: GraphQLInt,
+    // }),
 
-    boolean: new ScalarSemiBrick({
+    boolean: new ScalarSemiBrick<boolean>({
       semiBrickFactory: this,
       name: 'Boolean',
-      semiCodec: t.Int,
       semiGraphQLType: GraphQLBoolean,
     }),
   });
@@ -124,7 +117,6 @@ export class SemiBrickFactory {
       semiBrickFactory: this,
       name: params.name,
       keys: params.keys,
-      semiCodec: t.keyof(params.keys),
     });
     this.registerSemiBrick(sb);
     return sb;
@@ -137,7 +129,6 @@ export class SemiBrickFactory {
       semiBrickFactory: this,
       name: `InputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
-      semiCodec: t.array(params.listOf.semiCodec),
     });
     this.registerSemiBrick(sb);
     return sb;
@@ -147,12 +138,10 @@ export class SemiBrickFactory {
     name: string;
     fields: F;
   }): InputObjectSemiBrick<F> => {
-    const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
     const sb = new InputObjectSemiBrick({
       semiBrickFactory: this,
       name: params.name,
       fields: params.fields,
-      semiCodec: t.type(codecs),
     });
     this.registerSemiBrick(sb);
     return sb;
@@ -163,12 +152,10 @@ export class SemiBrickFactory {
     fields: F;
     description?: string;
   }): InterfaceSemiBrick<F> => {
-    const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
     const sb = new InterfaceSemiBrick({
       semiBrickFactory: this,
       name: params.name,
       fields: params.fields,
-      semiCodec: t.type(codecs),
     });
     this.registerSemiBrick(sb);
     return sb;
@@ -181,7 +168,6 @@ export class SemiBrickFactory {
       semiBrickFactory: this,
       name: `OutputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
-      semiCodec: t.array(params.listOf.semiCodec),
     });
     this.registerSemiBrick(sb);
     return sb;
@@ -191,12 +177,10 @@ export class SemiBrickFactory {
     name: string;
     fields: F;
   }): OutputObjectSemiBrick<F> => {
-    const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
     const sb = new OutputObjectSemiBrick({
       semiBrickFactory: this,
       name: params.name,
       fields: params.fields,
-      semiCodec: t.type(codecs),
     });
     this.registerSemiBrick(sb);
     return sb;
@@ -206,16 +190,10 @@ export class SemiBrickFactory {
     name: string;
     semiBricks: SBS;
   }): UnionSemiBrick<SBS> => {
-    const [firstSb, secondSb, ...rest] = params.semiBricks;
     const sb = new UnionSemiBrick({
       semiBrickFactory: this,
       name: params.name,
       semiBricks: params.semiBricks,
-      semiCodec: t.union([
-        firstSb.semiCodec,
-        secondSb.semiCodec,
-        ...rest.map(({ semiCodec }) => semiCodec),
-      ]),
     });
     this.registerSemiBrick(sb);
     return sb;

@@ -1,3 +1,4 @@
+// import { TypeOf } from './Brick';
 import { fieldResolverize, queryResolverize } from './resolver';
 import { SemiBrickFactory } from './SemiBrickFactory';
 
@@ -8,8 +9,8 @@ const membership = fac.enum({
   keys: { free: null, paid: null, enterprise: null }, // TODO: enable the dev to give values to the values too.
 });
 
-membership.nullable.semiBrick.semiCodec.encode('enterprise');
-// TODO: make a note: if all fields are deprecated, the schema will fail to build, forever.
+// const a: TypeOf<typeof membership['nullable']> = 'enterprise';
+
 export const someInput = fac.inputObject({
   name: 'SomeInput',
   fields: {

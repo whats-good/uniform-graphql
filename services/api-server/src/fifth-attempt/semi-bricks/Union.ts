@@ -4,6 +4,7 @@ import {
   NonNullableBrickOf,
   NullableBrickOf,
   SemiBrick,
+  SemiTypeOf,
 } from '../Brick';
 import { AnyOutputObjectSemiBrick } from './OutputObject';
 import { SemiBrickFactory } from '../SemiBrickFactory';
@@ -14,14 +15,12 @@ export type UnitableSemiBricks = [
   ...Array<AnyOutputObjectSemiBrick>
 ];
 
-type UtdTypes<T extends UnitableSemiBricks> = T[number]['semiCodec']['_A'];
-type UtdOutTypes<T extends UnitableSemiBricks> = T[number]['semiCodec']['_O'];
+type UtdTypes<T extends UnitableSemiBricks> = SemiTypeOf<T[number]>;
 
 export class UnionSemiBrick<SBS extends UnitableSemiBricks> extends SemiBrick<
   'union',
   GraphQLUnionType,
-  UtdTypes<SBS>,
-  UtdOutTypes<SBS>
+  UtdTypes<SBS>
 > {
   public readonly kind = 'union' as const;
   public readonly semiBricks: SBS;
@@ -33,7 +32,6 @@ export class UnionSemiBrick<SBS extends UnitableSemiBricks> extends SemiBrick<
     semiBrickFactory: SemiBrickFactory;
     name: string;
     semiBricks: SBS;
-    semiCodec: UnionSemiBrick<SBS>['semiCodec'];
   }) {
     super(params);
     this.semiBricks = params.semiBricks;

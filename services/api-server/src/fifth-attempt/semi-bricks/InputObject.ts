@@ -4,7 +4,6 @@ import {
   Brick,
   SemiBrick,
   AnyBrick,
-  Codec,
   NullableBrickOf,
   NonNullableBrickOf,
   AnySemiBrick,
@@ -27,16 +26,12 @@ export type AnyInputBrick = AnyBrick<InputKind>;
 export type AnyInputSemiBrick = AnySemiBrick<InputKind>;
 
 type TMap<F extends InputFieldConfigMap> = {
-  [K in keyof F]: F[K]['brick']['codec']['_A'];
-};
-
-type OMap<F extends InputFieldConfigMap> = {
-  [K in keyof F]: F[K]['brick']['codec']['_O'];
+  [K in keyof F]: F[K]['brick']['B_A'];
 };
 
 export class InputObjectSemiBrick<
   F extends InputFieldConfigMap
-> extends SemiBrick<'inputobject', GraphQLInputObjectType, TMap<F>, OMap<F>> {
+> extends SemiBrick<'inputobject', GraphQLInputObjectType, TMap<F>> {
   public readonly kind = 'inputobject' as const;
   public readonly fields: F;
   public readonly nullable: NullableBrickOf<InputObjectSemiBrick<F>>;
@@ -45,7 +40,6 @@ export class InputObjectSemiBrick<
   constructor(params: {
     semiBrickFactory: SemiBrickFactory;
     name: string;
-    semiCodec: Codec<TMap<F>, OMap<F>>;
     fields: F;
   }) {
     super(params);

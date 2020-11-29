@@ -77,20 +77,11 @@
 - add either nodemon or webpack hot reloading.
 - consider using the apollo-explorer instead of playground.
 - understand how `unique symbol` works.
-- maybe i should use graphql-typdefs and codegen to have my types, instead of this elaborate fp system
-- watch this 40 minute tutorial: https://www.youtube.com/watch?v=wqm5ibtCSf0
-- study the `infer` keyword.
 - look into recursion. it might be a bit of a headache.
-- maybe there's no reason to use io-ts. Could potentially get away with just using the patterns.
-- Important: I need to first recreate the internal GraphQL classes without any convenience methods. Once there's a solid foundation, i can add the convenience stuff.
-- Main problem: Once we create an object with dynamic keys, accessing it will be usually fine, but modifying it while preserving the generics will be a pain. io-ts does this well, but I'm not sure if I can follow their solution here. For example, once I create an outputobject semibrick, reaching into its field bricks to add specialized resolvers will be a problem.
 - Find a way to let the developers declare that it's okay to not return a nonNullable field on the initial pass, as long as they give a fieldResolver that will eventually resolve that field. The main challenge in doing so is ensuring that the fields dont appear to be accessible through "root", even though they were returned null from the top. This could be handled by giving a second generic, or a conditional type that sets the `root.X` of that field to a Maybe<X> for the field resolvers.
-- Don't use nested generics like `f<A, B extends C<A>, D extends F<C>>`, just use `f<D extends F<any>>`, and use mapped types to get what's under `D`.
-- Remove io-ts as a dependency
-- The graphqltypes are now lazy evaluated, but this comes with a price: multiple instances of the same type. In order to prevent this, all the types should be cached and retrieved, based on a prioritization scheme, such as "latest version". For this to work, we'll probably need to do 2 passes: First, put them in a DAG to find the depenedencies, and then use the lazy getters to retrieve the latest versions. This comes with its own problems though. We can no longer use the static initializers directly. We need a surrounding context to do the book-keeping of the versions.
 - I've introduced mutability to make referential integrity more manageable. However, that might have been a mistake. With the introduction of the wrapper factory library, we can potentially avoid having to mutate the bricks themselves. This way we can keep them completely & immutable, while storing all the state inside the wrapper. This will help me test my bricks.
-- Make semibrick an abstract class, and have it internally reuse the factory to produce the graphQL types
 - See if there's a way to make the bricks unaware of their factory
 - Create root resolvers via the factory, not by a random output object
 - Can interfaces have other interfaces as their fields?
-- Remove all the out types & the codecs
+- Find a way to force the dev to return the \_\_typename if the resolved field is an interface or a union
+- if all fields are deprecated, the schema will fail to build, forever.

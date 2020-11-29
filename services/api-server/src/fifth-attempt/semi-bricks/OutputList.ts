@@ -5,11 +5,12 @@ import {
   NonNullableBrickOf,
   NullableBrickOf,
   SemiBrick,
+  SemiTypeOf,
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { AnyOutputSemiBrick } from './OutputObject';
 
-type ListTypeOf<SB extends AnySemiBrick> = Array<SB['semiCodec']['_A']>;
+type ListTypeOf<SB extends AnySemiBrick> = Array<SemiTypeOf<SB>>;
 
 export class OutputListSemiBrick<
   SB extends AnyOutputSemiBrick
@@ -22,7 +23,6 @@ export class OutputListSemiBrick<
   constructor(params: {
     name: string;
     semiBrickFactory: SemiBrickFactory;
-    semiCodec: OutputListSemiBrick<SB>['semiCodec'];
     listOf: SB;
   }) {
     super(params);

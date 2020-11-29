@@ -6,18 +6,19 @@ import {
   TMap,
   AnyOutputBrick,
 } from './semi-bricks/OutputObject';
+import { TypeOf } from './Brick';
 
 // type Thunk<T> = () => T;
 
 type ResolverReturnType<T> = T | Promise<T>; // TODO: add thunk support later
 type ResolverReturnTypeOf<B extends AnyOutputBrick> = ResolverReturnType<
-  B['codec']['_A']
+  TypeOf<B>
 >;
 
 // TODO: add Context and info later
 
 type ArgTMap<T extends OutputFieldConfigArgumentMap> = {
-  [K in keyof T]: T[K]['brick']['codec']['_A'];
+  [K in keyof T]: TypeOf<T[K]['brick']>;
 };
 
 // TODO: later on, enable the root to be something else, but always force a return on the field.

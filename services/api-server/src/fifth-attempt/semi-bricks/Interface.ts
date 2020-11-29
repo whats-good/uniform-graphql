@@ -1,6 +1,6 @@
 import { GraphQLInterfaceType } from 'graphql';
 import _ from 'lodash';
-import { OMap, OutputFieldConfigMap, TMap } from './OutputObject';
+import { OutputFieldConfigMap, TMap } from './OutputObject';
 import {
   Brick,
   SemiBrick,
@@ -13,7 +13,7 @@ import { SemiBrickFactory } from '../SemiBrickFactory';
 
 export class InterfaceSemiBrick<
   F extends OutputFieldConfigMap
-> extends SemiBrick<'interface', GraphQLInterfaceType, TMap<F>, OMap<F>> {
+> extends SemiBrick<'interface', GraphQLInterfaceType, TMap<F>> {
   public readonly kind = 'interface' as const;
   public readonly fields: F;
 
@@ -21,10 +21,8 @@ export class InterfaceSemiBrick<
   public readonly nonNullable: NonNullableBrickOf<InterfaceSemiBrick<F>>;
   // TODO: add interfaces array here
 
-  // TODO: look into GraphQLInterface.resolveType
   constructor(params: {
     name: string;
-    semiCodec: InterfaceSemiBrick<F>['semiCodec'];
     fields: F;
     semiBrickFactory: SemiBrickFactory;
   }) {

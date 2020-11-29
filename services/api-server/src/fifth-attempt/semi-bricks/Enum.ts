@@ -3,7 +3,6 @@ import _ from 'lodash';
 import {
   SemiBrick,
   Brick,
-  Codec,
   NullableBrickOf,
   NonNullableBrickOf,
 } from '../Brick';
@@ -28,7 +27,6 @@ export class EnumSemiBrick<D extends StringKeys> extends SemiBrick<
 
   constructor(params: {
     name: string;
-    semiCodec: Codec<keyof D>;
     semiBrickFactory: SemiBrickFactory;
     keys: D;
   }) {

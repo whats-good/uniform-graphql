@@ -4,10 +4,10 @@ import {
   AnyBrick,
   AnySemiBrick,
   Brick,
-  Codec,
   NonNullableBrickOf,
   NullableBrickOf,
   SemiBrick,
+  TypeOf,
 } from '../Brick';
 import { ResolverFnOf as AnyResolverFnOf } from '../resolver';
 import { SemiBrickFactory } from '../SemiBrickFactory';
@@ -58,11 +58,7 @@ export interface OutputFieldConfigMap {
 }
 
 export type TMap<F extends OutputFieldConfigMap> = {
-  [K in keyof F]: F[K]['brick']['codec']['_A'];
-};
-
-export type OMap<F extends OutputFieldConfigMap> = {
-  [K in keyof F]: F[K]['brick']['codec']['_O'];
+  [K in keyof F]: TypeOf<F[K]['brick']>;
 };
 
 export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
@@ -75,7 +71,7 @@ export interface InterfaceSemiBrickMap {
 // TODO: add an optional "interfaces" field here
 export class OutputObjectSemiBrick<
   F extends OutputFieldConfigMap
-> extends SemiBrick<'outputobject', GraphQLObjectType, TMap<F>, OMap<F>> {
+> extends SemiBrick<'outputobject', GraphQLObjectType, TMap<F>> {
   public readonly kind = 'outputobject' as const;
   public readonly fields: F;
   public readonly interfaces: InterfaceSemiBrickMap = {};
@@ -86,7 +82,6 @@ export class OutputObjectSemiBrick<
   constructor(params: {
     semiBrickFactory: SemiBrickFactory;
     name: string;
-    semiCodec: Codec<TMap<F>, OMap<F>>;
     fields: F;
   }) {
     super(params);

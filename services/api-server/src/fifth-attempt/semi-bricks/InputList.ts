@@ -5,11 +5,12 @@ import {
   NonNullableBrickOf,
   NullableBrickOf,
   SemiBrick,
+  SemiTypeOf,
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { AnyInputSemiBrick } from './InputObject';
 
-type ListTypeOf<SB extends AnySemiBrick> = Array<SB['semiCodec']['_A']>;
+type ListTypeOf<SB extends AnySemiBrick> = Array<SemiTypeOf<SB>>;
 
 // TODO: combine the input and output lists into one super class, and then specialize.
 export class InputListSemiBrick<SB extends AnyInputSemiBrick> extends SemiBrick<
@@ -25,7 +26,6 @@ export class InputListSemiBrick<SB extends AnyInputSemiBrick> extends SemiBrick<
   constructor(params: {
     semiBrickFactory: SemiBrickFactory;
     name: string;
-    semiCodec: InputListSemiBrick<SB>['semiCodec'];
     listOf: SB;
   }) {
     super(params);
