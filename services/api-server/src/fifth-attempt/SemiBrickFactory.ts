@@ -9,22 +9,22 @@ import {
   GraphQLType,
 } from 'graphql';
 import { AnySemiBrick, SemiGraphQLTypeOf } from './Brick';
-import { EnumSemiBrick, StringKeys } from './semi-bricks/leaf/Enum';
-import { InputListSemiBrick } from './semi-bricks/input/InputList';
+import { EnumSemiBrick, StringKeys } from './semi-bricks/Enum';
+import { InputListSemiBrick } from './semi-bricks/InputList';
 import {
   AnyInputSemiBrick,
   InputFieldConfigMap,
   InputObjectSemiBrick,
-} from './semi-bricks/input/InputObject';
-import { InterfaceSemiBrick } from './semi-bricks/output/Interface';
-import { OutputListSemiBrick } from './semi-bricks/output/OutputList';
+} from './semi-bricks/InputObject';
+import { InterfaceSemiBrick } from './semi-bricks/Interface';
+import { OutputListSemiBrick } from './semi-bricks/OutputList';
 import {
   AnyOutputSemiBrick,
   OutputFieldConfigMap,
   OutputObjectSemiBrick,
-} from './semi-bricks/output/OutputObject';
-import { ScalarSemiBrick } from './semi-bricks/leaf/Scalar';
-import { UnionSemiBrick, UnitableSemiBricks } from './semi-bricks/output/Union';
+} from './semi-bricks/OutputObject';
+import { ScalarSemiBrick } from './semi-bricks/Scalar';
+import { UnionSemiBrick, UnitableSemiBricks } from './semi-bricks/Union';
 
 interface SemiBricksMap {
   [key: string]: AnySemiBrick;

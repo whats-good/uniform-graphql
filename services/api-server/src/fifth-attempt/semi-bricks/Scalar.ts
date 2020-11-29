@@ -4,8 +4,8 @@ import {
   Brick,
   NullableBrickOf,
   NonNullableBrickOf,
-} from '../../Brick';
-import { SemiBrickFactory } from '../../SemiBrickFactory';
+} from '../Brick';
+import { SemiBrickFactory } from '../SemiBrickFactory';
 
 export class ScalarSemiBrick<SB_A> extends SemiBrick<
   'scalar',

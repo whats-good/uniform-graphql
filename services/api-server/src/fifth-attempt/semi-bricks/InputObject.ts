@@ -7,8 +7,8 @@ import {
   NullableBrickOf,
   NonNullableBrickOf,
   AnySemiBrick,
-} from '../../Brick';
-import { SemiBrickFactory } from '../../SemiBrickFactory';
+} from '../Brick';
+import { SemiBrickFactory } from '../SemiBrickFactory';
 
 interface InputFieldConfig {
   brick: AnyInputBrick;

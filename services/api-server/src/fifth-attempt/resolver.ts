@@ -5,7 +5,7 @@ import {
   OutputFieldConfigArgumentMap,
   TMap,
   AnyOutputBrick,
-} from './semi-bricks/output/OutputObject';
+} from './semi-bricks/OutputObject';
 import { TypeOf } from './Brick';
 
 // type Thunk<T> = () => T;
