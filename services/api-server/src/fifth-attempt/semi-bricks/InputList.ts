@@ -23,7 +23,7 @@ export class InputListSemiBrick<SB extends AnyInputSemiBrick>
   public readonly nonNullable: NonNullableBrickOf<InputListSemiBrick<SB>>;
   public readonly nullable: NullableBrickOf<InputListSemiBrick<SB>>;
 
-  private constructor(
+  constructor(
     public semiBrickFactory: SemiBrickFactory,
     params: {
       name: string;
@@ -40,17 +40,5 @@ export class InputListSemiBrick<SB extends AnyInputSemiBrick>
 
   public readonly getSemiGraphQLType = (): GraphQLList<any> => {
     return new GraphQLList(this.listOf.getSemiGraphQLType());
-  };
-
-  public static init = (semiBrickFactory: SemiBrickFactory) => <
-    SB extends AnyInputSemiBrick
-  >(params: {
-    listOf: SB;
-  }): InputListSemiBrick<SB> => {
-    return new InputListSemiBrick(semiBrickFactory, {
-      name: `InputListOf<${params.listOf.name}>`,
-      listOf: params.listOf,
-      semiCodec: t.array(params.listOf.semiCodec),
-    });
   };
 }

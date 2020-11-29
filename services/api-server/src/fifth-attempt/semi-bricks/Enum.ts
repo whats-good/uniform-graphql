@@ -1,5 +1,4 @@
 import { GraphQLEnumType } from 'graphql';
-import * as t from 'io-ts';
 import _ from 'lodash';
 import {
   SemiBrick,
@@ -10,7 +9,7 @@ import {
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 
-interface StringKeys {
+export interface StringKeys {
   [key: string]: unknown;
 }
 
@@ -46,20 +45,6 @@ export class EnumSemiBrick<D extends StringKeys>
         // deprecationReason: 'some deprecation reason',
         // description: 'some description',
       })),
-    });
-  };
-
-  public static init = (semiBrickFactory: SemiBrickFactory) => <
-    D extends StringKeys
-  >(params: {
-    name: string;
-    description?: string;
-    keys: D;
-  }): EnumSemiBrick<D> => {
-    return new EnumSemiBrick(semiBrickFactory, {
-      name: params.name,
-      keys: params.keys,
-      semiCodec: t.keyof(params.keys),
     });
   };
 }

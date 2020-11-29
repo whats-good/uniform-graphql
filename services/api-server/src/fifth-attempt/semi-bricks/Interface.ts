@@ -1,10 +1,4 @@
-import {
-  GraphQLID,
-  GraphQLInterfaceType,
-  GraphQLObjectType,
-  GraphQLString,
-} from 'graphql';
-import * as t from 'io-ts';
+import { GraphQLInterfaceType } from 'graphql';
 import _ from 'lodash';
 import { OMap, OutputFieldConfigMap, TMap } from './OutputObject';
 import {
@@ -66,22 +60,6 @@ export class InterfaceSemiBrick<F extends OutputFieldConfigMap>
           resolve: field.resolve as any, // TODO: consider not doing any here
         };
       }),
-    });
-  };
-
-  public static init = (semiBrickFactory: SemiBrickFactory) => <
-    F extends OutputFieldConfigMap
-  >(params: {
-    name: string;
-    fields: F;
-    description?: string;
-  }): InterfaceSemiBrick<F> => {
-    // TODO: interface and output object types are extremely similar. consider creating a root clasas for both, and extending.
-    const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    return new InterfaceSemiBrick(semiBrickFactory, {
-      name: params.name,
-      fields: params.fields,
-      semiCodec: t.type(codecs),
     });
   };
 }

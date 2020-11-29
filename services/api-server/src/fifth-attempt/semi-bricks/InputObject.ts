@@ -19,7 +19,7 @@ interface InputFieldConfig {
   // defaultValue?: any; // TODO: implement
 }
 
-interface InputFieldConfigMap {
+export interface InputFieldConfigMap {
   [key: string]: InputFieldConfig;
 }
 
@@ -45,7 +45,7 @@ export class InputObjectSemiBrick<F extends InputFieldConfigMap>
   public readonly nullable: NullableBrickOf<InputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<InputObjectSemiBrick<F>>;
 
-  private constructor(
+  constructor(
     public semiBrickFactory: SemiBrickFactory,
     params: {
       name: string;
@@ -68,20 +68,6 @@ export class InputObjectSemiBrick<F extends InputFieldConfigMap>
         deprecationReason: field.deprecationReason,
         description: field.description,
       })),
-    });
-  };
-
-  public static init = (semiBrickFactory: SemiBrickFactory) => <
-    F extends InputFieldConfigMap
-  >(params: {
-    name: string;
-    fields: F;
-  }): InputObjectSemiBrick<F> => {
-    const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    return new InputObjectSemiBrick(semiBrickFactory, {
-      name: params.name,
-      fields: params.fields,
-      semiCodec: t.type(codecs),
     });
   };
 }

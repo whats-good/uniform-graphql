@@ -3,14 +3,14 @@ import { SemiBrickFactory } from './SemiBrickFactory';
 
 const fac = new SemiBrickFactory();
 
-const membership = fac.enum()({
+const membership = fac.enum({
   name: 'Membership',
   keys: { free: null, paid: null, enterprise: null }, // TODO: enable the dev to give values to the values too.
 });
 
 membership.nullable.semiBrick.semiCodec.encode('enterprise');
 // TODO: make a note: if all fields are deprecated, the schema will fail to build, forever.
-export const someInput = fac.inputObject()({
+export const someInput = fac.inputObject({
   name: 'SomeInput',
   fields: {
     id: {
@@ -28,7 +28,7 @@ export const someInput = fac.inputObject()({
   },
 });
 
-export const person = fac.outputObject()({
+export const person = fac.outputObject({
   name: 'Person',
   fields: {
     id: {
@@ -67,7 +67,7 @@ fieldResolverize({
   },
 });
 
-export const animal = fac.outputObject()({
+export const animal = fac.outputObject({
   name: 'Animal',
   fields: {
     owner: {
@@ -77,12 +77,12 @@ export const animal = fac.outputObject()({
   },
 });
 
-export const bestFriend = fac.union()({
+export const bestFriend = fac.union({
   name: 'BestFriend',
   semiBricks: [person, animal],
 });
 
-export const root = fac.outputObject()({
+export const root = fac.outputObject({
   name: 'RootQuery',
   fields: {
     // something: {
@@ -93,6 +93,10 @@ export const root = fac.outputObject()({
     //     },
     //   },
     // },
+    animal: {
+      brick: animal.nonNullable,
+      args: {},
+    },
     person: {
       brick: person.nonNullable,
       args: {
@@ -133,6 +137,14 @@ queryResolverize({
         id: 1,
       };
     },
+    animal: (_, __) => {
+      return {
+        owner: {
+          firstName: 'kerem',
+          id: 'kazan',
+        },
+      };
+    },
     // something: (_, args) => {
     //   return 'yo';
     // },
@@ -159,7 +171,7 @@ queryResolverize({
   },
 });
 
-const someInterface = fac.interface()({
+const someInterface = fac.interface({
   name: 'SomeInterface',
   fields: {
     someField: {
