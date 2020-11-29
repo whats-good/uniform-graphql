@@ -1,3 +1,4 @@
+import { GraphQLResolveInfo } from 'graphql';
 import { TypeOf } from './Brick';
 import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
 import {
@@ -14,7 +15,7 @@ type ResolverReturnTypeOf<B extends AnyOutputBrick> = ResolverReturnType<
   TypeOf<B>
 >;
 
-// TODO: add Context and info later
+// TODO: add Contextlater
 
 type ArgTMap<T extends OutputFieldConfigArgumentMap> = {
   [K in keyof T]: TypeOf<T[K]['brick']>;
@@ -25,6 +26,8 @@ type FieldResolversOf<T extends OutputFieldConfigMap> = {
   [K in keyof T]: (
     root: TMap<T>,
     args: ArgTMap<T[K]['args']>,
+    ctx: any,
+    info: GraphQLResolveInfo,
   ) => ResolverReturnTypeOf<T[K]['brick']>;
 };
 
@@ -32,6 +35,8 @@ type QueryResolversOf<T extends OutputFieldConfigMap> = {
   [K in keyof T]: (
     root: void,
     args: ArgTMap<T[K]['args']>,
+    ctx: any,
+    info: GraphQLResolveInfo,
   ) => ResolverReturnTypeOf<T[K]['brick']>;
 };
 

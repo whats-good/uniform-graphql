@@ -161,7 +161,8 @@ export const root = fac.outputObject({
 queryResolverize({
   semiBrick: root,
   resolvers: {
-    person: (_, args) => {
+    person: (_, args, ctx, info) => {
+      console.log(info);
       return {
         firstName: 'kerem',
         id: 1,
