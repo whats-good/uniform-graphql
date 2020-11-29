@@ -41,6 +41,16 @@ export abstract class SemiBrick<
     SB_O
   >;
 
+  // TODO: find a way for this "resolveAs" method to handle promises and thunks
+
+  // public resolveAs = async (x: SB_A) => {
+  //   const resolvedX = await x;
+  //   return {
+  //     ...resolvedX,
+  //     __typename: this.name,
+  //   };
+  // };
+
   public getSemiGraphQLType = (): SB_G => {
     return this.semiBrickFactory.getSemiGraphQLTypeOf(
       this,
