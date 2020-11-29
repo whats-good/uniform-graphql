@@ -38,7 +38,7 @@ export class EnumSemiBrick<D extends StringKeys> extends SemiBrick<
     this.nonNullable = Brick.initNonNullable(this);
   }
 
-  public readonly getSemiGraphQLType = (): GraphQLEnumType => {
+  public readonly getFreshSemiGraphQLType = (): GraphQLEnumType => {
     return new GraphQLEnumType({
       name: this.name,
       values: _.mapValues(this.keys, (_, key: string) => ({

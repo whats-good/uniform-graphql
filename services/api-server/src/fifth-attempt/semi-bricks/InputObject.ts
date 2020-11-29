@@ -54,7 +54,7 @@ export class InputObjectSemiBrick<
     this.nonNullable = Brick.initNonNullable(this);
   }
 
-  public readonly getSemiGraphQLType = (): GraphQLInputObjectType => {
+  public readonly getFreshSemiGraphQLType = (): GraphQLInputObjectType => {
     return new GraphQLInputObjectType({
       name: this.name,
       fields: _.mapValues(this.fields, (field) => ({

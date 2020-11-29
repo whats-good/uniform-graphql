@@ -42,7 +42,7 @@ export class UnionSemiBrick<SBS extends UnitableSemiBricks> extends SemiBrick<
     this.nonNullable = Brick.initNonNullable(this);
   }
 
-  public readonly getSemiGraphQLType = (): GraphQLUnionType => {
+  public readonly getFreshSemiGraphQLType = (): GraphQLUnionType => {
     return new GraphQLUnionType({
       name: this.name,
       types: this.semiBricks.map((sb) => sb.getSemiGraphQLType()),

@@ -35,7 +35,7 @@ export class InterfaceSemiBrick<
     this.nonNullable = Brick.initNonNullable(this);
   }
 
-  public readonly getSemiGraphQLType = (): GraphQLInterfaceType => {
+  public readonly getFreshSemiGraphQLType = (): GraphQLInterfaceType => {
     return new GraphQLInterfaceType({
       name: this.name,
       fields: _.mapValues(this.fields, (field) => {

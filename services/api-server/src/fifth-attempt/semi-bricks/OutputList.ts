@@ -31,7 +31,7 @@ export class OutputListSemiBrick<
     this.nullable = Brick.initNullable(this);
   }
 
-  public readonly getSemiGraphQLType = (): GraphQLList<any> => {
+  public readonly getFreshSemiGraphQLType = (): GraphQLList<any> => {
     return new GraphQLList(this.listOf.getSemiGraphQLType());
   };
 }

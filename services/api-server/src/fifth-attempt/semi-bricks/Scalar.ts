@@ -32,5 +32,5 @@ export class ScalarSemiBrick<
     this.nonNullable = Brick.initNonNullable(this);
   }
 
-  public readonly getSemiGraphQLType = (): SB_G => this.semiGraphQLType;
+  public readonly getFreshSemiGraphQLType = (): SB_G => this.semiGraphQLType;
 }

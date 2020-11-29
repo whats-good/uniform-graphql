@@ -1,5 +1,4 @@
 import { GraphQLObjectType } from 'graphql';
-import * as t from 'io-ts';
 import _ from 'lodash';
 import {
   AnyBrick,
@@ -72,34 +71,31 @@ export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
 export interface InterfaceSemiBrickMap {
   [key: string]: InterfaceSemiBrick<any>;
 }
+
 // TODO: add an optional "interfaces" field here
-export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
-  implements SemiBrick<'outputobject', GraphQLObjectType, TMap<F>, OMap<F>> {
+export class OutputObjectSemiBrick<
+  F extends OutputFieldConfigMap
+> extends SemiBrick<'outputobject', GraphQLObjectType, TMap<F>, OMap<F>> {
   public readonly kind = 'outputobject' as const;
-  public readonly name: string;
-  public readonly semiCodec: Codec<TMap<F>, OMap<F>>;
   public readonly fields: F;
   public readonly interfaces: InterfaceSemiBrickMap = {};
 
   public readonly nullable: NullableBrickOf<OutputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<OutputObjectSemiBrick<F>>;
 
-  constructor(
-    public semiBrickFactory: SemiBrickFactory,
-    params: {
-      name: string;
-      semiCodec: Codec<TMap<F>, OMap<F>>;
-      fields: F;
-    },
-  ) {
-    this.name = params.name;
-    this.semiCodec = params.semiCodec;
+  constructor(params: {
+    semiBrickFactory: SemiBrickFactory;
+    name: string;
+    semiCodec: Codec<TMap<F>, OMap<F>>;
+    fields: F;
+  }) {
+    super(params);
     this.fields = params.fields;
     this.nullable = Brick.initNullable(this);
     this.nonNullable = Brick.initNonNullable(this);
   }
 
-  public readonly getSemiGraphQLType = (): GraphQLObjectType => {
+  public getFreshSemiGraphQLType = (): GraphQLObjectType => {
     return new GraphQLObjectType({
       name: this.name,
       interfaces: Object.values(this.interfaces).map((sb) =>
@@ -138,19 +134,5 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
     resolve: AnyResolverFnOf<F, K>,
   ): void => {
     this.fields[key].resolve = resolve;
-  };
-
-  public static init = (semiBrickFactory: SemiBrickFactory) => <
-    F extends OutputFieldConfigMap
-  >(params: {
-    name: string;
-    fields: F;
-  }): OutputObjectSemiBrick<F> => {
-    const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    return new OutputObjectSemiBrick(semiBrickFactory, {
-      name: params.name,
-      fields: params.fields,
-      semiCodec: t.type(codecs),
-    });
   };
 }

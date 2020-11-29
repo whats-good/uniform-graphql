@@ -24,7 +24,7 @@ export abstract class SemiBrick<
   readonly semiCodec: Codec<SB_A, SB_O>;
   readonly semiBrickFactory: SemiBrickFactory;
   abstract kind: K;
-  abstract getSemiGraphQLType(): SB_G;
+  abstract getFreshSemiGraphQLType(): SB_G;
 
   abstract readonly nullable: Brick<
     K,
@@ -40,6 +40,13 @@ export abstract class SemiBrick<
     SB_A,
     SB_O
   >;
+
+  public getSemiGraphQLType = (): SB_G => {
+    return this.semiBrickFactory.getSemiGraphQLTypeOf(
+      this,
+      this.getFreshSemiGraphQLType,
+    );
+  };
 
   constructor(params: {
     name: string;
