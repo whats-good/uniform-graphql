@@ -11,11 +11,7 @@ import {
 import { AnySemiBrick, SemiGraphQLTypeOf } from './Brick';
 import { EnumSemiBrick, StringKeys } from './semi-bricks/Enum';
 import { InputListSemiBrick } from './semi-bricks/InputList';
-import {
-  AnyInputSemiBrick,
-  InputFieldConfigMap,
-  InputObjectSemiBrick,
-} from './semi-bricks/InputObject';
+import { InputObjectSemiBrick } from './semi-bricks/InputObject';
 import { InterfaceSemiBrick } from './semi-bricks/Interface';
 import { OutputListSemiBrick } from './semi-bricks/OutputList';
 import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
@@ -23,6 +19,8 @@ import { ScalarSemiBrick } from './semi-bricks/Scalar';
 import {
   OutputFieldConfigMap,
   AnyOutputSemiBrick,
+  AnyInputSemiBrick,
+  InputFieldConfigMap,
 } from './semi-bricks/struct-types';
 import { UnionSemiBrick, UnitableSemiBricks } from './semi-bricks/Union';
 

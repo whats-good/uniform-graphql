@@ -6,8 +6,7 @@ import {
   SemiBrick,
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
-import { AnyInputSemiBrick } from './InputObject';
-import { ListTypeOf } from './struct-types';
+import { AnyInputSemiBrick, ListTypeOf } from './struct-types';
 
 // TODO: combine the input and output lists into one super class, and then specialize.
 export class InputListSemiBrick<SB extends AnyInputSemiBrick> extends SemiBrick<

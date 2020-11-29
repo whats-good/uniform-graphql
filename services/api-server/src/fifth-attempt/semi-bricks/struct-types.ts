@@ -1,5 +1,4 @@
 import { AnyBrick, AnySemiBrick, SemiTypeOf, TypeOf } from '../Brick';
-import { AnyInputBrick } from './InputObject';
 import { InterfaceSemiBrick } from './Interface';
 import { OutputObjectSemiBrick } from './OutputObject';
 
@@ -72,7 +71,7 @@ export interface InputFieldConfig {
   // defaultValue?: any; // TODO: implement
 }
 
-export interface InputFieldConfigMap extends BrickMap<AnyOutputBrick> {
+export interface InputFieldConfigMap extends BrickMap<AnyInputBrick> {
   [key: string]: InputFieldConfig;
 }
 
