@@ -8,6 +8,7 @@ import {
   NullableBrickOf,
   NonNullableBrickOf,
 } from '../Brick';
+import { SemiBrickFactory } from '../SemiBrickFactory';
 
 interface StringKeys {
   [key: string]: unknown;
@@ -25,7 +26,10 @@ export class EnumSemiBrick<D extends StringKeys>
   public readonly nullable: NullableBrickOf<EnumSemiBrick<D>>;
   public readonly nonNullable: NonNullableBrickOf<EnumSemiBrick<D>>;
 
-  constructor(params: { name: string; semiCodec: Codec<keyof D>; keys: D }) {
+  constructor(
+    public semiBrickFactory: SemiBrickFactory,
+    params: { name: string; semiCodec: Codec<keyof D>; keys: D },
+  ) {
     this.name = params.name;
     this.semiCodec = params.semiCodec;
     this.keys = params.keys;
@@ -45,15 +49,17 @@ export class EnumSemiBrick<D extends StringKeys>
     });
   };
 
-  public static init<D extends StringKeys>(params: {
+  public static init = (semiBrickFactory: SemiBrickFactory) => <
+    D extends StringKeys
+  >(params: {
     name: string;
     description?: string;
     keys: D;
-  }): EnumSemiBrick<D> {
-    return new EnumSemiBrick({
+  }): EnumSemiBrick<D> => {
+    return new EnumSemiBrick(semiBrickFactory, {
       name: params.name,
       keys: params.keys,
       semiCodec: t.keyof(params.keys),
     });
-  }
+  };
 }

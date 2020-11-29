@@ -10,6 +10,7 @@ import {
   NonNullableBrickOf,
   AnySemiBrick,
 } from '../Brick';
+import { SemiBrickFactory } from '../SemiBrickFactory';
 
 interface InputFieldConfig {
   brick: AnyInputBrick;
@@ -44,11 +45,14 @@ export class InputObjectSemiBrick<F extends InputFieldConfigMap>
   public readonly nullable: NullableBrickOf<InputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<InputObjectSemiBrick<F>>;
 
-  private constructor(params: {
-    name: string;
-    semiCodec: Codec<TMap<F>, OMap<F>>;
-    fields: F;
-  }) {
+  private constructor(
+    public semiBrickFactory: SemiBrickFactory,
+    params: {
+      name: string;
+      semiCodec: Codec<TMap<F>, OMap<F>>;
+      fields: F;
+    },
+  ) {
     this.name = params.name;
     this.fields = params.fields;
     this.semiCodec = params.semiCodec;
@@ -67,15 +71,17 @@ export class InputObjectSemiBrick<F extends InputFieldConfigMap>
     });
   };
 
-  public static init<F extends InputFieldConfigMap>(params: {
+  public static init = (semiBrickFactory: SemiBrickFactory) => <
+    F extends InputFieldConfigMap
+  >(params: {
     name: string;
     fields: F;
-  }): InputObjectSemiBrick<F> {
+  }): InputObjectSemiBrick<F> => {
     const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    return new InputObjectSemiBrick({
+    return new InputObjectSemiBrick(semiBrickFactory, {
       name: params.name,
       fields: params.fields,
       semiCodec: t.type(codecs),
     });
-  }
+  };
 }

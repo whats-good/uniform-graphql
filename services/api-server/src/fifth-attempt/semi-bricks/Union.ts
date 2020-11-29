@@ -8,6 +8,7 @@ import {
   SemiBrick,
 } from '../Brick';
 import { AnyOutputObjectSemiBrick } from './OutputObject';
+import { SemiBrickFactory } from '../SemiBrickFactory';
 
 type UnitableSemiBricks = [
   AnyOutputObjectSemiBrick,
@@ -29,11 +30,14 @@ export class UnionSemiBrick<SBS extends UnitableSemiBricks>
   public readonly nullable: NullableBrickOf<UnionSemiBrick<SBS>>;
   public readonly nonNullable: NonNullableBrickOf<UnionSemiBrick<SBS>>;
 
-  private constructor(params: {
-    name: string;
-    semiBricks: SBS;
-    semiCodec: UnionSemiBrick<SBS>['semiCodec'];
-  }) {
+  private constructor(
+    public semiBrickFactory: SemiBrickFactory,
+    params: {
+      name: string;
+      semiBricks: SBS;
+      semiCodec: UnionSemiBrick<SBS>['semiCodec'];
+    },
+  ) {
     this.name = params.name;
     this.semiCodec = params.semiCodec;
     this.semiBricks = params.semiBricks;
@@ -49,12 +53,14 @@ export class UnionSemiBrick<SBS extends UnitableSemiBricks>
     });
   };
 
-  public static init<SBS extends UnitableSemiBricks>(params: {
+  public static init = (semiBrickFactory: SemiBrickFactory) => <
+    SBS extends UnitableSemiBricks
+  >(params: {
     name: string;
     semiBricks: SBS;
-  }): UnionSemiBrick<SBS> {
+  }): UnionSemiBrick<SBS> => {
     const [firstSb, secondSb, ...rest] = params.semiBricks;
-    return new UnionSemiBrick({
+    return new UnionSemiBrick(semiBrickFactory, {
       name: params.name,
       semiBricks: params.semiBricks,
       semiCodec: t.union([
@@ -63,5 +69,5 @@ export class UnionSemiBrick<SBS extends UnitableSemiBricks>
         ...rest.map(({ semiCodec }) => semiCodec),
       ]),
     });
-  }
+  };
 }

@@ -8,6 +8,7 @@ import {
   NullableBrickOf,
   SemiBrick,
 } from '../Brick';
+import { SemiBrickFactory } from '../SemiBrickFactory';
 import { AnyInputSemiBrick } from './InputObject';
 
 type ListTypeOf<SB extends AnySemiBrick> = Array<SB['semiCodec']['_A']>;
@@ -22,11 +23,14 @@ export class InputListSemiBrick<SB extends AnyInputSemiBrick>
   public readonly nonNullable: NonNullableBrickOf<InputListSemiBrick<SB>>;
   public readonly nullable: NullableBrickOf<InputListSemiBrick<SB>>;
 
-  private constructor(params: {
-    name: string;
-    semiCodec: InputListSemiBrick<SB>['semiCodec'];
-    listOf: SB;
-  }) {
+  private constructor(
+    public semiBrickFactory: SemiBrickFactory,
+    params: {
+      name: string;
+      semiCodec: InputListSemiBrick<SB>['semiCodec'];
+      listOf: SB;
+    },
+  ) {
     this.name = params.name;
     this.semiCodec = params.semiCodec;
     this.listOf = params.listOf;
@@ -38,13 +42,15 @@ export class InputListSemiBrick<SB extends AnyInputSemiBrick>
     return new GraphQLList(this.listOf.getSemiGraphQLType());
   };
 
-  public static init<SB extends AnyInputSemiBrick>(params: {
+  public static init = (semiBrickFactory: SemiBrickFactory) => <
+    SB extends AnyInputSemiBrick
+  >(params: {
     listOf: SB;
-  }): InputListSemiBrick<SB> {
-    return new InputListSemiBrick({
+  }): InputListSemiBrick<SB> => {
+    return new InputListSemiBrick(semiBrickFactory, {
       name: `InputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
       semiCodec: t.array(params.listOf.semiCodec),
     });
-  }
+  };
 }

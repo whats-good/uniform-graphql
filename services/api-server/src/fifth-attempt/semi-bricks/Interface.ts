@@ -14,6 +14,7 @@ import {
   NullableBrickOf,
   NonNullableBrickOf,
 } from '../Brick';
+import { SemiBrickFactory } from '../SemiBrickFactory';
 
 // TODO: unions and interfaces will both need a "resolveType" field
 
@@ -29,11 +30,14 @@ export class InterfaceSemiBrick<F extends OutputFieldConfigMap>
   // TODO: add interfaces array here
 
   // TODO: look into GraphQLInterface.resolveType
-  constructor(params: {
-    name: string;
-    semiCodec: InterfaceSemiBrick<F>['semiCodec'];
-    fields: F;
-  }) {
+  constructor(
+    public semiBrickFactory: SemiBrickFactory,
+    params: {
+      name: string;
+      semiCodec: InterfaceSemiBrick<F>['semiCodec'];
+      fields: F;
+    },
+  ) {
     this.name = params.name;
     this.semiCodec = params.semiCodec;
     this.fields = params.fields;
@@ -65,63 +69,19 @@ export class InterfaceSemiBrick<F extends OutputFieldConfigMap>
     });
   };
 
-  public static init<F extends OutputFieldConfigMap>(params: {
+  public static init = (semiBrickFactory: SemiBrickFactory) => <
+    F extends OutputFieldConfigMap
+  >(params: {
     name: string;
     fields: F;
     description?: string;
-  }): InterfaceSemiBrick<F> {
+  }): InterfaceSemiBrick<F> => {
     // TODO: interface and output object types are extremely similar. consider creating a root clasas for both, and extending.
     const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    return new InterfaceSemiBrick({
+    return new InterfaceSemiBrick(semiBrickFactory, {
       name: params.name,
       fields: params.fields,
       semiCodec: t.type(codecs),
     });
-  }
+  };
 }
-
-const firstInterface = new GraphQLInterfaceType({
-  name: 'FirstInterface',
-  fields: {
-    firstName: {
-      type: GraphQLString,
-    },
-  },
-});
-
-const secondInterface = new GraphQLInterfaceType({
-  name: 'SecondInterface',
-  fields: {
-    lastName: {
-      type: GraphQLString,
-    },
-  },
-});
-
-const secondLayer = new GraphQLInterfaceType({
-  name: 'SecondLayer',
-  interfaces: [firstInterface, secondInterface],
-  fields: {
-    firstName: {
-      type: GraphQLString,
-    },
-    lastName: {
-      type: GraphQLString,
-    },
-  },
-});
-
-export const obj = new GraphQLObjectType({
-  name: 'Obj',
-  fields: {
-    firstName: {
-      type: GraphQLString,
-    },
-    lastName: {
-      type: GraphQLString,
-    },
-  },
-  interfaces: [secondLayer, firstInterface, secondInterface],
-});
-
-// // TODO: for an interface to be implemented, all its interfaces should be listed. just implementing them isnt enough.

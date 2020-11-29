@@ -1,31 +1,25 @@
-import { InputObjectSemiBrick } from './semi-bricks/InputObject';
-import { scalars } from './semi-bricks/Scalar';
-import { EnumSemiBrick } from './semi-bricks/Enum';
-import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
 import { fieldResolverize, queryResolverize } from './resolver';
-import { UnionSemiBrick } from './semi-bricks/Union';
-import { OutputListSemiBrick } from './semi-bricks/OutputList';
-import { InputListSemiBrick } from './semi-bricks/InputList';
-import { GraphQLObjectType } from 'graphql';
-import { InterfaceSemiBrick, obj } from './semi-bricks/Interface';
+import { SemiBrickFactory } from './SemiBrickFactory';
 
-const membership = EnumSemiBrick.init({
+const fac = new SemiBrickFactory();
+
+const membership = fac.enum()({
   name: 'Membership',
   keys: { free: null, paid: null, enterprise: null }, // TODO: enable the dev to give values to the values too.
 });
 
 membership.nullable.semiBrick.semiCodec.encode('enterprise');
 // TODO: make a note: if all fields are deprecated, the schema will fail to build, forever.
-export const someInput = InputObjectSemiBrick.init({
+export const someInput = fac.inputObject()({
   name: 'SomeInput',
   fields: {
     id: {
-      brick: scalars.id.nullable,
+      brick: fac.scalar().id.nullable,
       deprecationReason: 'id is deprecated',
       description: 'this is the description!',
     },
     firstName: {
-      brick: scalars.string.nullable,
+      brick: fac.scalar().string.nullable,
       // deprecationReason: 'firstname is deprecated!',
     },
     membership: {
@@ -34,23 +28,23 @@ export const someInput = InputObjectSemiBrick.init({
   },
 });
 
-export const person = OutputObjectSemiBrick.init({
+export const person = fac.outputObject()({
   name: 'Person',
   fields: {
     id: {
-      brick: scalars.id.nullable,
+      brick: fac.scalar().id.nullable,
       // deprecationReason: 'this field is deprecataed',
       args: {
         x: {
-          brick: scalars.id.nullable,
+          brick: fac.scalar().id.nullable,
         },
         y: {
-          brick: scalars.float.nonNullable,
+          brick: fac.scalar().float.nonNullable,
         },
       },
     },
     firstName: {
-      brick: scalars.string.nullable,
+      brick: fac.scalar().string.nullable,
       args: {},
     },
   },
@@ -73,7 +67,7 @@ fieldResolverize({
   },
 });
 
-export const animal = OutputObjectSemiBrick.init({
+export const animal = fac.outputObject()({
   name: 'Animal',
   fields: {
     owner: {
@@ -83,12 +77,12 @@ export const animal = OutputObjectSemiBrick.init({
   },
 });
 
-export const bestFriend = UnionSemiBrick.init({
+export const bestFriend = fac.union()({
   name: 'BestFriend',
   semiBricks: [person, animal],
 });
 
-export const root = OutputObjectSemiBrick.init({
+export const root = fac.outputObject()({
   name: 'RootQuery',
   fields: {
     // something: {
@@ -103,7 +97,7 @@ export const root = OutputObjectSemiBrick.init({
       brick: person.nonNullable,
       args: {
         flag: {
-          brick: scalars.boolean.nonNullable,
+          brick: fac.scalar().boolean.nonNullable,
         },
       },
     },
@@ -165,62 +159,12 @@ queryResolverize({
   },
 });
 
-// TODO: note to self: root queries are not allowed to be nonNullable.
-
-const someInterface = InterfaceSemiBrick.init({
+const someInterface = fac.interface()({
   name: 'SomeInterface',
   fields: {
     someField: {
-      brick: scalars.id.nullable,
+      brick: fac.scalar().id.nullable,
       args: {},
     },
   },
 });
-
-// export const root = new GraphQLObjectType({
-//   name: 'root',
-//   fields: {
-//     obj: {
-//       type: obj,
-//     },
-//     // person: {
-//     //   type: new GraphQLObjectType({
-//     //     name: 'Person',
-//     //     fields: {
-//     //       someField: {
-//     //         type: GraphQLID,
-//     //       },
-//     //     },
-//     //     interfaces: [someInterface.semiGraphQLType],
-//     //   }),
-//     // },
-//     // someObject: {
-//     //   type: someInterface.semiGraphQLType,
-//     //   resolve: () => {
-//     //     return {
-//     //       __typename: 'Person',
-//     //       someField: 'some id',
-//     //     };
-//     //   },
-//     // },
-//   },
-// });
-
-const nullableScalar = scalars.id.nullable;
-const nonNullableScalar = scalars.id.nonNullable;
-nullableScalar.semiBrick;
-nonNullableScalar.semiBrick;
-const a = nullableScalar.codec.encode(null);
-const b = nonNullableScalar.codec.encode('a');
-const c = someInput.fields.firstName.brick.codec.encode('b');
-const d = someInput.semiCodec.encode({
-  id: '1',
-  firstName: 'kerem',
-  membership: 'free',
-});
-// TODO: make OMap appears here, and makes the type less readable
-const e = person.nullable.codec.encode(null);
-
-const f = person.fields.id.args.y.brick.semiBrick.nonNullable.codec.encode(
-  1234,
-);

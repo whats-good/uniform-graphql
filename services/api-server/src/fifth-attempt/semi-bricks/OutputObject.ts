@@ -11,6 +11,7 @@ import {
   SemiBrick,
 } from '../Brick';
 import { ResolverFnOf as AnyResolverFnOf } from '../resolver';
+import { SemiBrickFactory } from '../SemiBrickFactory';
 import { AnyInputBrick } from './InputObject';
 import { InterfaceSemiBrick } from './Interface';
 
@@ -69,7 +70,7 @@ export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
 
 // We need this to guarantee uniqueness of registered interfaces
 export interface InterfaceSemiBrickMap {
-  [key: string]: InterfaceSemiBrick<any, any>;
+  [key: string]: InterfaceSemiBrick<any>;
 }
 // TODO: add an optional "interfaces" field here
 export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
@@ -83,11 +84,14 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
   public readonly nullable: NullableBrickOf<OutputObjectSemiBrick<F>>;
   public readonly nonNullable: NonNullableBrickOf<OutputObjectSemiBrick<F>>;
 
-  constructor(params: {
-    name: string;
-    semiCodec: Codec<TMap<F>, OMap<F>>;
-    fields: F;
-  }) {
+  constructor(
+    public semiBrickFactory: SemiBrickFactory,
+    params: {
+      name: string;
+      semiCodec: Codec<TMap<F>, OMap<F>>;
+      fields: F;
+    },
+  ) {
     this.name = params.name;
     this.semiCodec = params.semiCodec;
     this.fields = params.fields;
@@ -124,7 +128,7 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
   // TODO: how can i make sure that this output object actually implements this interface?
   // TODO: i need to flatten the entire tree of interfaces that this interface itself may be extending, and register all of them here.
   public implements = <I extends OutputFieldConfigMap>(
-    sb: InterfaceSemiBrick<I, any>,
+    sb: InterfaceSemiBrick<I>,
   ): void => {
     this.interfaces[sb.name] = sb;
   };
@@ -136,15 +140,17 @@ export class OutputObjectSemiBrick<F extends OutputFieldConfigMap>
     this.fields[key].resolve = resolve;
   };
 
-  public static init<F extends OutputFieldConfigMap>(params: {
+  public static init = (semiBrickFactory: SemiBrickFactory) => <
+    F extends OutputFieldConfigMap
+  >(params: {
     name: string;
     fields: F;
-  }): OutputObjectSemiBrick<F> {
+  }): OutputObjectSemiBrick<F> => {
     const codecs = _.mapValues(params.fields, (field) => field.brick.codec);
-    return new OutputObjectSemiBrick({
+    return new OutputObjectSemiBrick(semiBrickFactory, {
       name: params.name,
       fields: params.fields,
       semiCodec: t.type(codecs),
     });
-  }
+  };
 }

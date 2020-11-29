@@ -1,5 +1,6 @@
 import { GraphQLNonNull, GraphQLNullableType, GraphQLType } from 'graphql';
 import * as t from 'io-ts';
+import { SemiBrickFactory } from './SemiBrickFactory';
 
 export type Codec<A, O = A, I = unknown> = t.Type<A, O, I>;
 
@@ -23,6 +24,7 @@ export interface SemiBrick<
   readonly semiCodec: Codec<SB_A, SB_O>;
   readonly getSemiGraphQLType: () => SB_G;
   readonly kind: K;
+  readonly semiBrickFactory: SemiBrickFactory;
 
   readonly nullable: Brick<
     K,
