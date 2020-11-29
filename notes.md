@@ -82,7 +82,6 @@
 - I've introduced mutability to make referential integrity more manageable. However, that might have been a mistake. With the introduction of the wrapper factory library, we can potentially avoid having to mutate the bricks themselves. This way we can keep them completely & immutable, while storing all the state inside the wrapper. This will help me test my bricks.
 - See if there's a way to make the bricks unaware of their factory
 - Create root resolvers via the factory, not by a random output object
-- Can interfaces have other interfaces as their fields?
 - Find a way to force the dev to return the \_\_typename if the resolved field is an interface or a union
 - if all fields are deprecated, the schema will fail to build, forever.
 - TMap makes it harder to reason with resolved union types.

@@ -1,24 +1,14 @@
 import { GraphQLObjectType } from 'graphql';
-import _ from 'lodash';
-import {
-  Brick,
-  NonNullableBrickOf,
-  NullableBrickOf,
-  SemiBrick,
-} from '../Brick';
+import { Brick, NonNullableBrickOf, NullableBrickOf } from '../Brick';
 import { ResolverFnOf as AnyResolverFnOf } from '../resolver';
 import { SemiBrickFactory } from '../SemiBrickFactory';
-import { InterfaceSemiBrick } from './Interface';
-import {
-  OutputFieldConfigMap,
-  TMap,
-  InterfaceSemiBrickMap,
-} from './struct-types';
+import { ImplementorSemiBrick } from './Implementor';
+import { OutputFieldConfigMap, InterfaceSemiBrickMap } from './struct-types';
 
 // TODO: add an optional "interfaces" field here
 export class OutputObjectSemiBrick<
   F extends OutputFieldConfigMap
-> extends SemiBrick<'outputobject', GraphQLObjectType, TMap<F>> {
+> extends ImplementorSemiBrick<'outputobject', GraphQLObjectType, F> {
   public readonly kind = 'outputobject' as const;
   public readonly fields: F;
   public readonly interfaces: InterfaceSemiBrickMap = {};
@@ -38,38 +28,7 @@ export class OutputObjectSemiBrick<
   }
 
   public getFreshSemiGraphQLType = (): GraphQLObjectType => {
-    return new GraphQLObjectType({
-      name: this.name,
-      interfaces: Object.values(this.interfaces).map((sb) =>
-        sb.getSemiGraphQLType(),
-      ),
-      fields: _.mapValues(this.fields, (field) => {
-        const { args } = field;
-        const graphQLArgs = _.mapValues(args, (arg) => {
-          return {
-            type: arg.brick.getGraphQLType(),
-            description: arg.description,
-            deprecationReason: arg.deprecationReason,
-          };
-        });
-        return {
-          type: field.brick.getGraphQLType(),
-          description: field.description,
-          deprecationReason: field.deprecationReason,
-          args: graphQLArgs,
-          resolve: field.resolve as any, // TODO: consider not doing any here
-        };
-      }),
-    });
-  };
-
-  // TODO: how can i make sure that this output object actually implements this interface?
-  // TODO: how can i guarantee that this object is already inside the "implementors" map of the interface?
-  // TODO: i need to flatten the entire tree of interfaces that this interface itself may be extending, and register all of them here.
-  public implements = <I extends OutputFieldConfigMap>(
-    sb: InterfaceSemiBrick<I>,
-  ): void => {
-    this.interfaces[sb.name] = sb;
+    return new GraphQLObjectType(this.getGraphQLTypeConstructor());
   };
 
   public setFieldResolver = <K extends keyof F>(

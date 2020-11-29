@@ -1,5 +1,4 @@
 // import { TypeOf } from './Brick';
-import { GraphQLInterfaceType } from 'graphql';
 import { fieldResolverize, queryResolverize } from './resolver';
 import { SemiBrickFactory } from './SemiBrickFactory';
 
@@ -57,6 +56,34 @@ const employeeInterface = fac.interface({
   implementors: {},
 });
 
+fieldResolverize({
+  semiBrick: person,
+  resolvers: {
+    id: (root, args) => {
+      return root.id;
+    },
+  },
+});
+
+export const animal = fac.outputObject({
+  name: 'Animal',
+  fields: {
+    id: {
+      brick: fac.scalar().id.nullable,
+      args: {},
+    },
+    owner: {
+      brick: person.nullable,
+      args: {},
+    },
+  },
+});
+
+export const bestFriend = fac.union({
+  name: 'BestFriend',
+  semiBricks: [person, animal],
+});
+
 const idInterface = fac.interface({
   name: 'IDInterface',
   fields: {
@@ -68,6 +95,8 @@ const idInterface = fac.interface({
   // TODO: how can i make sure that the brick's key is the same as its name?
   implementors: {
     employeeInterface,
+    person,
+    animal,
   },
 });
 
@@ -83,31 +112,6 @@ const firstNameInterface = fac.interface({
     employeeInterface,
   },
 });
-
-fieldResolverize({
-  semiBrick: person,
-  resolvers: {
-    id: (root, args) => {
-      return root.id;
-    },
-  },
-});
-
-export const animal = fac.outputObject({
-  name: 'Animal',
-  fields: {
-    owner: {
-      brick: person.nullable,
-      args: {},
-    },
-  },
-});
-
-export const bestFriend = fac.union({
-  name: 'BestFriend',
-  semiBricks: [person, animal],
-});
-
 export const root = fac.outputObject({
   name: 'RootQuery',
   fields: {
@@ -165,6 +169,7 @@ queryResolverize({
     },
     animal: (_, __) => {
       return {
+        id: 'yo',
         owner: {
           firstName: 'kerem',
           id: 'kazan',
@@ -176,6 +181,7 @@ queryResolverize({
     },
     bestFriend: async (_, __) => {
       return {
+        id: 'yo',
         owner: {
           id: 'this is the id',
           firstName: 'this is the name',
