@@ -8,16 +8,18 @@ export type ListTypeOf<SB extends AnySemiBrick> = Array<SemiTypeOf<SB>>;
 // TODO: can we do recursive output objects?
 
 export interface BrickMap<B extends AnyBrick> {
-  brick: B;
+  [key: string]: {
+    brick: B;
+  };
 }
 
-export interface ArgumentConfig extends BrickMap<AnyInputBrick> {
+export interface ArgumentConfig {
   brick: AnyInputBrick;
   description?: string;
   deprecationReason?: string;
   // defaultValue?: any; // TODO: implement
 }
-export interface OutputFieldConfigArgumentMap {
+export interface OutputFieldConfigArgumentMap extends BrickMap<AnyInputBrick> {
   [key: string]: ArgumentConfig;
 }
 
@@ -45,15 +47,15 @@ export interface OutputFieldConfig<
   // TODO: consider refining this
 }
 
-export interface OutputFieldConfigMap {
+export interface OutputFieldConfigMap extends BrickMap<AnyOutputBrick> {
   [key: string]: OutputFieldConfig<
     AnyOutputBrick,
     OutputFieldConfigArgumentMap
   >;
 }
 
-export type TMap<F extends OutputFieldConfigMap> = {
-  [K in keyof F]: TypeOf<F[K]['brick']>;
+export type TMap<M extends BrickMap<any>> = {
+  [K in keyof M]: TypeOf<M[K]['brick']>;
 };
 
 export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
