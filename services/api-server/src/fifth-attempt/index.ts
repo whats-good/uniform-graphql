@@ -49,6 +49,16 @@ export const person = fac.outputObject({
   },
 });
 
+const idInterface = fac.interface({
+  name: 'IDInterface',
+  fields: {
+    id: {
+      brick: fac.scalar().id.nonNullable,
+      args: {},
+    },
+  },
+});
+
 fieldResolverize({
   semiBrick: person,
   resolvers: {
