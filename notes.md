@@ -86,6 +86,4 @@
 - if all fields are deprecated, the schema will fail to build, forever.
 - TMap makes it harder to reason with resolved union types.
 - Look into unique symbols to help the compiler understand that each semibrick is unique
-- Find an altnerative to the "as const" interface \_\_typename strategy
-- Make the names generic
 - Create a base abstract class for output types, so that you can take out the "R" field from the input types

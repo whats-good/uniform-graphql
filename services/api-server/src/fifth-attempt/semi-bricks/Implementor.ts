@@ -36,10 +36,7 @@ type Implements<F extends OutputFieldConfigMap> = AnyImplementorSemiBrickOf<
 >;
 
 // TODO: find a way to make sure the sbs implement the interface
-export interface Implementors<F extends OutputFieldConfigMap> {
-  [key: string]: Implements<F>;
-}
-
+export type Implementors<F extends OutputFieldConfigMap> = Implements<F>[];
 export abstract class ImplementorSemiBrick<
   K extends ImplementorKind,
   N extends string,

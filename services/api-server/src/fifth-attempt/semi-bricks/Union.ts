@@ -20,7 +20,13 @@ type UtdTypes<T extends UnitableSemiBricks> = SemiTypeOf<T[number]>;
 export class UnionSemiBrick<
   SBS extends UnitableSemiBricks,
   N extends string
-> extends SemiBrick<'union', N, GraphQLUnionType, UtdTypes<SBS>> {
+> extends SemiBrick<
+  'union',
+  N,
+  GraphQLUnionType,
+  UtdTypes<SBS>,
+  UtdTypes<SBS> & { __typename: SBS[number]['name'] }
+> {
   public readonly kind = 'union' as const;
   public readonly semiBricks: SBS;
 

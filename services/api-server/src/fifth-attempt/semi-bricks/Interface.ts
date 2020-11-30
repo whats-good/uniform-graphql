@@ -15,8 +15,7 @@ export class InterfaceSemiBrick<
   N,
   GraphQLInterfaceType,
   F,
-  // TODO: how can i make this work better? The "as const" method breaks typesafety a bit.
-  TMap<F> & { __typename: keyof I }
+  TMap<F> & { __typename: I[number]['name'] }
 > {
   public readonly kind = 'interface';
   public readonly fields: F;
@@ -34,10 +33,7 @@ export class InterfaceSemiBrick<
     super(params);
     this.fields = params.fields;
     this.implementors = params.implementors;
-
-    Object.values(this.implementors).forEach((sb) => {
-      sb.implements(this);
-    });
+    this.implementors.forEach((sb) => sb.implements(this));
 
     this.nullable = Brick.initNullable(this);
     this.nonNullable = Brick.initNonNullable(this);

@@ -52,7 +52,7 @@ const EmployeeInterface = fac.interface({
       args: {},
     },
   },
-  implementors: {},
+  implementors: [],
 });
 
 fieldResolverize({
@@ -91,12 +91,7 @@ const idInterface = fac.interface({
       args: {},
     },
   },
-  // TODO: how can i make sure that the brick's key is the same as its name?
-  implementors: {
-    EmployeeInterface,
-    Person,
-    Animal,
-  },
+  implementors: [EmployeeInterface, Person, Animal],
 });
 
 const firstNameInterface = fac.interface({
@@ -107,9 +102,7 @@ const firstNameInterface = fac.interface({
       args: {},
     },
   },
-  implementors: {
-    employeeInterface: EmployeeInterface,
-  },
+  implementors: [EmployeeInterface],
 });
 export const root = fac.outputObject({
   name: 'RootQuery',
@@ -192,6 +185,7 @@ queryResolverize({
     },
     bestFriend: async (_, __) => {
       return {
+        __typename: 'Animal' as const,
         id: 'yo',
         owner: {
           id: 'this is the id',
