@@ -25,7 +25,7 @@ interface ImplementorGraphQLConfig {
 
 export type AnyImplementorSemiBrickOf<
   F extends OutputFieldConfigMap
-> = ImplementorSemiBrick<any, any, F>;
+> = ImplementorSemiBrick<any, any, any, F>;
 
 type ExtendsFieldConfigMap<F extends OutputFieldConfigMap> = {
   [K in keyof F]: F[K];
@@ -42,15 +42,16 @@ export interface Implementors<F extends OutputFieldConfigMap> {
 
 export abstract class ImplementorSemiBrick<
   K extends ImplementorKind,
+  N extends string,
   SB_G extends GraphQLInterfaceType | GraphQLObjectType,
   F extends OutputFieldConfigMap,
   SB_R = TMap<F>
-> extends SemiBrick<K, SB_G, TMap<F>, SB_R> {
+> extends SemiBrick<K, N, SB_G, TMap<F>, SB_R> {
   public readonly fields: F;
   public readonly interfaces: InterfaceSemiBrickMap = {};
 
   constructor(params: {
-    name: string;
+    name: N;
     fields: F;
     semiBrickFactory: SemiBrickFactory;
   }) {
@@ -63,7 +64,7 @@ export abstract class ImplementorSemiBrick<
   // TODO: i need to flatten the entire tree of interfaces that this interface itself may be extending, and register all of them here.
 
   public implements = <I extends OutputFieldConfigMap>(
-    sb: InterfaceSemiBrick<I, any>,
+    sb: InterfaceSemiBrick<I, any, any>,
   ): void => {
     this.interfaces[sb.name] = sb;
   };

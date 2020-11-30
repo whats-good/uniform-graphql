@@ -10,7 +10,7 @@ import { AnyOutputSemiBrick, ListTypeOf } from './struct-types';
 
 export class OutputListSemiBrick<
   SB extends AnyOutputSemiBrick
-> extends SemiBrick<'outputlist', GraphQLList<any>, ListTypeOf<SB>> {
+> extends SemiBrick<'outputlist', string, GraphQLList<any>, ListTypeOf<SB>> {
   public readonly kind = 'outputlist';
   public readonly listOf: SB;
   public readonly nonNullable: NonNullableBrickOf<OutputListSemiBrick<SB>>;

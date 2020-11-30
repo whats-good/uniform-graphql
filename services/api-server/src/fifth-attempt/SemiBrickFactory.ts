@@ -76,19 +76,20 @@ export class SemiBrickFactory {
 
   // TODO: find a way to avoid doing this delayed execution
   scalar = () => ({
-    id: new ScalarSemiBrick<string | number>({
+    id: new ScalarSemiBrick<string | number, 'ID'>({
       semiBrickFactory: this,
       name: 'ID',
       semiGraphQLType: GraphQLID,
     }),
 
-    string: new ScalarSemiBrick<string>({
+    // TODO: see if you can avoid typing the Name param twice
+    string: new ScalarSemiBrick<string, 'String'>({
       semiBrickFactory: this,
       name: 'String',
       semiGraphQLType: GraphQLString,
     }),
 
-    float: new ScalarSemiBrick<number>({
+    float: new ScalarSemiBrick<number, 'Float'>({
       semiBrickFactory: this,
       name: 'Float',
       semiGraphQLType: GraphQLFloat,
@@ -100,18 +101,18 @@ export class SemiBrickFactory {
     //   semiGraphQLType: GraphQLInt,
     // }),
 
-    boolean: new ScalarSemiBrick<boolean>({
+    boolean: new ScalarSemiBrick<boolean, 'Boolean'>({
       semiBrickFactory: this,
       name: 'Boolean',
       semiGraphQLType: GraphQLBoolean,
     }),
   });
 
-  enum = <D extends StringKeys>(params: {
-    name: string;
+  enum = <D extends StringKeys, N extends string>(params: {
+    name: N;
     description?: string;
     keys: D;
-  }): EnumSemiBrick<D> => {
+  }): EnumSemiBrick<N, D> => {
     const sb = new EnumSemiBrick({
       semiBrickFactory: this,
       name: params.name,
@@ -133,10 +134,10 @@ export class SemiBrickFactory {
     return sb;
   };
 
-  inputObject = <F extends InputFieldConfigMap>(params: {
-    name: string;
+  inputObject = <F extends InputFieldConfigMap, N extends string>(params: {
+    name: N;
     fields: F;
-  }): InputObjectSemiBrick<F> => {
+  }): InputObjectSemiBrick<F, N> => {
     const sb = new InputObjectSemiBrick({
       semiBrickFactory: this,
       name: params.name,
@@ -148,12 +149,13 @@ export class SemiBrickFactory {
 
   interface = <
     F extends OutputFieldConfigMap,
-    I extends Implementors<F>
+    I extends Implementors<F>,
+    N extends string
   >(params: {
-    name: string;
+    name: N;
     fields: F;
     implementors: I;
-  }): InterfaceSemiBrick<F, I> => {
+  }): InterfaceSemiBrick<F, I, N> => {
     const sb = new InterfaceSemiBrick({
       semiBrickFactory: this,
       name: params.name,
@@ -176,10 +178,10 @@ export class SemiBrickFactory {
     return sb;
   };
 
-  outputObject = <F extends OutputFieldConfigMap>(params: {
-    name: string;
+  outputObject = <F extends OutputFieldConfigMap, N extends string>(params: {
+    name: N;
     fields: F;
-  }): OutputObjectSemiBrick<F> => {
+  }): OutputObjectSemiBrick<F, N> => {
     const sb = new OutputObjectSemiBrick({
       semiBrickFactory: this,
       name: params.name,
@@ -189,10 +191,10 @@ export class SemiBrickFactory {
     return sb;
   };
 
-  union = <SBS extends UnitableSemiBricks>(params: {
-    name: string;
+  union = <SBS extends UnitableSemiBricks, N extends string>(params: {
+    name: N;
     semiBricks: SBS;
-  }): UnionSemiBrick<SBS> => {
+  }): UnionSemiBrick<SBS, N> => {
     const sb = new UnionSemiBrick({
       semiBrickFactory: this,
       name: params.name,

@@ -57,11 +57,11 @@ export type TMap<M extends BrickMap<any>> = {
   [K in keyof M]: TypeOf<M[K]['brick']>;
 };
 
-export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
+export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any, any>;
 
 // We need this to guarantee uniqueness of registered interfaces
 export interface InterfaceSemiBrickMap {
-  [key: string]: InterfaceSemiBrick<any, any>;
+  [key: string]: InterfaceSemiBrick<any, any, any>;
 }
 
 export interface InputFieldConfig {

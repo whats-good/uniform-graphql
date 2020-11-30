@@ -10,16 +10,17 @@ import { SemiBrickFactory } from '../SemiBrickFactory';
 import { InputFieldConfigMap, TMap } from './struct-types';
 
 export class InputObjectSemiBrick<
-  F extends InputFieldConfigMap
-> extends SemiBrick<'inputobject', GraphQLInputObjectType, TMap<F>> {
+  F extends InputFieldConfigMap,
+  N extends string
+> extends SemiBrick<'inputobject', N, GraphQLInputObjectType, TMap<F>> {
   public readonly kind = 'inputobject' as const;
   public readonly fields: F;
-  public readonly nullable: NullableBrickOf<InputObjectSemiBrick<F>>;
-  public readonly nonNullable: NonNullableBrickOf<InputObjectSemiBrick<F>>;
+  public readonly nullable: NullableBrickOf<InputObjectSemiBrick<F, N>>;
+  public readonly nonNullable: NonNullableBrickOf<InputObjectSemiBrick<F, N>>;
 
   constructor(params: {
     semiBrickFactory: SemiBrickFactory;
-    name: string;
+    name: N;
     fields: F;
   }) {
     super(params);

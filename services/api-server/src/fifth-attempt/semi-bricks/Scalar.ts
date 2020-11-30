@@ -7,19 +7,20 @@ import {
 } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 
-export class ScalarSemiBrick<SB_A> extends SemiBrick<
+export class ScalarSemiBrick<SB_A, N extends string> extends SemiBrick<
   'scalar',
+  N,
   GraphQLScalarType,
   SB_A
 > {
   public readonly kind = 'scalar' as const;
   public readonly semiGraphQLType: GraphQLScalarType;
-  public readonly nullable: NullableBrickOf<ScalarSemiBrick<SB_A>>;
-  public readonly nonNullable: NonNullableBrickOf<ScalarSemiBrick<SB_A>>;
+  public readonly nullable: NullableBrickOf<ScalarSemiBrick<SB_A, N>>;
+  public readonly nonNullable: NonNullableBrickOf<ScalarSemiBrick<SB_A, N>>;
 
   constructor(params: {
     semiBrickFactory: SemiBrickFactory;
-    name: string;
+    name: N;
     semiGraphQLType: GraphQLScalarType;
   }) {
     super(params);

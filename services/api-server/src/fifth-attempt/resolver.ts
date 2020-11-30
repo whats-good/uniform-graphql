@@ -46,7 +46,7 @@ export type ResolverFnOf<T extends OutputFieldConfigMap, K extends keyof T> = (
 ) => ResolverReturnTypeOf<T[K]['brick']>;
 
 export const fieldResolverize = <F extends OutputFieldConfigMap>(params: {
-  semiBrick: OutputObjectSemiBrick<F>;
+  semiBrick: OutputObjectSemiBrick<F, any>;
   resolvers: Partial<FieldResolversOf<F>>;
 }): void => {
   Object.entries(params.resolvers).forEach(([key, value]) => {
@@ -55,7 +55,7 @@ export const fieldResolverize = <F extends OutputFieldConfigMap>(params: {
 };
 
 export const queryResolverize = <F extends OutputFieldConfigMap>(params: {
-  semiBrick: OutputObjectSemiBrick<F>;
+  semiBrick: OutputObjectSemiBrick<F, any>;
   resolvers: QueryResolversOf<F>;
 }): void => {
   // TODO: make this DRYer

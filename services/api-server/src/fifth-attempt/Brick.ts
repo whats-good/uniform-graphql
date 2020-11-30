@@ -13,6 +13,7 @@ export type Kind =
 
 export abstract class SemiBrick<
   K extends Kind,
+  N extends string,
   SB_G extends GraphQLNullableType,
   // TODO: make sure this cant be null or undefined
   SB_A,
@@ -21,13 +22,15 @@ export abstract class SemiBrick<
   SB_G!: SB_G; // the semi-graphql type
   SB_A!: SB_A; // the actual static type
   SB_R!: SB_R; // the resolve type. It will be almost always equal to the static type, but not always.
-  readonly name: string;
+  readonly name: N;
   readonly semiBrickFactory: SemiBrickFactory;
   abstract kind: K;
   abstract getFreshSemiGraphQLType(): SB_G;
 
-  abstract readonly nullable: NullableBrickOf<SemiBrick<K, SB_G, SB_A>>;
-  abstract readonly nonNullable: NonNullableBrickOf<SemiBrick<K, SB_G, SB_A>>;
+  abstract readonly nullable: NullableBrickOf<SemiBrick<K, N, SB_G, SB_A>>;
+  abstract readonly nonNullable: NonNullableBrickOf<
+    SemiBrick<K, N, SB_G, SB_A>
+  >;
   // TODO: find a way for this "resolveAs" method to handle promises and thunks
 
   // public resolveAs = async (x: SB_A) => {
@@ -45,15 +48,16 @@ export abstract class SemiBrick<
     );
   };
 
-  constructor(params: { name: string; semiBrickFactory: SemiBrickFactory }) {
+  constructor(params: { name: N; semiBrickFactory: SemiBrickFactory }) {
     this.name = params.name;
     this.semiBrickFactory = params.semiBrickFactory;
   }
 }
 
-export type AnySemiBrick<K extends Kind = any> = SemiBrick<K, any, any>;
+export type AnySemiBrick<K extends Kind = any> = SemiBrick<K, any, any, any>;
 export type AnyBrick<K extends Kind = any> = Brick<
   K,
+  any,
   any,
   AnySemiBrick<K>,
   any,
@@ -62,6 +66,10 @@ export type AnyBrick<K extends Kind = any> = Brick<
 interface Kinded {
   kind: Kind;
 }
+interface Named {
+  name: string;
+}
+export type NameOf<T extends Named> = T['name'];
 export type KindOf<T extends Kinded> = T['kind'];
 export type SemiTypeOf<SB extends AnySemiBrick> = SB['SB_A'];
 export type SemiGraphQLTypeOf<SB extends AnySemiBrick> = ReturnType<
@@ -72,6 +80,7 @@ export type GraphQLTypeOf<B extends AnyBrick> = B['B_G'];
 
 export type NullableBrickOf<SB extends AnySemiBrick> = Brick<
   KindOf<SB>,
+  SB['name'],
   SemiGraphQLTypeOf<SB>,
   SB,
   SemiTypeOf<SB> | null | undefined,
@@ -80,6 +89,7 @@ export type NullableBrickOf<SB extends AnySemiBrick> = Brick<
 
 export type NonNullableBrickOf<SB extends AnySemiBrick> = Brick<
   KindOf<SB>,
+  SB['name'],
   GraphQLNonNull<any>,
   SB,
   SemiTypeOf<SB>,
@@ -88,6 +98,7 @@ export type NonNullableBrickOf<SB extends AnySemiBrick> = Brick<
 
 export class Brick<
   K extends Kind,
+  N extends SB['name'],
   B_G extends GraphQLType,
   SB extends AnySemiBrick<K>,
   B_A,
@@ -97,13 +108,13 @@ export class Brick<
   B_G!: B_G;
   B_R!: B_R;
 
-  public readonly name: string;
+  public readonly name: N;
   public readonly kind: K;
   public readonly semiBrick: SB;
   public readonly getGraphQLType: () => B_G;
 
   constructor(params: {
-    name: string;
+    name: SB['name'];
     kind: K;
     getGraphQLType: () => B_G;
     semiBrick: SB;

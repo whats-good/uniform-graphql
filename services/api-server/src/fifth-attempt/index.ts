@@ -1,7 +1,6 @@
 // import { TypeOf } from './Brick';
 import { fieldResolverize, queryResolverize } from './resolver';
 import { SemiBrickFactory } from './SemiBrickFactory';
-import { GraphQLObjectType, GraphQLNullableType } from 'graphql';
 export const fac = new SemiBrickFactory();
 
 const membership = fac.enum({

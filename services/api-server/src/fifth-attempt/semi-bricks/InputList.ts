@@ -11,6 +11,7 @@ import { AnyInputSemiBrick, ListTypeOf } from './struct-types';
 // TODO: combine the input and output lists into one super class, and then specialize.
 export class InputListSemiBrick<SB extends AnyInputSemiBrick> extends SemiBrick<
   'inputlist',
+  string, // TODO: differentiate between named and non-named types so that you can avoid unnecessary generics
   GraphQLList<any>,
   ListTypeOf<SB>
 > {

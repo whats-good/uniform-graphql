@@ -17,20 +17,19 @@ export type UnitableSemiBricks = [
 
 type UtdTypes<T extends UnitableSemiBricks> = SemiTypeOf<T[number]>;
 
-export class UnionSemiBrick<SBS extends UnitableSemiBricks> extends SemiBrick<
-  'union',
-  GraphQLUnionType,
-  UtdTypes<SBS>
-> {
+export class UnionSemiBrick<
+  SBS extends UnitableSemiBricks,
+  N extends string
+> extends SemiBrick<'union', N, GraphQLUnionType, UtdTypes<SBS>> {
   public readonly kind = 'union' as const;
   public readonly semiBricks: SBS;
 
-  public readonly nullable: NullableBrickOf<UnionSemiBrick<SBS>>;
-  public readonly nonNullable: NonNullableBrickOf<UnionSemiBrick<SBS>>;
+  public readonly nullable: NullableBrickOf<UnionSemiBrick<SBS, N>>;
+  public readonly nonNullable: NonNullableBrickOf<UnionSemiBrick<SBS, N>>;
 
   public constructor(params: {
     semiBrickFactory: SemiBrickFactory;
-    name: string;
+    name: N;
     semiBricks: SBS;
   }) {
     super(params);

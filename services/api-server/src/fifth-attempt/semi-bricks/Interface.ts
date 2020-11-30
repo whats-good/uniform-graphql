@@ -8,26 +8,27 @@ import { OutputFieldConfigMap, TMap } from './struct-types';
 
 export class InterfaceSemiBrick<
   F extends OutputFieldConfigMap,
-  I extends Implementors<F>
+  I extends Implementors<F>,
+  N extends string
 > extends ImplementorSemiBrick<
   'interface',
+  N,
   GraphQLInterfaceType,
   F,
   // TODO: how can i make this work better? The "as const" method breaks typesafety a bit.
-  // I'll probably need to genericize the names now
   TMap<F> & { __typename: keyof I }
 > {
   public readonly kind = 'interface';
   public readonly fields: F;
   public readonly implementors: I;
 
-  public readonly nullable: NullableBrickOf<InterfaceSemiBrick<F, I>>;
-  public readonly nonNullable: NonNullableBrickOf<InterfaceSemiBrick<F, I>>;
+  public readonly nullable: NullableBrickOf<InterfaceSemiBrick<F, I, N>>;
+  public readonly nonNullable: NonNullableBrickOf<InterfaceSemiBrick<F, I, N>>;
 
   constructor(params: {
-    name: string;
+    name: N;
     fields: F;
-    implementors: InterfaceSemiBrick<F, I>['implementors'];
+    implementors: InterfaceSemiBrick<F, I, N>['implementors'];
     semiBrickFactory: SemiBrickFactory;
   }) {
     super(params);
