@@ -10,6 +10,7 @@ import {
 } from 'graphql';
 import { AnySemiBrick, SemiGraphQLTypeOf } from './Brick';
 import { EnumSemiBrick, StringKeys } from './semi-bricks/Enum';
+import { Implementors } from './semi-bricks/Implementor';
 import { InputListSemiBrick } from './semi-bricks/InputList';
 import { InputObjectSemiBrick } from './semi-bricks/InputObject';
 import { InterfaceSemiBrick } from './semi-bricks/Interface';
@@ -145,11 +146,14 @@ export class SemiBrickFactory {
     return sb;
   };
 
-  interface = <F extends OutputFieldConfigMap>(params: {
+  interface = <
+    F extends OutputFieldConfigMap,
+    I extends Implementors<F>
+  >(params: {
     name: string;
     fields: F;
-    implementors: InterfaceSemiBrick<F>['implementors'];
-  }): InterfaceSemiBrick<F> => {
+    implementors: I;
+  }): InterfaceSemiBrick<F, I> => {
     const sb = new InterfaceSemiBrick({
       semiBrickFactory: this,
       name: params.name,

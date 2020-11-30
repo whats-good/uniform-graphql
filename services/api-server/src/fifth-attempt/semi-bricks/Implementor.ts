@@ -63,7 +63,7 @@ export abstract class ImplementorSemiBrick<
   // TODO: i need to flatten the entire tree of interfaces that this interface itself may be extending, and register all of them here.
 
   public implements = <I extends OutputFieldConfigMap>(
-    sb: InterfaceSemiBrick<I>,
+    sb: InterfaceSemiBrick<I, any>,
   ): void => {
     this.interfaces[sb.name] = sb;
   };

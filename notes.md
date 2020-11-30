@@ -85,3 +85,4 @@
 - Find a way to force the dev to return the \_\_typename if the resolved field is an interface or a union
 - if all fields are deprecated, the schema will fail to build, forever.
 - TMap makes it harder to reason with resolved union types.
+- Look into unique symbols to help the compiler understand that each semibrick is unique
