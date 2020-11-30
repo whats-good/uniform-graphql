@@ -1,24 +1,26 @@
 import { GraphQLInterfaceType } from 'graphql';
-import _ from 'lodash';
 import { Brick, NullableBrickOf, NonNullableBrickOf } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { ImplementorSemiBrick, Implementors } from './Implementor';
-import { OutputFieldConfigMap } from './struct-types';
+import { OutputFieldConfigMap, TMap } from './struct-types';
 
 // TODO: unions and interfaces will both need a "resolveType" field
 
-// TODO: create a shared interface for OutputObject and Interface semibricks, since they can both implement interfaces
 export class InterfaceSemiBrick<
   F extends OutputFieldConfigMap,
   I extends Implementors<F>
-> extends ImplementorSemiBrick<'interface', GraphQLInterfaceType, F> {
-  public readonly kind = 'interface' as const;
+> extends ImplementorSemiBrick<
+  'interface',
+  GraphQLInterfaceType,
+  F,
+  TMap<F> & { __typename: string }
+> {
+  public readonly kind = 'interface';
   public readonly fields: F;
   public readonly implementors: I;
 
   public readonly nullable: NullableBrickOf<InterfaceSemiBrick<F, I>>;
   public readonly nonNullable: NonNullableBrickOf<InterfaceSemiBrick<F, I>>;
-  // TODO: add interfaces array here
 
   constructor(params: {
     name: string;

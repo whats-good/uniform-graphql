@@ -43,9 +43,9 @@ export interface Implementors<F extends OutputFieldConfigMap> {
 export abstract class ImplementorSemiBrick<
   K extends ImplementorKind,
   SB_G extends GraphQLInterfaceType | GraphQLObjectType,
-  F extends OutputFieldConfigMap
-> extends SemiBrick<K, SB_G, TMap<F>> {
-  abstract readonly kind: K;
+  F extends OutputFieldConfigMap,
+  SB_R = TMap<F>
+> extends SemiBrick<K, SB_G, TMap<F>, SB_R> {
   public readonly fields: F;
   public readonly interfaces: InterfaceSemiBrickMap = {};
 

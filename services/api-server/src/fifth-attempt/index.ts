@@ -1,7 +1,7 @@
 // import { TypeOf } from './Brick';
 import { fieldResolverize, queryResolverize } from './resolver';
 import { SemiBrickFactory } from './SemiBrickFactory';
-
+import { GraphQLObjectType, GraphQLNullableType } from 'graphql';
 export const fac = new SemiBrickFactory();
 
 const membership = fac.enum({
@@ -115,6 +115,10 @@ const firstNameInterface = fac.interface({
 export const root = fac.outputObject({
   name: 'RootQuery',
   fields: {
+    idInterface: {
+      brick: idInterface.nullable,
+      args: {},
+    },
     something: {
       brick: fac.scalar().string.nullable,
       args: {
@@ -161,6 +165,12 @@ export const root = fac.outputObject({
 queryResolverize({
   semiBrick: root,
   resolvers: {
+    idInterface: (_, args, ctx) => {
+      return {
+        __typename: 'x',
+        id: 'yo',
+      };
+    },
     person: (_, args, ctx, info) => {
       console.log(info);
       return {

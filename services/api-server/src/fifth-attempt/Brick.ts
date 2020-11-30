@@ -14,10 +14,13 @@ export type Kind =
 export abstract class SemiBrick<
   K extends Kind,
   SB_G extends GraphQLNullableType,
-  SB_A // TODO: make sure this cant be null or undefined
+  // TODO: make sure this cant be null or undefined
+  SB_A,
+  SB_R = SB_A
 > {
-  SB_G!: SB_G;
-  SB_A!: SB_A;
+  SB_G!: SB_G; // the semi-graphql type
+  SB_A!: SB_A; // the actual static type
+  SB_R!: SB_R; // the resolve type. It will be almost always equal to the static type, but not always.
   readonly name: string;
   readonly semiBrickFactory: SemiBrickFactory;
   abstract kind: K;
@@ -53,6 +56,7 @@ export type AnyBrick<K extends Kind = any> = Brick<
   K,
   any,
   AnySemiBrick<K>,
+  any,
   any
 >;
 interface Kinded {
@@ -70,24 +74,29 @@ export type NullableBrickOf<SB extends AnySemiBrick> = Brick<
   KindOf<SB>,
   SemiGraphQLTypeOf<SB>,
   SB,
-  SemiTypeOf<SB> | null | undefined
+  SemiTypeOf<SB> | null | undefined,
+  SB['SB_R'] | null | undefined
 >;
 
 export type NonNullableBrickOf<SB extends AnySemiBrick> = Brick<
   KindOf<SB>,
   GraphQLNonNull<any>,
   SB,
-  SemiTypeOf<SB>
+  SemiTypeOf<SB>,
+  SB['SB_R']
 >;
 
 export class Brick<
   K extends Kind,
   B_G extends GraphQLType,
   SB extends AnySemiBrick<K>,
-  B_A
+  B_A,
+  B_R
 > {
   B_A!: B_A;
   B_G!: B_G;
+  B_R!: B_R;
+
   public readonly name: string;
   public readonly kind: K;
   public readonly semiBrick: SB;

@@ -12,7 +12,7 @@ import {
 
 type ResolverReturnType<T> = T | Promise<T>; // TODO: add thunk support later
 type ResolverReturnTypeOf<B extends AnyOutputBrick> = ResolverReturnType<
-  TypeOf<B>
+  B['B_R']
 >;
 
 // TODO: add Contextlater
