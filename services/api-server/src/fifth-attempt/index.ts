@@ -28,7 +28,7 @@ export const someInput = fac.inputObject({
   },
 });
 
-export const person = fac.outputObject({
+export const Person = fac.outputObject({
   name: 'Person',
   fields: {
     id: {
@@ -41,7 +41,7 @@ export const person = fac.outputObject({
     },
   },
 });
-const employeeInterface = fac.interface({
+const EmployeeInterface = fac.interface({
   name: 'EmployeeInterface',
   fields: {
     firstName: {
@@ -57,7 +57,7 @@ const employeeInterface = fac.interface({
 });
 
 fieldResolverize({
-  semiBrick: person,
+  semiBrick: Person,
   resolvers: {
     id: (root, args) => {
       return root.id;
@@ -65,7 +65,7 @@ fieldResolverize({
   },
 });
 
-export const animal = fac.outputObject({
+export const Animal = fac.outputObject({
   name: 'Animal',
   fields: {
     id: {
@@ -73,7 +73,7 @@ export const animal = fac.outputObject({
       args: {},
     },
     owner: {
-      brick: person.nullable,
+      brick: Person.nullable,
       args: {},
     },
   },
@@ -81,7 +81,7 @@ export const animal = fac.outputObject({
 
 export const bestFriend = fac.union({
   name: 'BestFriend',
-  semiBricks: [person, animal],
+  semiBricks: [Person, Animal],
 });
 
 const idInterface = fac.interface({
@@ -94,9 +94,9 @@ const idInterface = fac.interface({
   },
   // TODO: how can i make sure that the brick's key is the same as its name?
   implementors: {
-    employeeInterface,
-    person,
-    animal,
+    EmployeeInterface,
+    Person,
+    Animal,
   },
 });
 
@@ -109,7 +109,7 @@ const firstNameInterface = fac.interface({
     },
   },
   implementors: {
-    employeeInterface,
+    employeeInterface: EmployeeInterface,
   },
 });
 export const root = fac.outputObject({
@@ -128,11 +128,11 @@ export const root = fac.outputObject({
       },
     },
     animal: {
-      brick: animal.nonNullable,
+      brick: Animal.nonNullable,
       args: {},
     },
     person: {
-      brick: person.nonNullable,
+      brick: Person.nonNullable,
       args: {
         flag: {
           brick: fac.scalar().boolean.nonNullable,
@@ -145,7 +145,7 @@ export const root = fac.outputObject({
     },
     people: {
       brick: fac.outputList({
-        listOf: person,
+        listOf: Person,
       }).nonNullable,
       args: {
         numPeople: {
@@ -167,8 +167,9 @@ queryResolverize({
   resolvers: {
     idInterface: (_, args, ctx) => {
       return {
-        __typename: 'x',
+        __typename: 'Person' as const,
         id: 'yo',
+        firstName: 'kazan',
       };
     },
     person: (_, args, ctx, info) => {

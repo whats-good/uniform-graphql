@@ -13,7 +13,9 @@ export class InterfaceSemiBrick<
   'interface',
   GraphQLInterfaceType,
   F,
-  TMap<F> & { __typename: string }
+  // TODO: how can i make this work better? The "as const" method breaks typesafety a bit.
+  // I'll probably need to genericize the names now
+  TMap<F> & { __typename: keyof I }
 > {
   public readonly kind = 'interface';
   public readonly fields: F;
