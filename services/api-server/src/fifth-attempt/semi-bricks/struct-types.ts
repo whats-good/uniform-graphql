@@ -61,7 +61,7 @@ export type AnyOutputObjectSemiBrick = OutputObjectSemiBrick<any>;
 
 // We need this to guarantee uniqueness of registered interfaces
 export interface InterfaceSemiBrickMap {
-  [key: string]: InterfaceSemiBrick<any>;
+  [key: string]: InterfaceSemiBrick<any, any>;
 }
 
 export interface InputFieldConfig {

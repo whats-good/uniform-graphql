@@ -23,19 +23,8 @@ export abstract class SemiBrick<
   abstract kind: K;
   abstract getFreshSemiGraphQLType(): SB_G;
 
-  abstract readonly nullable: Brick<
-    K,
-    SB_G,
-    SemiBrick<K, SB_G, SB_A>,
-    SB_A | null | undefined // TODO: consider adding void here, to help with non-returning resolvers
-  >;
-  abstract readonly nonNullable: Brick<
-    K,
-    GraphQLNonNull<any>,
-    SemiBrick<K, SB_G, SB_A>,
-    SB_A
-  >;
-
+  abstract readonly nullable: NullableBrickOf<SemiBrick<K, SB_G, SB_A>>;
+  abstract readonly nonNullable: NonNullableBrickOf<SemiBrick<K, SB_G, SB_A>>;
   // TODO: find a way for this "resolveAs" method to handle promises and thunks
 
   // public resolveAs = async (x: SB_A) => {
