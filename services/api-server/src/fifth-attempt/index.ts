@@ -1,4 +1,3 @@
-// import { TypeOf } from './Brick';
 import { fieldResolverize, queryResolverize } from './resolver';
 import { SemiBrickFactory } from './SemiBrickFactory';
 export const fac = new SemiBrickFactory();
@@ -7,8 +6,6 @@ const membership = fac.enum({
   name: 'Membership',
   keys: { free: null, paid: null, enterprise: null }, // TODO: enable the dev to give values to the values too.
 });
-
-// const a: TypeOf<typeof membership['nullable']> = 'enterprise';
 
 export const someInput = fac.inputObject({
   name: 'SomeInput',
@@ -165,7 +162,6 @@ queryResolverize({
       };
     },
     person: (_, args, ctx, info) => {
-      console.log(info);
       return {
         firstName: 'kerem',
         id: 1,

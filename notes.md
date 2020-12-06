@@ -87,3 +87,5 @@
 - TMap makes it harder to reason with resolved union types.
 - Look into unique symbols to help the compiler understand that each semibrick is unique
 - Create a base abstract class for output types, so that you can take out the "R" field from the input types
+- current TODO: Enable the user to start using a custom context
+- second TODO: Pass the brick into the resolver function, and behind the scenes convert the function into the actual resolve function. This would mean that the developers wouldnt be coding the actual resolvers, but the resolver factories. This would need to take promises and thunks into consideration too.

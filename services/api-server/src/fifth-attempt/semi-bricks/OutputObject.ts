@@ -1,6 +1,6 @@
 import { GraphQLObjectType } from 'graphql';
 import { Brick, NonNullableBrickOf, NullableBrickOf } from '../Brick';
-import { ResolverFnOf as AnyResolverFnOf } from '../resolver';
+import { FieldResolverOf } from '../resolver';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { ImplementorSemiBrick } from './Implementor';
 import { OutputFieldConfigMap, InterfaceSemiBrickMap } from './struct-types';
@@ -33,7 +33,7 @@ export class OutputObjectSemiBrick<
 
   public setFieldResolver = <K extends keyof F>(
     key: K,
-    resolve: AnyResolverFnOf<F, K>,
+    resolve: FieldResolverOf<F, K>,
   ): void => {
     this.fields[key].resolve = resolve;
   };
