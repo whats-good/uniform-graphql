@@ -45,7 +45,7 @@ export abstract class ImplementorSemiBrick<
   SB_R = TMap<F>
 > extends SemiBrick<K, N, SB_G, TMap<F>, SB_R> {
   public readonly fields: F;
-  public readonly interfaces: InterfaceSemiBrickMap = {};
+  private readonly shallowInterfaces: InterfaceSemiBrickMap = {};
 
   constructor(params: {
     name: N;
@@ -63,13 +63,27 @@ export abstract class ImplementorSemiBrick<
   public implements = <I extends OutputFieldConfigMap>(
     sb: InterfaceSemiBrick<I, any, any>,
   ): void => {
-    this.interfaces[sb.name] = sb;
+    this.shallowInterfaces[sb.name] = sb;
+  };
+
+  public getFlattenedInterfaces = (): InterfaceSemiBrickMap => {
+    const interfacesMap: InterfaceSemiBrickMap = {};
+    Object.entries(this.shallowInterfaces).forEach(([key, value]) => {
+      const curFlattenedInterfaces = value.getFlattenedInterfaces();
+      Object.entries(curFlattenedInterfaces).forEach(
+        ([innerKey, innerValue]) => {
+          interfacesMap[innerKey] = innerValue;
+        },
+      );
+      interfacesMap[key] = value;
+    });
+    return interfacesMap;
   };
 
   protected getGraphQLTypeConstructor = (): ImplementorGraphQLConfig => {
     return {
       name: this.name,
-      interfaces: Object.values(this.interfaces).map((sb) =>
+      interfaces: Object.values(this.getFlattenedInterfaces()).map((sb) =>
         sb.getSemiGraphQLType(),
       ),
       fields: _.mapValues(this.fields, (field) => {

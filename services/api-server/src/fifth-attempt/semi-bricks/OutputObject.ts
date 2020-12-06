@@ -15,7 +15,7 @@ export class OutputObjectSemiBrick<
 > extends ImplementorSemiBrick<'outputobject', N, GraphQLObjectType, F> {
   public readonly kind = 'outputobject' as const;
   public readonly fields: F;
-  public readonly interfaces: InterfaceSemiBrickMap = {};
+  public readonly flatInterfaces: InterfaceSemiBrickMap = {};
 
   public readonly nullable: NullableBrickOf<OutputObjectSemiBrick<F, N>>;
   public readonly nonNullable: NonNullableBrickOf<OutputObjectSemiBrick<F, N>>;

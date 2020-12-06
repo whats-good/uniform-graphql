@@ -48,7 +48,7 @@ const EmployeeInterface = fac.interface({
       args: {},
     },
   },
-  implementors: [],
+  implementors: [Person],
 });
 
 Person.fieldResolverize({
@@ -101,8 +101,8 @@ const firstNameInterface = fac.interface({
 export const root = fac.outputObject({
   name: 'RootQuery',
   fields: {
-    idInterface: {
-      brick: idInterface.nullable,
+    employeeInterface: {
+      brick: EmployeeInterface.nullable,
       args: {},
     },
     something: {
@@ -149,7 +149,7 @@ export const root = fac.outputObject({
 
 // TODO: see if we can do the rootquery resolver without creating the root first.
 root.queryResolverize({
-  idInterface: (_, args, ctx) => {
+  employeeInterface: (_, args, ctx) => {
     return {
       __typename: 'Person' as const,
       id: 'yo',
