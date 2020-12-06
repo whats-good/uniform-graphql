@@ -1,9 +1,13 @@
 import { GraphQLObjectType } from 'graphql';
 import { Brick, NonNullableBrickOf, NullableBrickOf } from '../Brick';
-import { FieldResolversOf, RootQueryResolversOf } from '../resolver';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { ImplementorSemiBrick } from './Implementor';
-import { OutputFieldConfigMap, InterfaceSemiBrickMap } from './struct-types';
+import {
+  OutputFieldConfigMap,
+  InterfaceSemiBrickMap,
+  FieldResolversOf,
+  RootQueryResolversOf,
+} from './struct-types';
 
 export class OutputObjectSemiBrick<
   F extends OutputFieldConfigMap,
