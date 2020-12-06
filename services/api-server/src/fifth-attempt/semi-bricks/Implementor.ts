@@ -86,7 +86,7 @@ export abstract class ImplementorSemiBrick<
           description: field.description,
           deprecationReason: field.deprecationReason,
           args: graphQLArgs,
-          resolve: field.resolve as any, // TODO: consider not doing any here
+          resolve: field.resolve,
         };
       }),
     };

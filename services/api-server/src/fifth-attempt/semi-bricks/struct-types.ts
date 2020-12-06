@@ -37,14 +37,14 @@ export type AnyOutputSemiBrick = AnySemiBrick<OutputKind>;
 // TODO: add context stuff later
 export interface OutputFieldConfig<
   B extends AnyOutputBrick,
-  A extends OutputFieldConfigArgumentMap
+  A extends OutputFieldConfigArgumentMap,
+  R extends unknown = void
 > {
   readonly brick: B;
   readonly args: A;
   readonly description?: string;
   readonly deprecationReason?: string;
-  resolve?: unknown;
-  // TODO: consider refining this
+  resolve?: ResolverFnOfBrickAndArgs<B, A, R>;
 }
 
 export interface OutputFieldConfigMap extends BrickMap<AnyOutputBrick> {
