@@ -42,6 +42,7 @@ export class OutputObjectSemiBrick<
     });
   };
 
+  // TODO: remove
   public queryResolverize = (resolvers: RootQueryResolversOf<F>): void => {
     Object.entries(resolvers).forEach(([key, value]) => {
       this.fields[key].resolve = value;

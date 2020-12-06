@@ -93,19 +93,29 @@ type ArgTMap<T extends OutputFieldConfigArgumentMap> = {
   [K in keyof T]: TypeOf<T[K]['brick']>;
 };
 
-type ResolverFnOf<T extends OutputFieldConfigMap, K extends keyof T, R> = (
+type ResolverFnOfBrickAndArgs<
+  B extends AnyOutputBrick,
+  A extends OutputFieldConfigArgumentMap,
+  R
+> = (
   root: R,
-  args: ArgTMap<T[K]['args']>,
+  args: ArgTMap<A>,
   ctx: any,
   info: GraphQLResolveInfo,
-) => ResolverReturnTypeOf<T[K]['brick']>;
+) => ResolverReturnTypeOf<B>;
+
+type ResolverFnOfConfigMap<
+  T extends OutputFieldConfigMap,
+  K extends keyof T,
+  R
+> = ResolverFnOfBrickAndArgs<T[K]['brick'], T[K]['args'], R>;
 
 // TODO: later on, enable the root to be something else, but always force a return on the field.
 export type FieldResolversOf<T extends OutputFieldConfigMap> = {
-  [K in keyof T]: ResolverFnOf<T, K, TMap<T>>;
+  [K in keyof T]: ResolverFnOfConfigMap<T, K, TMap<T>>;
 };
 
 // TODO: remove this one and integrate it directly into the factory
 export type RootQueryResolversOf<T extends OutputFieldConfigMap> = {
-  [K in keyof T]: ResolverFnOf<T, K, undefined>;
+  [K in keyof T]: ResolverFnOfConfigMap<T, K, undefined>;
 };
