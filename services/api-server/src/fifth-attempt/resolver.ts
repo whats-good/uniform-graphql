@@ -33,6 +33,6 @@ export type FieldResolversOf<T extends OutputFieldConfigMap> = {
 };
 
 // TODO: remove this one and integrate it directly into the factory
-export type QueryResolversOf<T extends OutputFieldConfigMap> = {
+export type RootQueryResolversOf<T extends OutputFieldConfigMap> = {
   [K in keyof T]: ResolverFnOf<T, K, undefined>;
 };

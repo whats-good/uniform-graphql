@@ -1,6 +1,6 @@
 import { GraphQLObjectType } from 'graphql';
 import { Brick, NonNullableBrickOf, NullableBrickOf } from '../Brick';
-import { FieldResolversOf, QueryResolversOf } from '../resolver';
+import { FieldResolversOf, RootQueryResolversOf } from '../resolver';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { ImplementorSemiBrick } from './Implementor';
 import { OutputFieldConfigMap, InterfaceSemiBrickMap } from './struct-types';
@@ -31,13 +31,14 @@ export class OutputObjectSemiBrick<
     return new GraphQLObjectType(this.getGraphQLTypeConstructor());
   };
 
+  // TODO: maybe i should separate root resolvers from field resolvers?
   public fieldResolverize = (resolvers: Partial<FieldResolversOf<F>>): void => {
     Object.entries(resolvers).forEach(([key, value]) => {
       this.fields[key].resolve = value;
     });
   };
 
-  public queryResolverize = (resolvers: QueryResolversOf<F>): void => {
+  public queryResolverize = (resolvers: RootQueryResolversOf<F>): void => {
     Object.entries(resolvers).forEach(([key, value]) => {
       this.fields[key].resolve = value;
     });
