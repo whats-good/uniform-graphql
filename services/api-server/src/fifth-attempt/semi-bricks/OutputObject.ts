@@ -1,6 +1,6 @@
 import { GraphQLObjectType } from 'graphql';
 import { Brick, NonNullableBrickOf, NullableBrickOf } from '../Brick';
-import { FieldResolverOf } from '../resolver';
+import { FieldResolversOf, QueryResolversOf } from '../resolver';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { ImplementorSemiBrick } from './Implementor';
 import { OutputFieldConfigMap, InterfaceSemiBrickMap } from './struct-types';
@@ -31,10 +31,15 @@ export class OutputObjectSemiBrick<
     return new GraphQLObjectType(this.getGraphQLTypeConstructor());
   };
 
-  public setFieldResolver = <K extends keyof F>(
-    key: K,
-    resolve: FieldResolverOf<F, K>,
-  ): void => {
-    this.fields[key].resolve = resolve;
+  public fieldResolverize = (resolvers: Partial<FieldResolversOf<F>>): void => {
+    Object.entries(resolvers).forEach(([key, value]) => {
+      this.fields[key].resolve = value;
+    });
+  };
+
+  public queryResolverize = (resolvers: QueryResolversOf<F>): void => {
+    Object.entries(resolvers).forEach(([key, value]) => {
+      this.fields[key].resolve = value;
+    });
   };
 }

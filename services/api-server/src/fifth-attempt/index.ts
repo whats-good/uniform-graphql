@@ -1,4 +1,3 @@
-import { fieldResolverize, queryResolverize } from './resolver';
 import { SemiBrickFactory } from './SemiBrickFactory';
 export const fac = new SemiBrickFactory();
 
@@ -52,12 +51,9 @@ const EmployeeInterface = fac.interface({
   implementors: [],
 });
 
-fieldResolverize({
-  semiBrick: Person,
-  resolvers: {
-    id: (root, args) => {
-      return root.id;
-    },
+Person.fieldResolverize({
+  id: (root, args) => {
+    return root.id;
   },
 });
 
@@ -101,6 +97,7 @@ const firstNameInterface = fac.interface({
   },
   implementors: [EmployeeInterface],
 });
+
 export const root = fac.outputObject({
   name: 'RootQuery',
   fields: {
@@ -151,56 +148,53 @@ export const root = fac.outputObject({
 });
 
 // TODO: see if we can do the rootquery resolver without creating the root first.
-queryResolverize({
-  semiBrick: root,
-  resolvers: {
-    idInterface: (_, args, ctx) => {
-      return {
-        __typename: 'Person' as const,
-        id: 'yo',
-        firstName: 'kazan',
-      };
-    },
-    person: (_, args, ctx, info) => {
-      return {
+root.queryResolverize({
+  idInterface: (_, args, ctx) => {
+    return {
+      __typename: 'Person' as const,
+      id: 'yo',
+      firstName: 'kazan',
+    };
+  },
+  person: (_, args, ctx, info) => {
+    return {
+      firstName: 'kerem',
+      id: 1,
+    };
+  },
+  animal: (_, __) => {
+    return {
+      id: 'yo',
+      owner: {
         firstName: 'kerem',
-        id: 1,
-      };
-    },
-    animal: (_, __) => {
-      return {
-        id: 'yo',
-        owner: {
-          firstName: 'kerem',
-          id: 'kazan',
-        },
-      };
-    },
-    something: (_, args) => {
-      return 'yo';
-    },
-    bestFriend: async (_, __) => {
-      return {
-        __typename: 'Animal' as const,
-        id: 'yo',
-        owner: {
-          id: 'this is the id',
-          firstName: 'this is the name',
-        },
-      };
-    },
-    // // TODO: make the brick to resolve somehow accessible. something like via the info param.
-    people: (root, args) => {
-      // TODO: dont use any here
-      const toReturn: any[] = [];
-      const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
-      for (let i = 0; i < args.numPeople; i++) {
-        toReturn.push({
-          firstName: `some-name-${i}-${m}`,
-          id: i,
-        });
-      }
-      return toReturn;
-    },
+        id: 'kazan',
+      },
+    };
+  },
+  something: (_, args) => {
+    return 'yo';
+  },
+  bestFriend: async (_, __) => {
+    return {
+      __typename: 'Animal' as const,
+      id: 'yo',
+      owner: {
+        id: 'this is the id',
+        firstName: 'this is the name',
+      },
+    };
+  },
+  // // TODO: make the brick to resolve somehow accessible. something like via the info param.
+  people: (root, args) => {
+    // TODO: dont use any here
+    const toReturn: any[] = [];
+    const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
+    for (let i = 0; i < args.numPeople; i++) {
+      toReturn.push({
+        firstName: `some-name-${i}-${m}`,
+        id: i,
+      });
+    }
+    return toReturn;
   },
 });
