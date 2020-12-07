@@ -1,13 +1,14 @@
 import { GraphQLInterfaceType } from 'graphql';
 import { Brick, NullableBrickOf, NonNullableBrickOf } from '../Brick';
+import { OutputFieldMap } from '../OutputField';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { ImplementorSemiBrick, Implementors } from './Implementor';
-import { OutputFieldConfigMap, TMap } from './struct-types';
+import { TMap } from './struct-types';
 
 // TODO: unions and interfaces will both need a "resolveType" field
 
 export class InterfaceSemiBrick<
-  F extends OutputFieldConfigMap,
+  F extends OutputFieldMap,
   I extends Implementors<F>,
   N extends string
 > extends ImplementorSemiBrick<

@@ -1,11 +1,12 @@
 import { GraphQLObjectType } from 'graphql';
 import { Brick, NonNullableBrickOf, NullableBrickOf } from '../Brick';
+import { OutputFieldMap } from '../OutputField';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { ImplementorSemiBrick } from './Implementor';
-import { OutputFieldConfigMap, InterfaceSemiBrickMap } from './struct-types';
+import { InterfaceSemiBrickMap } from './struct-types';
 
 export class OutputObjectSemiBrick<
-  F extends OutputFieldConfigMap,
+  F extends OutputFieldMap,
   N extends string
 > extends ImplementorSemiBrick<'outputobject', N, GraphQLObjectType, F> {
   public readonly kind = 'outputobject' as const;

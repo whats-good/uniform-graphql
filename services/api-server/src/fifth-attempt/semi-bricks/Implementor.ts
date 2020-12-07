@@ -5,13 +5,10 @@ import {
 } from 'graphql';
 import _ from 'lodash';
 import { SemiBrick } from '../Brick';
+import { OutputFieldMap } from '../OutputField';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { InterfaceSemiBrick } from './Interface';
-import {
-  InterfaceSemiBrickMap,
-  OutputFieldConfigMap,
-  TMap,
-} from './struct-types';
+import { InterfaceSemiBrickMap, TMap } from './struct-types';
 
 type ImplementorKind = 'interface' | 'outputobject';
 
@@ -24,24 +21,24 @@ interface ImplementorGraphQLConfig {
 }
 
 export type AnyImplementorSemiBrickOf<
-  F extends OutputFieldConfigMap
+  F extends OutputFieldMap
 > = ImplementorSemiBrick<any, any, any, F>;
 
-type ExtendsFieldConfigMap<F extends OutputFieldConfigMap> = {
+type ExtendsFieldConfigMap<F extends OutputFieldMap> = {
   [K in keyof F]: F[K];
 };
 
-type Implements<F extends OutputFieldConfigMap> = AnyImplementorSemiBrickOf<
+type Implements<F extends OutputFieldMap> = AnyImplementorSemiBrickOf<
   ExtendsFieldConfigMap<F>
 >;
 
 // TODO: find a way to make sure the sbs implement the interface
-export type Implementors<F extends OutputFieldConfigMap> = Implements<F>[];
+export type Implementors<F extends OutputFieldMap> = Implements<F>[];
 export abstract class ImplementorSemiBrick<
   K extends ImplementorKind,
   N extends string,
   SB_G extends GraphQLInterfaceType | GraphQLObjectType,
-  F extends OutputFieldConfigMap,
+  F extends OutputFieldMap,
   SB_R = TMap<F>
 > extends SemiBrick<K, N, SB_G, TMap<F>, SB_R> {
   public readonly fields: F;
@@ -60,7 +57,7 @@ export abstract class ImplementorSemiBrick<
   // TODO: how can i guarantee that this interfacae is already inside the "implementors" map of the interface?
   // TODO: i need to flatten the entire tree of interfaces that this interface itself may be extending, and register all of them here.
 
-  public implements = <I extends OutputFieldConfigMap>(
+  public implements = <I extends OutputFieldMap>(
     sb: InterfaceSemiBrick<I, any, any>,
   ): void => {
     this.shallowInterfaces[sb.name] = sb;

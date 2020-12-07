@@ -2,7 +2,6 @@ import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
-  // GraphQLInt,
   GraphQLList,
   GraphQLNamedType,
   GraphQLString,
@@ -18,12 +17,12 @@ import { OutputListSemiBrick } from './semi-bricks/OutputList';
 import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
 import { ScalarSemiBrick } from './semi-bricks/Scalar';
 import {
-  OutputFieldConfigMap,
   AnyOutputSemiBrick,
   AnyInputSemiBrick,
   InputFieldConfigMap,
 } from './semi-bricks/struct-types';
 import { UnionSemiBrick, UnitableSemiBricks } from './semi-bricks/Union';
+import { OutputFieldMap } from './OutputField';
 
 interface SemiBricksMap {
   [key: string]: AnySemiBrick;
@@ -148,7 +147,7 @@ export class SemiBrickFactory {
   };
 
   interface = <
-    F extends OutputFieldConfigMap,
+    F extends OutputFieldMap,
     I extends Implementors<F>,
     N extends string
   >(params: {
@@ -178,7 +177,7 @@ export class SemiBrickFactory {
     return sb;
   };
 
-  outputObject = <F extends OutputFieldConfigMap, N extends string>(params: {
+  outputObject = <F extends OutputFieldMap, N extends string>(params: {
     name: N;
     fields: F;
   }): OutputObjectSemiBrick<F, N> => {
