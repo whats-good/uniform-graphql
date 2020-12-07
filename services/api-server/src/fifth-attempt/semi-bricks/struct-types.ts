@@ -38,7 +38,7 @@ export type AnyOutputSemiBrick = AnySemiBrick<OutputKind>;
 export interface OutputFieldConfig<
   B extends AnyOutputBrick,
   A extends OutputFieldConfigArgumentMap,
-  R extends unknown = void
+  R extends unknown = undefined
 > {
   readonly brick: B;
   readonly args: A;
