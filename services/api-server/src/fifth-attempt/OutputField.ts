@@ -16,6 +16,10 @@ export interface OutputFieldMap extends BrickMap<AnyOutputBrick> {
   [key: string]: OutputField<AnyOutputBrick, OutputFieldArgumentMap>;
 }
 
+export interface RootQueryOutputFieldMap extends BrickMap<AnyOutputBrick> {
+  [key: string]: RootQueryOutputField<AnyOutputBrick, OutputFieldArgumentMap>;
+}
+
 // type Thunk<T> = () => T;
 
 type ResolverReturnType<T> = T | Promise<T>; // TODO: add thunk support later
@@ -103,14 +107,14 @@ export class RootQueryOutputField<
   B extends AnyOutputBrick,
   A extends OutputFieldArgumentMap
 > extends OutputField<B, A> {
-  public readonly resolve: ResolverFnOfBrickAndArgs<B, A, undefined>;
+  private readonly resolve: any; // TODO: see if there's a better solution than any here
 
   constructor(params: {
     brick: B;
     args: A;
     description?: string;
     deprecationReason?: string;
-    resolve: RootQueryOutputField<B, A>['resolve'];
+    resolve: ResolverFnOfBrickAndArgs<B, A, undefined>;
   }) {
     super(params);
     this.resolve = params.resolve;
@@ -122,7 +126,7 @@ export class RootQueryOutputField<
       description: this.description,
       deprecationReason: this.deprecationReason,
       args: this.getArgsGrpahQLTypeConstructor(),
-      resolve: this.resolve as any, // TODO: see if there's a better solution than "any" here
+      resolve: this.resolve,
     };
   };
 }

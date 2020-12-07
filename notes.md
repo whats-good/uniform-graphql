@@ -52,6 +52,7 @@
 - You cant list the same interface more than once. This means that we'll probably need to add unique identifiers to our interfaces
 - The "implementor" is not allowed to extend the fields of an interface. They need to match 1:1. TODO: See if nullability works the same way.
 - implementors should be a key-value pair, not an array. And brick names should be part of their generics, otherwise it wont show.
+- a good way to get type safety (sometimes at the cost of inference) is using "any" types in private fields but strict types in the constructors. This will force the user to give very particular types while we can still build a library in a more relaxed manner.
 
 # TODOS
 

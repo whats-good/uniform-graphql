@@ -22,7 +22,7 @@ import {
   InputFieldConfigMap,
 } from './semi-bricks/struct-types';
 import { UnionSemiBrick, UnitableSemiBricks } from './semi-bricks/Union';
-import { OutputFieldMap } from './OutputField';
+import { OutputFieldMap, RootQueryOutputFieldMap } from './OutputField';
 
 interface SemiBricksMap {
   [key: string]: AnySemiBrick;
@@ -178,6 +178,19 @@ export class SemiBrickFactory {
   };
 
   outputObject = <F extends OutputFieldMap, N extends string>(params: {
+    name: N;
+    fields: F;
+  }): OutputObjectSemiBrick<F, N> => {
+    const sb = new OutputObjectSemiBrick({
+      semiBrickFactory: this,
+      name: params.name,
+      fields: params.fields,
+    });
+    this.registerSemiBrick(sb);
+    return sb;
+  };
+
+  rootQuery = <F extends RootQueryOutputFieldMap, N extends string>(params: {
     name: N;
     fields: F;
   }): OutputObjectSemiBrick<F, N> => {

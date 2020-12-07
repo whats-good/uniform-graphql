@@ -93,13 +93,10 @@ const firstNameInterface = fac.interface({
   implementors: [EmployeeInterface],
 });
 
-export const root = fac.outputObject({
+// TODO: find a way to get this done without having to call the classes directly. just via passing the constructors
+export const root = fac.rootQuery({
   name: 'RootQuery',
   fields: {
-    employeeInterface: new SimpleOutputField({
-      brick: EmployeeInterface.nullable,
-      args: {},
-    }),
     anotherThing: new RootQueryOutputField({
       brick: fac.scalar().string.nonNullable,
       args: {
@@ -109,31 +106,70 @@ export const root = fac.outputObject({
         return 'abc';
       },
     }),
-    something: new SimpleOutputField({
+    employeeInterface: new RootQueryOutputField({
+      brick: EmployeeInterface.nullable,
+      args: {},
+      resolve: (_, args, ctx) => {
+        return {
+          __typename: 'Person' as const,
+          id: 'yo',
+          firstName: 'kazan',
+        };
+      },
+    }),
+    something: new RootQueryOutputField({
       brick: fac.scalar().string.nonNullable,
       args: {
         inputObjectArg: {
           brick: someInput.nonNullable,
         },
       },
+      resolve: (_, args) => {
+        return 'yo';
+      },
     }),
-    animal: new SimpleOutputField({
+    animal: new RootQueryOutputField({
       brick: Animal.nonNullable,
       args: {},
+      resolve: (_, __) => {
+        return {
+          id: 'yo',
+          owner: {
+            firstName: 'kerem',
+            id: 'kazan',
+          },
+        };
+      },
     }),
-    person: new SimpleOutputField({
+    person: new RootQueryOutputField({
       brick: Person.nonNullable,
       args: {
         flag: {
           brick: fac.scalar().boolean.nonNullable,
         },
       },
+      resolve: (_, args, ctx, info) => {
+        return {
+          firstName: 'kerem',
+          id: 1,
+        };
+      },
     }),
-    bestFriend: new SimpleOutputField({
+    bestFriend: new RootQueryOutputField({
       brick: bestFriend.nonNullable,
       args: {},
+      resolve: async (_, __) => {
+        return {
+          __typename: 'Animal' as const,
+          id: 'yo',
+          owner: {
+            id: 'this is the id',
+            firstName: 'this is the name',
+          },
+        };
+      },
     }),
-    people: new SimpleOutputField({
+    people: new RootQueryOutputField({
       brick: fac.outputList({
         listOf: Person,
       }).nonNullable,
@@ -145,58 +181,17 @@ export const root = fac.outputObject({
           brick: fac.inputList(membership).nonNullable,
         },
       },
+      resolve: (root, args) => {
+        const toReturn: any[] = [];
+        const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
+        for (let i = 0; i < args.numPeople; i++) {
+          toReturn.push({
+            firstName: `some-name-${i}-${m}`,
+            id: i,
+          });
+        }
+        return toReturn;
+      },
     }),
   },
 });
-
-// // TODO: see if we can do the rootquery resolver without creating the root first.
-// root.queryResolverize({
-//   employeeInterface: (_, args, ctx) => {
-//     return {
-//       __typename: 'Person' as const,
-//       id: 'yo',
-//       firstName: 'kazan',
-//     };
-//   },
-//   person: (_, args, ctx, info) => {
-//     return {
-//       firstName: 'kerem',
-//       id: 1,
-//     };
-//   },
-//   animal: (_, __) => {
-//     return {
-//       id: 'yo',
-//       owner: {
-//         firstName: 'kerem',
-//         id: 'kazan',
-//       },
-//     };
-//   },
-//   something: (_, args) => {
-//     return 'yo';
-//   },
-//   bestFriend: async (_, __) => {
-//     return {
-//       __typename: 'Animal' as const,
-//       id: 'yo',
-//       owner: {
-//         id: 'this is the id',
-//         firstName: 'this is the name',
-//       },
-//     };
-//   },
-//   // // TODO: make the brick to resolve somehow accessible. something like via the info param.
-//   people: (root, args) => {
-//     // TODO: dont use any here
-//     const toReturn: any[] = [];
-//     const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
-//     for (let i = 0; i < args.numPeople; i++) {
-//       toReturn.push({
-//         firstName: `some-name-${i}-${m}`,
-//         id: i,
-//       });
-//     }
-//     return toReturn;
-//   },
-// });
