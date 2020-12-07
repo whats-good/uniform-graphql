@@ -6,7 +6,6 @@ import {
   OutputFieldConfigMap,
   InterfaceSemiBrickMap,
   FieldResolversOf,
-  RootQueryResolversOf,
 } from './struct-types';
 
 export class OutputObjectSemiBrick<
@@ -37,13 +36,6 @@ export class OutputObjectSemiBrick<
 
   // TODO: maybe i should separate root resolvers from field resolvers?
   public fieldResolverize = (resolvers: Partial<FieldResolversOf<F>>): void => {
-    Object.entries(resolvers).forEach(([key, value]) => {
-      this.fields[key].resolve = value;
-    });
-  };
-
-  // TODO: remove
-  public queryResolverize = (resolvers: RootQueryResolversOf<F>): void => {
     Object.entries(resolvers).forEach(([key, value]) => {
       this.fields[key].resolve = value;
     });

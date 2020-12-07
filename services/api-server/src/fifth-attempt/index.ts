@@ -1,3 +1,4 @@
+import { OutputFieldConfig } from './semi-bricks/struct-types';
 import { SemiBrickFactory } from './SemiBrickFactory';
 export const fac = new SemiBrickFactory();
 
@@ -98,6 +99,18 @@ const firstNameInterface = fac.interface({
   implementors: [EmployeeInterface],
 });
 
+const somethingField = OutputFieldConfig.init({
+  brick: fac.scalar().string.nullable,
+  args: {
+    inputObjectArg: {
+      brick: someInput.nonNullable,
+    },
+  },
+  resolve: (root, args, context) => {
+    return '1';
+  },
+});
+
 export const root = fac.outputObject({
   name: 'RootQuery',
   fields: {
@@ -106,13 +119,14 @@ export const root = fac.outputObject({
       args: {},
     },
     something: {
-      brick: fac.scalar().string.nullable,
+      brick: fac.scalar().string.nonNullable,
       args: {
         inputObjectArg: {
           brick: someInput.nonNullable,
         },
       },
     },
+    somethingField,
     animal: {
       brick: Animal.nonNullable,
       args: {},
@@ -138,63 +152,61 @@ export const root = fac.outputObject({
           brick: fac.scalar().float.nonNullable,
         },
         listArg: {
-          brick: fac.inputList({
-            listOf: membership, // TODO: make it take the brick directly, and nothing else
-          }).nonNullable,
+          brick: fac.inputList(membership).nonNullable,
         },
       },
     },
   },
 });
 
-// TODO: see if we can do the rootquery resolver without creating the root first.
-root.queryResolverize({
-  employeeInterface: (_, args, ctx) => {
-    return {
-      __typename: 'Person' as const,
-      id: 'yo',
-      firstName: 'kazan',
-    };
-  },
-  person: (_, args, ctx, info) => {
-    return {
-      firstName: 'kerem',
-      id: 1,
-    };
-  },
-  animal: (_, __) => {
-    return {
-      id: 'yo',
-      owner: {
-        firstName: 'kerem',
-        id: 'kazan',
-      },
-    };
-  },
-  something: (_, args) => {
-    return 'yo';
-  },
-  bestFriend: async (_, __) => {
-    return {
-      __typename: 'Animal' as const,
-      id: 'yo',
-      owner: {
-        id: 'this is the id',
-        firstName: 'this is the name',
-      },
-    };
-  },
-  // // TODO: make the brick to resolve somehow accessible. something like via the info param.
-  people: (root, args) => {
-    // TODO: dont use any here
-    const toReturn: any[] = [];
-    const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
-    for (let i = 0; i < args.numPeople; i++) {
-      toReturn.push({
-        firstName: `some-name-${i}-${m}`,
-        id: i,
-      });
-    }
-    return toReturn;
-  },
-});
+// // TODO: see if we can do the rootquery resolver without creating the root first.
+// root.queryResolverize({
+//   employeeInterface: (_, args, ctx) => {
+//     return {
+//       __typename: 'Person' as const,
+//       id: 'yo',
+//       firstName: 'kazan',
+//     };
+//   },
+//   person: (_, args, ctx, info) => {
+//     return {
+//       firstName: 'kerem',
+//       id: 1,
+//     };
+//   },
+//   animal: (_, __) => {
+//     return {
+//       id: 'yo',
+//       owner: {
+//         firstName: 'kerem',
+//         id: 'kazan',
+//       },
+//     };
+//   },
+//   something: (_, args) => {
+//     return 'yo';
+//   },
+//   bestFriend: async (_, __) => {
+//     return {
+//       __typename: 'Animal' as const,
+//       id: 'yo',
+//       owner: {
+//         id: 'this is the id',
+//         firstName: 'this is the name',
+//       },
+//     };
+//   },
+//   // // TODO: make the brick to resolve somehow accessible. something like via the info param.
+//   people: (root, args) => {
+//     // TODO: dont use any here
+//     const toReturn: any[] = [];
+//     const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
+//     for (let i = 0; i < args.numPeople; i++) {
+//       toReturn.push({
+//         firstName: `some-name-${i}-${m}`,
+//         id: i,
+//       });
+//     }
+//     return toReturn;
+//   },
+// });

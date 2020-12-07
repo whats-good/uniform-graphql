@@ -122,13 +122,13 @@ export class SemiBrickFactory {
     return sb;
   };
 
-  inputList = <SB extends AnyInputSemiBrick>(params: {
-    listOf: SB;
-  }): InputListSemiBrick<SB> => {
+  inputList = <SB extends AnyInputSemiBrick>(
+    listOf: SB,
+  ): InputListSemiBrick<SB> => {
     const sb = new InputListSemiBrick({
       semiBrickFactory: this,
-      name: `InputListOf<${params.listOf.name}>`,
-      listOf: params.listOf,
+      name: `InputListOf<${listOf.name}>`,
+      listOf: listOf,
     });
     this.registerSemiBrick(sb);
     return sb;

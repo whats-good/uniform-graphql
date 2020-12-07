@@ -19,7 +19,7 @@ export interface ArgumentConfig {
   deprecationReason?: string;
   // defaultValue?: any; // TODO: implement
 }
-export interface OutputFieldConfigArgumentMap extends BrickMap<AnyInputBrick> {
+export interface OutputFieldConfigArgumentMap {
   [key: string]: ArgumentConfig;
 }
 
@@ -35,7 +35,7 @@ export type AnyOutputBrick = AnyBrick<OutputKind>;
 export type AnyOutputSemiBrick = AnySemiBrick<OutputKind>;
 
 // TODO: add context stuff later
-export interface OutputFieldConfig<
+export class OutputFieldConfig<
   B extends AnyOutputBrick,
   A extends OutputFieldConfigArgumentMap,
   R extends unknown = undefined
@@ -44,7 +44,29 @@ export interface OutputFieldConfig<
   readonly args: A;
   readonly description?: string;
   readonly deprecationReason?: string;
-  resolve?: ResolverFnOfBrickAndArgs<B, A, R>;
+  resolve?: unknown;
+
+  constructor(params: OutputFieldConfig<B, A, R>) {
+    this.brick = params.brick;
+    this.args = params.args;
+    this.description = params.description;
+    this.deprecationReason = params.deprecationReason;
+    this.resolve = params.resolve;
+  }
+
+  static init = <
+    B extends AnyOutputBrick,
+    A extends OutputFieldConfigArgumentMap
+  >(params: {
+    brick: B;
+    args: A;
+    resolve: ResolverFnOfBrickAndArgs<B, A, undefined>;
+  }): OutputFieldConfig<B, A, undefined> => {
+    return new OutputFieldConfig({
+      brick: params.brick,
+      args: params.args,
+    });
+  };
 }
 
 export interface OutputFieldConfigMap extends BrickMap<AnyOutputBrick> {
@@ -113,9 +135,4 @@ type ResolverFnOfConfigMap<
 // TODO: later on, enable the root to be something else, but always force a return on the field.
 export type FieldResolversOf<T extends OutputFieldConfigMap> = {
   [K in keyof T]: ResolverFnOfConfigMap<T, K, TMap<T>>;
-};
-
-// TODO: remove this one and integrate it directly into the factory
-export type RootQueryResolversOf<T extends OutputFieldConfigMap> = {
-  [K in keyof T]: ResolverFnOfConfigMap<T, K, undefined>;
 };
