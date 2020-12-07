@@ -27,48 +27,42 @@ export const someInput = fac.inputObject({
 export const Person = fac.outputObject({
   name: 'Person',
   fields: {
-    id: {
+    id: new OutputFieldConfig({
       brick: fac.scalar().id.nullable,
       args: {},
-    },
-    firstName: {
+    }),
+    firstName: new OutputFieldConfig({
       brick: fac.scalar().string.nonNullable,
       args: {},
-    },
+    }),
   },
 });
 const EmployeeInterface = fac.interface({
   name: 'EmployeeInterface',
   fields: {
-    firstName: {
+    firstName: new OutputFieldConfig({
       brick: fac.scalar().string.nonNullable,
       args: {},
-    },
-    id: {
+    }),
+    id: new OutputFieldConfig({
       brick: fac.scalar().id.nullable,
       args: {},
-    },
+    }),
   },
   implementors: [Person],
-});
-
-Person.fieldResolverize({
-  id: (root, args) => {
-    return root.id;
-  },
 });
 
 export const Animal = fac.outputObject({
   name: 'Animal',
   fields: {
-    id: {
+    id: new OutputFieldConfig({
       brick: fac.scalar().id.nullable,
       args: {},
-    },
-    owner: {
+    }),
+    owner: new OutputFieldConfig({
       brick: Person.nullable,
       args: {},
-    },
+    }),
   },
 });
 
@@ -80,10 +74,10 @@ export const bestFriend = fac.union({
 const idInterface = fac.interface({
   name: 'IDInterface',
   fields: {
-    id: {
+    id: new OutputFieldConfig({
       brick: fac.scalar().id.nullable,
       args: {},
-    },
+    }),
   },
   implementors: [EmployeeInterface, Person, Animal],
 });
@@ -91,59 +85,46 @@ const idInterface = fac.interface({
 const firstNameInterface = fac.interface({
   name: 'FirstNameInterface',
   fields: {
-    firstName: {
+    firstName: new OutputFieldConfig({
       brick: fac.scalar().string.nonNullable,
       args: {},
-    },
+    }),
   },
   implementors: [EmployeeInterface],
-});
-
-const somethingField = OutputFieldConfig.init({
-  brick: fac.scalar().string.nullable,
-  args: {
-    inputObjectArg: {
-      brick: someInput.nonNullable,
-    },
-  },
-  resolve: (root, args, context) => {
-    return '1';
-  },
 });
 
 export const root = fac.outputObject({
   name: 'RootQuery',
   fields: {
-    employeeInterface: {
+    employeeInterface: new OutputFieldConfig({
       brick: EmployeeInterface.nullable,
       args: {},
-    },
-    something: {
+    }),
+    something: new OutputFieldConfig({
       brick: fac.scalar().string.nonNullable,
       args: {
         inputObjectArg: {
           brick: someInput.nonNullable,
         },
       },
-    },
-    somethingField,
-    animal: {
+    }),
+    animal: new OutputFieldConfig({
       brick: Animal.nonNullable,
       args: {},
-    },
-    person: {
+    }),
+    person: new OutputFieldConfig({
       brick: Person.nonNullable,
       args: {
         flag: {
           brick: fac.scalar().boolean.nonNullable,
         },
       },
-    },
-    bestFriend: {
+    }),
+    bestFriend: new OutputFieldConfig({
       brick: bestFriend.nonNullable,
       args: {},
-    },
-    people: {
+    }),
+    people: new OutputFieldConfig({
       brick: fac.outputList({
         listOf: Person,
       }).nonNullable,
@@ -155,7 +136,7 @@ export const root = fac.outputObject({
           brick: fac.inputList(membership).nonNullable,
         },
       },
-    },
+    }),
   },
 });
 

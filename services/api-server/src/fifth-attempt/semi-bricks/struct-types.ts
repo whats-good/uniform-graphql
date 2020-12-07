@@ -1,4 +1,5 @@
-import { GraphQLResolveInfo } from 'graphql';
+import _ from 'lodash';
+import { GraphQLFieldConfig, GraphQLResolveInfo } from 'graphql';
 import { AnyBrick, AnySemiBrick, SemiTypeOf, TypeOf } from '../Brick';
 import { InterfaceSemiBrick } from './Interface';
 import { OutputObjectSemiBrick } from './OutputObject';
@@ -35,38 +36,56 @@ export type AnyOutputBrick = AnyBrick<OutputKind>;
 export type AnyOutputSemiBrick = AnySemiBrick<OutputKind>;
 
 // TODO: add context stuff later
-export class OutputFieldConfig<
+export interface OutputFieldConfigConstructor<
   B extends AnyOutputBrick,
-  A extends OutputFieldConfigArgumentMap,
-  R extends unknown = undefined
+  A extends OutputFieldConfigArgumentMap
 > {
   readonly brick: B;
   readonly args: A;
   readonly description?: string;
   readonly deprecationReason?: string;
-  resolve?: unknown;
+}
 
-  constructor(params: OutputFieldConfig<B, A, R>) {
+export class OutputFieldConfig<
+  B extends AnyOutputBrick,
+  A extends OutputFieldConfigArgumentMap
+> {
+  readonly brick: B;
+  readonly args: A;
+  readonly description?: string;
+  readonly deprecationReason?: string;
+
+  constructor(params: OutputFieldConfigConstructor<B, A>) {
     this.brick = params.brick;
     this.args = params.args;
     this.description = params.description;
     this.deprecationReason = params.deprecationReason;
-    this.resolve = params.resolve;
   }
 
-  static init = <
-    B extends AnyOutputBrick,
-    A extends OutputFieldConfigArgumentMap
-  >(params: {
-    brick: B;
-    args: A;
-    resolve: ResolverFnOfBrickAndArgs<B, A, undefined>;
-  }): OutputFieldConfig<B, A, undefined> => {
-    return new OutputFieldConfig({
-      brick: params.brick,
-      args: params.args,
+  // TODO: add context and root later
+  public getGraphQLTypeConstructor = (): GraphQLFieldConfig<any, any> => {
+    const graphQLArgs = _.mapValues(this.args, (arg) => {
+      return {
+        type: arg.brick.getGraphQLType(),
+        description: arg.description,
+        deprecationReason: arg.deprecationReason,
+      };
     });
+    return {
+      type: this.brick.getGraphQLType(),
+      description: this.description,
+      deprecationReason: this.deprecationReason,
+      args: graphQLArgs,
+    };
   };
+}
+
+export interface OutputFieldConfigConstructorMap
+  extends BrickMap<AnyOutputBrick> {
+  [key: string]: OutputFieldConfigConstructor<
+    AnyOutputBrick,
+    OutputFieldConfigArgumentMap
+  >;
 }
 
 export interface OutputFieldConfigMap extends BrickMap<AnyOutputBrick> {

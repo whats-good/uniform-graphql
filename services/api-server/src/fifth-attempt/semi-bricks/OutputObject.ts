@@ -2,11 +2,7 @@ import { GraphQLObjectType } from 'graphql';
 import { Brick, NonNullableBrickOf, NullableBrickOf } from '../Brick';
 import { SemiBrickFactory } from '../SemiBrickFactory';
 import { ImplementorSemiBrick } from './Implementor';
-import {
-  OutputFieldConfigMap,
-  InterfaceSemiBrickMap,
-  FieldResolversOf,
-} from './struct-types';
+import { OutputFieldConfigMap, InterfaceSemiBrickMap } from './struct-types';
 
 export class OutputObjectSemiBrick<
   F extends OutputFieldConfigMap,
@@ -32,12 +28,5 @@ export class OutputObjectSemiBrick<
 
   public getFreshSemiGraphQLType = (): GraphQLObjectType => {
     return new GraphQLObjectType(this.getGraphQLTypeConstructor());
-  };
-
-  // TODO: maybe i should separate root resolvers from field resolvers?
-  public fieldResolverize = (resolvers: Partial<FieldResolversOf<F>>): void => {
-    Object.entries(resolvers).forEach(([key, value]) => {
-      this.fields[key].resolve = value;
-    });
   };
 }

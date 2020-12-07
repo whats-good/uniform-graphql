@@ -86,23 +86,9 @@ export abstract class ImplementorSemiBrick<
       interfaces: Object.values(this.getFlattenedInterfaces()).map((sb) =>
         sb.getSemiGraphQLType(),
       ),
-      fields: _.mapValues(this.fields, (field) => {
-        const { args } = field;
-        const graphQLArgs = _.mapValues(args, (arg) => {
-          return {
-            type: arg.brick.getGraphQLType(),
-            description: arg.description,
-            deprecationReason: arg.deprecationReason,
-          };
-        });
-        return {
-          type: field.brick.getGraphQLType(),
-          description: field.description,
-          deprecationReason: field.deprecationReason,
-          args: graphQLArgs,
-          resolve: field.resolve,
-        };
-      }),
+      fields: _.mapValues(this.fields, (field) =>
+        field.getGraphQLTypeConstructor(),
+      ),
     };
   };
 }
