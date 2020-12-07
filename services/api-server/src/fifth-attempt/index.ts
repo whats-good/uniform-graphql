@@ -52,6 +52,12 @@ const EmployeeInterface = fac.interface({
   implementors: [Person],
 });
 
+Person.fieldResolverize({
+  firstName: (root, args, context) => {
+    return root.firstName + root.firstName;
+  },
+});
+
 export const Animal = fac.outputObject({
   name: 'Animal',
   fields: {

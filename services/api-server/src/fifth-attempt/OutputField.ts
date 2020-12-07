@@ -64,6 +64,8 @@ export abstract class OutputField<
   readonly description?: string;
   readonly deprecationReason?: string;
 
+  public resolve: unknown; // TODO: see if there's a better solution than any here
+
   constructor(params: {
     brick: B;
     args: A;
@@ -76,7 +78,7 @@ export abstract class OutputField<
     this.deprecationReason = params.deprecationReason;
   }
 
-  protected getArgsGrpahQLTypeConstructor = (): GraphQLFieldConfigArgumentMap => {
+  private getArgsGraphQLTypeConstructor = (): GraphQLFieldConfigArgumentMap => {
     return _.mapValues(this.args, (arg) => {
       return {
         type: arg.brick.getGraphQLType(),
@@ -86,29 +88,30 @@ export abstract class OutputField<
     });
   };
 
-  abstract getGraphQLTypeConstructor(): GraphQLFieldConfig<any, any>;
-}
+  public setResolve = <R>(resolve: ResolverFnOfBrickAndArgs<B, A, R>): void => {
+    this.resolve = resolve;
+  };
 
-export class SimpleOutputField<
-  B extends AnyOutputBrick,
-  A extends OutputFieldArgumentMap
-> extends OutputField<B, A> {
   public getGraphQLTypeConstructor = (): GraphQLFieldConfig<any, any> => {
     return {
       type: this.brick.getGraphQLType(),
       description: this.description,
       deprecationReason: this.deprecationReason,
-      args: this.getArgsGrpahQLTypeConstructor(),
+      args: this.getArgsGraphQLTypeConstructor(),
+      resolve: this.resolve as any,
     };
   };
 }
+
+export class SimpleOutputField<
+  B extends AnyOutputBrick,
+  A extends OutputFieldArgumentMap
+> extends OutputField<B, A> {}
 
 export class RootQueryOutputField<
   B extends AnyOutputBrick,
   A extends OutputFieldArgumentMap
 > extends OutputField<B, A> {
-  private readonly resolve: any; // TODO: see if there's a better solution than any here
-
   constructor(params: {
     brick: B;
     args: A;
@@ -119,14 +122,4 @@ export class RootQueryOutputField<
     super(params);
     this.resolve = params.resolve;
   }
-
-  public getGraphQLTypeConstructor = (): GraphQLFieldConfig<any, any> => {
-    return {
-      type: this.brick.getGraphQLType(),
-      description: this.description,
-      deprecationReason: this.deprecationReason,
-      args: this.getArgsGrpahQLTypeConstructor(),
-      resolve: this.resolve,
-    };
-  };
 }
