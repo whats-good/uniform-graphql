@@ -53,6 +53,7 @@
 - The "implementor" is not allowed to extend the fields of an interface. They need to match 1:1. TODO: See if nullability works the same way.
 - implementors should be a key-value pair, not an array. And brick names should be part of their generics, otherwise it wont show.
 - a good way to get type safety (sometimes at the cost of inference) is using "any" types in private fields but strict types in the constructors. This will force the user to give very particular types while we can still build a library in a more relaxed manner.
+- if we want to keep things isolated and immutable, we'll need a non-pointer, manual, string based dependency graph
 
 # TODOS
 
@@ -90,3 +91,5 @@
 - Create a base abstract class for output types, so that you can take out the "R" field from the input types
 - current TODO: Enable the user to start using a custom context
 - second TODO: Pass the brick into the resolver function, and behind the scenes convert the function into the actual resolve function. This would mean that the developers wouldnt be coding the actual resolvers, but the resolver factories. This would need to take promises and thunks into consideration too.
+- TODO: current problem: How can we create a new fieldmap with resolvers out of a fieldmap without resolvers?
+- TODO: general problem: Do we keep mutating things or do we create new things out of existing ones while keeping the previous ones untouched? If we want to maintain immutability, we need to have rigorous cloning methods.
