@@ -4,6 +4,7 @@ import {
   GraphQLID,
   GraphQLList,
   GraphQLNamedType,
+  GraphQLSchema,
   GraphQLString,
   GraphQLType,
 } from 'graphql';
@@ -36,6 +37,7 @@ export class SemiBrickFactory {
   // TODO: put all the semibricks in the order they are initialized here.
   private readonly semiBricks: SemiBricksMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
+  private readonly rootQueryFieldMaps: RootQueryOutputFieldMap[] = [];
 
   constructor() {
     const scalar = this.scalar();
@@ -190,17 +192,12 @@ export class SemiBrickFactory {
     return sb;
   };
 
-  rootQuery = <F extends RootQueryOutputFieldMap, N extends string>(params: {
-    name: N;
+  // TODO: also register root mutations
+  // TODO: warn the user when they try to register the same query field.
+  rootQuery = <F extends RootQueryOutputFieldMap>(params: {
     fields: F;
-  }): OutputObjectSemiBrick<F, N> => {
-    const sb = new OutputObjectSemiBrick({
-      semiBrickFactory: this,
-      name: params.name,
-      fields: params.fields,
-    });
-    this.registerSemiBrick(sb);
-    return sb;
+  }): void => {
+    this.rootQueryFieldMaps.push(params.fields);
   };
 
   union = <SBS extends UnitableSemiBricks, N extends string>(params: {
@@ -214,5 +211,21 @@ export class SemiBrickFactory {
     });
     this.registerSemiBrick(sb);
     return sb;
+  };
+
+  getGraphQLSchema = (): GraphQLSchema => {
+    const fields = {};
+    this.rootQueryFieldMaps.forEach((curRootQueryMap) => {
+      Object.assign(fields, curRootQueryMap);
+    });
+    const rootQuery = new OutputObjectSemiBrick({
+      name: 'RootQuery',
+      semiBrickFactory: this,
+      fields,
+    });
+    return new GraphQLSchema({
+      query: rootQuery.getSemiGraphQLType(),
+      types: this.getAllNamedSemiGraphQLTypes(),
+    });
   };
 }

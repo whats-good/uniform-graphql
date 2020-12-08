@@ -99,9 +99,25 @@ const firstNameInterface = fac.interface({
   implementors: [EmployeeInterface],
 });
 
+fac.rootQuery({
+  fields: {
+    kerem: new RootQueryOutputField({
+      brick: Person.nonNullable,
+      args: {
+        id: { brick: fac.scalar().id.nonNullable },
+      },
+      resolve: (root, args, context) => {
+        return {
+          id: 'this is the id',
+          firstName: 'this is the firstname',
+        };
+      },
+    }),
+  },
+});
+
 // TODO: find a way to get this done without having to call the classes directly. just via passing the constructors
-export const root = fac.rootQuery({
-  name: 'RootQuery',
+fac.rootQuery({
   fields: {
     anotherThing: new RootQueryOutputField({
       brick: fac.scalar().string.nonNullable,

@@ -1,12 +1,8 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import { GraphQLSchema } from 'graphql';
-import { root, fac } from './fifth-attempt';
+import { fac } from './fifth-attempt';
 
-const schema = new GraphQLSchema({
-  query: root.getSemiGraphQLType(),
-  types: fac.getAllNamedSemiGraphQLTypes(),
-});
+const schema = fac.getGraphQLSchema();
 
 const apolloServer = new ApolloServer({
   schema,
