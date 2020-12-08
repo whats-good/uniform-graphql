@@ -217,3 +217,23 @@ fac.rootQuery({
     }),
   },
 });
+
+fac.mutation({
+  fields: {
+    // TODO: since it's reused in mutations, RootQueryOutput isn't that appropriate here.
+    doThis: new RootQueryOutputField({
+      brick: Person.nonNullable,
+      args: {
+        x: {
+          brick: fac.scalar().boolean.nonNullable,
+        },
+      },
+      resolve: (root, args, context) => {
+        return {
+          id: 'yo',
+          firstName: 'yeah',
+        };
+      },
+    }),
+  },
+});
