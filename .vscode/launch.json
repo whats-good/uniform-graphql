@@ -5,27 +5,9 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "cwd": "${workspaceFolder}/packages/rss",
       "type": "node",
       "request": "launch",
-      "name": "Debug Rss/index.ts",
-      "runtimeExecutable": "npm",
-      "args": [
-        "run",
-        "start"
-      ],
-      "sourceMaps": true,
-      "smartStep": true,
-      "internalConsoleOptions": "openOnSessionStart",
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
-    },
-    {
-      "cwd": "${workspaceFolder}/services/api-server",
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Api Server",
+      "name": "Debug",
       "runtimeExecutable": "npm",
       "args": [
         "run",

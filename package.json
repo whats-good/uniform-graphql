@@ -1,18 +1,28 @@
 {
-  "name": "whatsgood",
-  "private": true,
+  "name": "@whatsgood/graphql",
   "version": "1.0.0",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "",
+  "main": "build/index.js",
   "author": "Kerem Kazan",
-  "license": "ISC",
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint '*/**/*.{ts,tsx}'",
+    "build": "tsc -p ./tsconfig.json",
+    "start": "ts-node ./src/index.ts",
+    "debug": "ts-node ./src/index.ts"
+  },
   "dependencies": {
     "reflect-metadata": "0.1.13",
-    "graphql": "15.4.0"
+    "graphql": "15.4.0",
+    "lodash": "4.17.20"
   },
   "devDependencies": {
-    "lerna": "3.22.1",
+    "apollo-server-express": "2.19.0",
+    "express": "4.17.1",
+    "body-parser": "1.19.0",
+    "@types/lodash": "4.14.165",
+    "tsd": "0.13.1",
     "eslint": "7.13.0",
     "eslint-config-prettier": "6.15.0",
     "eslint-plugin-prettier": "3.1.4",

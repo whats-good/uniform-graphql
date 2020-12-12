@@ -1,9 +1,0 @@
-version: '3'
-
-services:
-  rssbridge:
-    image: rssbridge/rss-bridge:latest
-    ports:
-      - 4002:80
-  # TODO: setup networks
-  # TODO: setup filesystem

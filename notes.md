@@ -99,3 +99,4 @@
 - TODO: study declaration merging.
 - TODO: study namespace declaration merging and understand how that works even when compiled.
 - When i look at the way type-graphql works, I'm starting to think that they chose decorators and classes not because they are easier to use, but because they make mutually recursive types possible.
+- research: type-fest
