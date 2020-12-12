@@ -1,1 +1,0 @@
-* install lerna by "npm install -g lerna"
