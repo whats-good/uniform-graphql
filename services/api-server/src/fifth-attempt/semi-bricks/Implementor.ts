@@ -17,7 +17,7 @@ interface ImplementorGraphQLConfig {
   name: string;
   description?: string;
   interfaces?: Array<GraphQLInterfaceType>;
-  fields: GraphQLFieldConfigMap<any, any>;
+  fields: () => GraphQLFieldConfigMap<any, any>;
 }
 
 export type AnyImplementorSemiBrickOf<
@@ -83,9 +83,8 @@ export abstract class ImplementorSemiBrick<
       interfaces: Object.values(this.getFlattenedInterfaces()).map((sb) =>
         sb.getSemiGraphQLType(),
       ),
-      fields: _.mapValues(this.fields, (field) =>
-        field.getGraphQLTypeConstructor(),
-      ),
+      fields: () =>
+        _.mapValues(this.fields, (field) => field.getGraphQLTypeConstructor()),
     };
   };
 }

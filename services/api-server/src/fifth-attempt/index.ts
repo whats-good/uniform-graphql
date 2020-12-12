@@ -72,6 +72,24 @@ export const Animal = fac.outputObject({
   },
 });
 
+export const User = fac.outputObject({
+  name: 'User',
+  get fields() {
+    return {
+      id: new SimpleOutputField({
+        brick: fac.scalar().id.nullable,
+        args: {},
+      }),
+      friends: new SimpleOutputField({
+        brick: fac.outputList({
+          listOf: fac.recursive(this),
+        }).nonNullable,
+        args: {},
+      }),
+    };
+  },
+});
+
 export const bestFriend = fac.union({
   name: 'BestFriend',
   semiBricks: [Person, Animal],
@@ -126,6 +144,18 @@ fac.rootQuery({
       },
       resolve: (root, args, context) => {
         return 'abc';
+      },
+    }),
+    currentUser: new RootQueryOutputField({
+      brick: User.nullable,
+      args: {},
+      resolve: (root, args, context) => {
+        return {
+          id: 'yo',
+          get friends() {
+            return [this];
+          },
+        };
       },
     }),
     employeeInterface: new RootQueryOutputField({

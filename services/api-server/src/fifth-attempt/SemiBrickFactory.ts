@@ -187,12 +187,20 @@ export class SemiBrickFactory {
     const sb = new OutputObjectSemiBrick({
       semiBrickFactory: this,
       name: params.name,
-      fields: params.fields,
+      fields: {},
     });
     this.registerSemiBrick(sb);
-    return sb;
+    // @ts-ignore // TODO: figure this out
+    sb.fields = params.fields;
+    return sb as any;
   };
 
+  recursive = <F extends OutputFieldMap, N extends string>(params: {
+    name: N;
+    fields: F;
+  }): OutputObjectSemiBrick<F, N> => {
+    return this.semiBricks[params.name] as any;
+  };
   // TODO: warn the user when they try to register the same query field.
   rootQuery = <F extends RootQueryOutputFieldMap>(params: {
     fields: F;
