@@ -1,7 +1,10 @@
-import { RootQueryOutputField, SimpleOutputField } from './OutputField';
-import { SemiBrickFactory } from './SemiBrickFactory';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
+import {
+  SemiBrickFactory,
+  SimpleOutputField,
+  RootQueryOutputField,
+} from './src';
 export const fac = new SemiBrickFactory();
 
 const membership = fac.enum({
