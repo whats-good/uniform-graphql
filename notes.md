@@ -57,6 +57,7 @@
 - looks like mobx-state-tree deals with the circular dependency (mutually recursive types) issue too. I wonder how they approached it and if they've solved it.
 - `runtypes` is another static-to-runtime type solution that seems to work until it doesnt. it also uses this lazy evaluation approach, but it loses all static type safety instantly.
 - maybe the answer is declaration merging?
+- can an output object both implement an interface and also have fields that resolve to said interface?
 
 # TODOS
 

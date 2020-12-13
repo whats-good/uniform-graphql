@@ -4,8 +4,6 @@ import { OutputObjectSemiType } from './OutputObject';
 
 export type ListTypeOf<SB extends AnySemiType> = Array<SemiTypeOf<SB>>;
 
-// TODO: can we do recursive output objects?
-
 export interface TypeMap<B extends AnyType> {
   [key: string]: {
     brick: B;

@@ -66,16 +66,22 @@ export abstract class OutputField<
 
   public resolve: unknown; // TODO: see if there's a better solution than any here
 
-  constructor(params: {
+  constructor({
+    brick,
+    // @ts-ignore // TODO: see if we can fix this
+    args = {},
+    description,
+    deprecationReason,
+  }: {
     brick: B;
-    args: A;
+    args?: A;
     description?: string;
     deprecationReason?: string;
   }) {
-    this.brick = params.brick;
-    this.args = params.args;
-    this.description = params.description;
-    this.deprecationReason = params.deprecationReason;
+    this.brick = brick;
+    this.args = args;
+    this.description = description;
+    this.deprecationReason = deprecationReason;
   }
 
   private getArgsGraphQLTypeConstructor = (): GraphQLFieldConfigArgumentMap => {
@@ -112,14 +118,27 @@ export class RootQueryOutputField<
   B extends AnyOutputType,
   A extends OutputFieldArgumentMap
 > extends OutputField<B, A> {
-  constructor(params: {
+  constructor({
+    brick,
+    // @ts-ignore TODO: see if we can fix this
+    args = {},
+    description,
+    deprecationReason,
+    resolve,
+  }: {
     brick: B;
-    args: A;
+    args?: A;
     description?: string;
     deprecationReason?: string;
     resolve: ResolverFnOfTypeAndArgs<B, A, undefined>;
   }) {
-    super(params);
-    this.resolve = params.resolve;
+    args;
+    super({
+      brick,
+      args,
+      deprecationReason,
+      description,
+    });
+    this.resolve = resolve;
   }
 }
