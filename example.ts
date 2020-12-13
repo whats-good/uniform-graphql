@@ -10,6 +10,7 @@ import {
   field,
 } from './src';
 import { SemiTypeOf } from './src/Type';
+import { arg } from './src/types/struct-types';
 
 const fac = new SemiTypeFactory();
 
@@ -102,7 +103,7 @@ fac.rootQuery({
     kerem: new RootOutputField({
       type: Person.nonNullable,
       args: {
-        id: { type: id.nonNullable },
+        id: arg(id.nonNullable),
       },
       resolve: (root, args, context) => {
         return {
@@ -119,7 +120,7 @@ fac.rootQuery({
     anotherThing: new RootOutputField({
       type: string.nonNullable,
       args: {
-        someArg: { type: boolean.nonNullable },
+        someArg: arg(boolean.nonNullable),
       },
       resolve: (root, args, context) => {
         return 'abc';
@@ -167,9 +168,7 @@ fac.rootQuery({
     something: new RootOutputField({
       type: string.nonNullable,
       args: {
-        inputObjectArg: {
-          type: someInput.nonNullable,
-        },
+        inputObjectArg: arg(someInput.nonNullable),
       },
       resolve: (_, args) => {
         return 'yo';
@@ -190,9 +189,7 @@ fac.rootQuery({
     person: new RootOutputField({
       type: Person.nonNullable,
       args: {
-        flag: {
-          type: boolean.nonNullable,
-        },
+        flag: arg(boolean.nonNullable),
       },
       resolve: (_, args, ctx, info) => {
         return {
@@ -217,13 +214,8 @@ fac.rootQuery({
     people: new RootOutputField({
       type: fac.outputList(Person).nonNullable,
       args: {
-        // TODO: instead of multiple key-value pairs, describe the non-essentials via decorators.
-        numPeople: {
-          type: float.nonNullable,
-        },
-        listArg: {
-          type: fac.inputList(membership).nonNullable,
-        },
+        numPeople: arg(float.nonNullable),
+        listArg: arg(fac.inputList(membership).nonNullable),
       },
       resolve: (root, args) => {
         const toReturn: Array<SemiTypeOf<typeof Person>> = [];
@@ -245,9 +237,7 @@ fac.mutation({
     doThis: new RootOutputField({
       type: Person.nonNullable,
       args: {
-        x: {
-          type: boolean.nonNullable,
-        },
+        x: arg(boolean.nonNullable),
       },
       resolve: (root, args, context) => {
         return {

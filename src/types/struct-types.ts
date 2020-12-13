@@ -10,14 +10,18 @@ export interface TypeMap<B extends AnyType> {
   };
 }
 
-export interface ArgumentConfig {
-  type: AnyInputType;
+interface ArgumentConfig<A extends AnyInputType> {
+  type: A;
   description?: string;
   deprecationReason?: string;
   // defaultValue?: any; // TODO: implement
 }
+
+export const arg = <A extends AnyInputType>(type: A) => ({
+  type,
+});
 export interface OutputFieldArgumentMap {
-  [key: string]: ArgumentConfig;
+  [key: string]: ArgumentConfig<any>;
 }
 
 export type OutputKind =
