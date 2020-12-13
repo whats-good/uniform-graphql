@@ -5,8 +5,6 @@ import { SemiTypeFactory } from '../SemiTypeFactory';
 import { ImplementorSemiType, Implementors } from './Implementor';
 import { TMap } from './struct-types';
 
-// TODO: unions and interfaces will both need a "resolveType" field
-
 export class InterfaceSemiType<
   F extends OutputFieldMap,
   I extends Implementors<F>,

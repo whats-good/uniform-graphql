@@ -58,6 +58,7 @@
 - `runtypes` is another static-to-runtime type solution that seems to work until it doesnt. it also uses this lazy evaluation approach, but it loses all static type safety instantly.
 - maybe the answer is declaration merging?
 - can an output object both implement an interface and also have fields that resolve to said interface?
+- we're not having interfaces implement other interfaces, because it's too much trouble for little to no gain.
 
 # TODOS
 
@@ -101,3 +102,4 @@
 - TODO: study namespace declaration merging and understand how that works even when compiled.
 - When i look at the way type-graphql works, I'm starting to think that they chose decorators and classes not because they are easier to use, but because they make mutually recursive types possible.
 - research: type-fest
+- now that we have eliminated interface types from implementors of interfaces, should we separate the ImplementorType from the interface type?

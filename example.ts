@@ -105,7 +105,7 @@ const idInterface = fac.interface({
       type: id.nullable,
     }),
   },
-  implementors: [EmployeeInterface, Person, Animal],
+  implementors: [Animal],
 });
 
 const firstNameInterface = fac.interface({
@@ -115,7 +115,7 @@ const firstNameInterface = fac.interface({
       type: string.nonNullable,
     }),
   },
-  implementors: [EmployeeInterface],
+  implementors: [Person],
 });
 
 fac.rootQuery({
@@ -150,8 +150,7 @@ fac.rootQuery({
       type: firstNameInterface.nullable,
       resolve: () => {
         return {
-          __typename: 'EmployeeInterface' as const,
-          // TODO: this should be impossible to give here. Interface types should not be allowed to appear.
+          __typename: 'Person' as const,
           firstName: 'some firstname',
         };
       },
@@ -174,6 +173,15 @@ fac.rootQuery({
           __typename: 'Person' as const,
           id: 'yo',
           firstName: 'kazan',
+        };
+      },
+    }),
+    idInterface: new RootOutputField({
+      type: idInterface.nullable,
+      resolve: () => {
+        return {
+          __typename: 'Animal' as const,
+          id: 'x',
         };
       },
     }),
@@ -232,6 +240,7 @@ fac.rootQuery({
         listOf: Person,
       }).nonNullable,
       args: {
+        // TODO: instead of multiple key-value pairs, describe the non-essentials via decorators.
         numPeople: {
           type: float.nonNullable,
         },

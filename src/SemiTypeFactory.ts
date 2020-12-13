@@ -29,7 +29,6 @@ interface GraphQLTypesMap {
 }
 
 export class SemiTypeFactory {
-  // TODO: put all the semitypes in the order they are initialized here.
   private readonly semiTypes: SemiTypesMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
   private readonly rootQueryFieldMaps: RootOutputFieldMap[] = [];

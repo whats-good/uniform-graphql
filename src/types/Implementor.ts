@@ -9,6 +9,7 @@ import { OutputFieldMap } from '../OutputField';
 import { SemiTypeFactory } from '../SemiTypeFactory';
 import { InterfaceSemiType } from './Interface';
 import { InterfaceSemiTypeMap, TMap } from './struct-types';
+import { OutputObjectSemiType } from './OutputObject';
 
 type ImplementorKind = 'interface' | 'outputobject';
 
@@ -20,15 +21,15 @@ interface ImplementorGraphQLConfig {
   fields: () => GraphQLFieldConfigMap<any, any>;
 }
 
-export type AnyImplementorSemiTypeOf<
+type ObjectImplementorSemiTypeOf<
   F extends OutputFieldMap
-> = ImplementorSemiType<any, any, any, F>;
+> = OutputObjectSemiType<F, any>;
 
 type ExtendsFieldConfigMap<F extends OutputFieldMap> = {
   [K in keyof F]: F[K];
 };
 
-type Implements<F extends OutputFieldMap> = AnyImplementorSemiTypeOf<
+type Implements<F extends OutputFieldMap> = ObjectImplementorSemiTypeOf<
   ExtendsFieldConfigMap<F>
 >;
 
