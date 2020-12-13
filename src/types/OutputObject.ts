@@ -1,39 +1,26 @@
 import { GraphQLObjectType } from 'graphql';
-import {
-  StaticGraphQLType,
-  NonNullableStaticGraphQLTypeOf,
-  NullableStaticGraphQLTypeOf,
-} from '../StaticGraphQLType';
+import { Type, NonNullableTypeOf, NullableTypeOf } from '../Type';
 import { FieldResolversOf, OutputFieldMap } from '../OutputField';
-import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
-import { ImplementorSemiStaticGraphQLType } from './Implementor';
-import { InterfaceSemiStaticGraphQLTypeMap } from './struct-types';
+import { TypeFactory } from '../TypeFactory';
+import { ImplementorSemiType } from './Implementor';
+import { InterfaceSemiTypeMap } from './struct-types';
 
-export class OutputObjectSemiStaticGraphQLType<
+export class OutputObjectSemiType<
   F extends OutputFieldMap,
   N extends string
-> extends ImplementorSemiStaticGraphQLType<
-  'outputobject',
-  N,
-  GraphQLObjectType,
-  F
-> {
+> extends ImplementorSemiType<'outputobject', N, GraphQLObjectType, F> {
   public readonly kind = 'outputobject' as const;
   public readonly fields: F;
-  public readonly flatInterfaces: InterfaceSemiStaticGraphQLTypeMap = {};
+  public readonly flatInterfaces: InterfaceSemiTypeMap = {};
 
-  public readonly nullable: NullableStaticGraphQLTypeOf<
-    OutputObjectSemiStaticGraphQLType<F, N>
-  >;
-  public readonly nonNullable: NonNullableStaticGraphQLTypeOf<
-    OutputObjectSemiStaticGraphQLType<F, N>
-  >;
+  public readonly nullable: NullableTypeOf<OutputObjectSemiType<F, N>>;
+  public readonly nonNullable: NonNullableTypeOf<OutputObjectSemiType<F, N>>;
 
   constructor(params: { typeFactory: TypeFactory; name: N; fields: F }) {
     super(params);
     this.fields = params.fields;
-    this.nullable = StaticGraphQLType.initNullable(this);
-    this.nonNullable = StaticGraphQLType.initNonNullable(this);
+    this.nullable = Type.initNullable(this);
+    this.nonNullable = Type.initNonNullable(this);
   }
 
   public getFreshSemiGraphQLType = (): GraphQLObjectType => {

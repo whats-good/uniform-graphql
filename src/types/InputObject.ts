@@ -1,37 +1,23 @@
 import { GraphQLInputObjectType } from 'graphql';
 import _ from 'lodash';
-import {
-  StaticGraphQLType,
-  SemiStaticGraphQLType,
-  NullableStaticGraphQLTypeOf,
-  NonNullableStaticGraphQLTypeOf,
-} from '../StaticGraphQLType';
-import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { Type, SemiType, NullableTypeOf, NonNullableTypeOf } from '../Type';
+import { TypeFactory } from '../TypeFactory';
 import { InputFieldConfigMap, TMap } from './struct-types';
 
-export class InputObjectSemiStaticGraphQLType<
+export class InputObjectSemiType<
   F extends InputFieldConfigMap,
   N extends string
-> extends SemiStaticGraphQLType<
-  'inputobject',
-  N,
-  GraphQLInputObjectType,
-  TMap<F>
-> {
+> extends SemiType<'inputobject', N, GraphQLInputObjectType, TMap<F>> {
   public readonly kind = 'inputobject' as const;
   public readonly fields: F;
-  public readonly nullable: NullableStaticGraphQLTypeOf<
-    InputObjectSemiStaticGraphQLType<F, N>
-  >;
-  public readonly nonNullable: NonNullableStaticGraphQLTypeOf<
-    InputObjectSemiStaticGraphQLType<F, N>
-  >;
+  public readonly nullable: NullableTypeOf<InputObjectSemiType<F, N>>;
+  public readonly nonNullable: NonNullableTypeOf<InputObjectSemiType<F, N>>;
 
   constructor(params: { typeFactory: TypeFactory; name: N; fields: F }) {
     super(params);
     this.fields = params.fields;
-    this.nullable = StaticGraphQLType.initNullable(this);
-    this.nonNullable = StaticGraphQLType.initNonNullable(this);
+    this.nullable = Type.initNullable(this);
+    this.nonNullable = Type.initNonNullable(this);
   }
 
   public readonly getFreshSemiGraphQLType = (): GraphQLInputObjectType => {

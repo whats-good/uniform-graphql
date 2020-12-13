@@ -1,16 +1,9 @@
 import { GraphQLList } from 'graphql';
-import {
-  StaticGraphQLType,
-  NonNullableStaticGraphQLTypeOf,
-  NullableStaticGraphQLTypeOf,
-  SemiStaticGraphQLType,
-} from '../StaticGraphQLType';
-import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
-import { AnyOutputSemiStaticGraphQLType, ListTypeOf } from './struct-types';
+import { Type, NonNullableTypeOf, NullableTypeOf, SemiType } from '../Type';
+import { TypeFactory } from '../TypeFactory';
+import { AnyOutputSemiType, ListTypeOf } from './struct-types';
 
-export class OutputListSemiStaticGraphQLType<
-  SB extends AnyOutputSemiStaticGraphQLType
-> extends SemiStaticGraphQLType<
+export class OutputListSemiType<SB extends AnyOutputSemiType> extends SemiType<
   'outputlist',
   string,
   GraphQLList<any>,
@@ -18,18 +11,14 @@ export class OutputListSemiStaticGraphQLType<
 > {
   public readonly kind = 'outputlist';
   public readonly listOf: SB;
-  public readonly nonNullable: NonNullableStaticGraphQLTypeOf<
-    OutputListSemiStaticGraphQLType<SB>
-  >;
-  public readonly nullable: NullableStaticGraphQLTypeOf<
-    OutputListSemiStaticGraphQLType<SB>
-  >;
+  public readonly nonNullable: NonNullableTypeOf<OutputListSemiType<SB>>;
+  public readonly nullable: NullableTypeOf<OutputListSemiType<SB>>;
 
   constructor(params: { name: string; typeFactory: TypeFactory; listOf: SB }) {
     super(params);
     this.listOf = params.listOf;
-    this.nonNullable = StaticGraphQLType.initNonNullable(this);
-    this.nullable = StaticGraphQLType.initNullable(this);
+    this.nonNullable = Type.initNonNullable(this);
+    this.nullable = Type.initNullable(this);
   }
 
   public readonly getFreshSemiGraphQLType = (): GraphQLList<any> => {

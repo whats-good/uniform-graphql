@@ -8,31 +8,25 @@ import {
   GraphQLString,
   GraphQLType,
 } from 'graphql';
-import {
-  AnySemiStaticGraphQLType,
-  SemiGraphQLTypeOf,
-} from './StaticGraphQLType';
-import { EnumSemiStaticGraphQLType, StringKeys } from './types/Enum';
+import { AnySemiType, SemiGraphQLTypeOf } from './Type';
+import { EnumSemiType, StringKeys } from './types/Enum';
 import { Implementors } from './types/Implementor';
-import { InputListSemiStaticGraphQLType } from './types/InputList';
-import { InputObjectSemiStaticGraphQLType } from './types/InputObject';
-import { InterfaceSemiStaticGraphQLType } from './types/Interface';
-import { OutputListSemiStaticGraphQLType } from './types/OutputList';
-import { OutputObjectSemiStaticGraphQLType } from './types/OutputObject';
-import { ScalarSemiStaticGraphQLType } from './types/Scalar';
+import { InputListSemiType } from './types/InputList';
+import { InputObjectSemiType } from './types/InputObject';
+import { InterfaceSemiType } from './types/Interface';
+import { OutputListSemiType } from './types/OutputList';
+import { OutputObjectSemiType } from './types/OutputObject';
+import { ScalarSemiType } from './types/Scalar';
 import {
-  AnyOutputSemiStaticGraphQLType,
-  AnyInputSemiStaticGraphQLType,
+  AnyOutputSemiType,
+  AnyInputSemiType,
   InputFieldConfigMap,
 } from './types/struct-types';
-import {
-  UnionSemiStaticGraphQLType,
-  UnitableSemiStaticGraphQLTypes,
-} from './types/Union';
+import { UnionSemiType, UnitableSemiTypes } from './types/Union';
 import { OutputFieldMap, RootQueryOutputFieldMap } from './OutputField';
 
-interface SemiStaticGraphQLTypesMap {
-  [key: string]: AnySemiStaticGraphQLType;
+interface SemiTypesMap {
+  [key: string]: AnySemiType;
 }
 
 interface GraphQLTypesMap {
@@ -41,35 +35,35 @@ interface GraphQLTypesMap {
 
 export class TypeFactory {
   // TODO: put all the semibricks in the order they are initialized here.
-  private readonly semiStaticGraphQLTypes: SemiStaticGraphQLTypesMap = {};
+  private readonly semiTypes: SemiTypesMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
   private readonly rootQueryFieldMaps: RootQueryOutputFieldMap[] = [];
   private readonly mutationFieldMaps: RootQueryOutputFieldMap[] = [];
 
   constructor() {
     const scalar = this.scalar();
-    Object.values(scalar).forEach(this.registerSemiStaticGraphQLType);
+    Object.values(scalar).forEach(this.registerSemiType);
   }
 
   public getAllNamedSemiGraphQLTypes = (): GraphQLNamedType[] => {
-    const allSemiGraphQLTypes = Object.values(
-      this.semiStaticGraphQLTypes,
-    ).map((sb) => sb.getSemiGraphQLType());
+    const allSemiGraphQLTypes = Object.values(this.semiTypes).map((sb) =>
+      sb.getSemiGraphQLType(),
+    );
     return allSemiGraphQLTypes.filter((x) => !(x instanceof GraphQLList));
   };
 
-  private registerSemiStaticGraphQLType = (sb: AnySemiStaticGraphQLType) => {
-    if (this.semiStaticGraphQLTypes[sb.name]) {
+  private registerSemiType = (sb: AnySemiType) => {
+    if (this.semiTypes[sb.name]) {
       throw new Error(
-        `SemiStaticGraphQLType with name: ${sb.name} already exists. Try a different name.`,
+        `SemiType with name: ${sb.name} already exists. Try a different name.`,
       );
     }
-    this.semiStaticGraphQLTypes[sb.name] = sb;
+    this.semiTypes[sb.name] = sb;
     return sb;
   };
 
   public getSemiGraphQLTypeOf = (
-    sb: AnySemiStaticGraphQLType,
+    sb: AnySemiType,
     fallback: () => SemiGraphQLTypeOf<typeof sb>,
   ): SemiGraphQLTypeOf<typeof sb> => {
     const cachedType: GraphQLType | undefined = this.graphQLTypes[sb.name];
@@ -84,32 +78,32 @@ export class TypeFactory {
 
   // TODO: find a way to avoid doing this delayed execution
   scalar = () => ({
-    id: new ScalarSemiStaticGraphQLType<string | number, 'ID'>({
+    id: new ScalarSemiType<string | number, 'ID'>({
       typeFactory: this,
       name: 'ID',
       semiGraphQLType: GraphQLID,
     }),
 
     // TODO: see if you can avoid typing the Name param twice
-    string: new ScalarSemiStaticGraphQLType<string, 'String'>({
+    string: new ScalarSemiType<string, 'String'>({
       typeFactory: this,
       name: 'String',
       semiGraphQLType: GraphQLString,
     }),
 
-    float: new ScalarSemiStaticGraphQLType<number, 'Float'>({
+    float: new ScalarSemiType<number, 'Float'>({
       typeFactory: this,
       name: 'Float',
       semiGraphQLType: GraphQLFloat,
     }),
 
-    // int: new ScalarSemiStaticGraphQLType({ // TODO: get back here and reimplement
+    // int: new ScalarSemiType({ // TODO: get back here and reimplement
     //   typeFactory: this,
     //   name: 'Int',
     //   semiGraphQLType: GraphQLInt,
     // }),
 
-    boolean: new ScalarSemiStaticGraphQLType<boolean, 'Boolean'>({
+    boolean: new ScalarSemiType<boolean, 'Boolean'>({
       typeFactory: this,
       name: 'Boolean',
       semiGraphQLType: GraphQLBoolean,
@@ -120,38 +114,38 @@ export class TypeFactory {
     name: N;
     description?: string;
     keys: D;
-  }): EnumSemiStaticGraphQLType<N, D> => {
-    const sb = new EnumSemiStaticGraphQLType({
+  }): EnumSemiType<N, D> => {
+    const sb = new EnumSemiType({
       typeFactory: this,
       name: params.name,
       keys: params.keys,
     });
-    this.registerSemiStaticGraphQLType(sb);
+    this.registerSemiType(sb);
     return sb;
   };
 
-  inputList = <SB extends AnyInputSemiStaticGraphQLType>(
+  inputList = <SB extends AnyInputSemiType>(
     listOf: SB,
-  ): InputListSemiStaticGraphQLType<SB> => {
-    const sb = new InputListSemiStaticGraphQLType({
+  ): InputListSemiType<SB> => {
+    const sb = new InputListSemiType({
       typeFactory: this,
       name: `InputListOf<${listOf.name}>`,
       listOf: listOf,
     });
-    this.registerSemiStaticGraphQLType(sb);
+    this.registerSemiType(sb);
     return sb;
   };
 
   inputObject = <F extends InputFieldConfigMap, N extends string>(params: {
     name: N;
     fields: F;
-  }): InputObjectSemiStaticGraphQLType<F, N> => {
-    const sb = new InputObjectSemiStaticGraphQLType({
+  }): InputObjectSemiType<F, N> => {
+    const sb = new InputObjectSemiType({
       typeFactory: this,
       name: params.name,
       fields: params.fields,
     });
-    this.registerSemiStaticGraphQLType(sb);
+    this.registerSemiType(sb);
     return sb;
   };
 
@@ -163,39 +157,39 @@ export class TypeFactory {
     name: N;
     fields: F;
     implementors: I;
-  }): InterfaceSemiStaticGraphQLType<F, I, N> => {
-    const sb = new InterfaceSemiStaticGraphQLType({
+  }): InterfaceSemiType<F, I, N> => {
+    const sb = new InterfaceSemiType({
       typeFactory: this,
       name: params.name,
       fields: params.fields,
       implementors: params.implementors,
     });
-    this.registerSemiStaticGraphQLType(sb);
+    this.registerSemiType(sb);
     return sb;
   };
 
-  outputList = <SB extends AnyOutputSemiStaticGraphQLType>(params: {
+  outputList = <SB extends AnyOutputSemiType>(params: {
     listOf: SB;
-  }): OutputListSemiStaticGraphQLType<SB> => {
-    const sb = new OutputListSemiStaticGraphQLType({
+  }): OutputListSemiType<SB> => {
+    const sb = new OutputListSemiType({
       typeFactory: this,
       name: `OutputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
     });
-    this.registerSemiStaticGraphQLType(sb);
+    this.registerSemiType(sb);
     return sb;
   };
 
   outputObject = <F extends OutputFieldMap, N extends string>(params: {
     name: N;
     fields: F;
-  }): OutputObjectSemiStaticGraphQLType<F, N> => {
-    const sb = new OutputObjectSemiStaticGraphQLType({
+  }): OutputObjectSemiType<F, N> => {
+    const sb = new OutputObjectSemiType({
       typeFactory: this,
       name: params.name,
       fields: {},
     });
-    this.registerSemiStaticGraphQLType(sb);
+    this.registerSemiType(sb);
     // @ts-ignore // TODO: figure this out
     sb.fields = params.fields;
     return sb as any;
@@ -204,8 +198,8 @@ export class TypeFactory {
   recursive = <F extends OutputFieldMap, N extends string>(params: {
     name: N;
     fields: F;
-  }): OutputObjectSemiStaticGraphQLType<F, N> => {
-    return this.semiStaticGraphQLTypes[params.name] as any;
+  }): OutputObjectSemiType<F, N> => {
+    return this.semiTypes[params.name] as any;
   };
   // TODO: warn the user when they try to register the same query field.
   rootQuery = <F extends RootQueryOutputFieldMap>(params: {
@@ -220,19 +214,16 @@ export class TypeFactory {
     this.mutationFieldMaps.push(params.fields);
   };
 
-  union = <
-    SBS extends UnitableSemiStaticGraphQLTypes,
-    N extends string
-  >(params: {
+  union = <SBS extends UnitableSemiTypes, N extends string>(params: {
     name: N;
-    semiStaticGraphQLTypes: SBS;
-  }): UnionSemiStaticGraphQLType<SBS, N> => {
-    const sb = new UnionSemiStaticGraphQLType({
+    semiTypes: SBS;
+  }): UnionSemiType<SBS, N> => {
+    const sb = new UnionSemiType({
       typeFactory: this,
       name: params.name,
-      semiStaticGraphQLTypes: params.semiStaticGraphQLTypes,
+      semiTypes: params.semiTypes,
     });
-    this.registerSemiStaticGraphQLType(sb);
+    this.registerSemiType(sb);
     return sb;
   };
 
@@ -245,12 +236,12 @@ export class TypeFactory {
     this.mutationFieldMaps.forEach((cur) => {
       Object.assign(mutationFields, cur);
     });
-    const Query = new OutputObjectSemiStaticGraphQLType({
+    const Query = new OutputObjectSemiType({
       name: 'Query',
       typeFactory: this,
       fields: rootQueryFields,
     });
-    const Mutation = new OutputObjectSemiStaticGraphQLType({
+    const Mutation = new OutputObjectSemiType({
       name: 'Mutation',
       typeFactory: this,
       fields: mutationFields,

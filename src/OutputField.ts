@@ -4,36 +4,28 @@ import {
   GraphQLResolveInfo,
 } from 'graphql';
 import _ from 'lodash';
-import { TypeOf } from './StaticGraphQLType';
+import { TypeOf } from './Type';
 import {
-  AnyOutputStaticGraphQLType,
+  AnyOutputType,
   OutputFieldArgumentMap,
-  StaticGraphQLTypeMap,
+  TypeMap,
   TMap,
 } from './types/struct-types';
 
-export interface OutputFieldMap
-  extends StaticGraphQLTypeMap<AnyOutputStaticGraphQLType> {
-  [key: string]: OutputField<
-    AnyOutputStaticGraphQLType,
-    OutputFieldArgumentMap
-  >;
+export interface OutputFieldMap extends TypeMap<AnyOutputType> {
+  [key: string]: OutputField<AnyOutputType, OutputFieldArgumentMap>;
 }
 
-export interface RootQueryOutputFieldMap
-  extends StaticGraphQLTypeMap<AnyOutputStaticGraphQLType> {
-  [key: string]: RootQueryOutputField<
-    AnyOutputStaticGraphQLType,
-    OutputFieldArgumentMap
-  >;
+export interface RootQueryOutputFieldMap extends TypeMap<AnyOutputType> {
+  [key: string]: RootQueryOutputField<AnyOutputType, OutputFieldArgumentMap>;
 }
 
 // type Thunk<T> = () => T;
 
 type ResolverReturnType<T> = T | Promise<T>; // TODO: add thunk support later
-type ResolverReturnTypeOf<
-  B extends AnyOutputStaticGraphQLType
-> = ResolverReturnType<B['B_R']>;
+type ResolverReturnTypeOf<B extends AnyOutputType> = ResolverReturnType<
+  B['B_R']
+>;
 
 // TODO: add Contextlater
 
@@ -41,8 +33,8 @@ type ArgTMap<T extends OutputFieldArgumentMap> = {
   [K in keyof T]: TypeOf<T[K]['brick']>;
 };
 
-type ResolverFnOfStaticGraphQLTypeAndArgs<
-  B extends AnyOutputStaticGraphQLType,
+type ResolverFnOfTypeAndArgs<
+  B extends AnyOutputType,
   A extends OutputFieldArgumentMap,
   R
 > = (
@@ -56,7 +48,7 @@ type ResolverFnOfConfigMap<
   T extends OutputFieldMap,
   K extends keyof T,
   R
-> = ResolverFnOfStaticGraphQLTypeAndArgs<T[K]['brick'], T[K]['args'], R>;
+> = ResolverFnOfTypeAndArgs<T[K]['brick'], T[K]['args'], R>;
 
 // TODO: later on, enable the root to be something else, but always force a return on the field.
 export type FieldResolversOf<T extends OutputFieldMap> = {
@@ -64,7 +56,7 @@ export type FieldResolversOf<T extends OutputFieldMap> = {
 };
 
 export abstract class OutputField<
-  B extends AnyOutputStaticGraphQLType,
+  B extends AnyOutputType,
   A extends OutputFieldArgumentMap
 > {
   readonly brick: B;
@@ -96,9 +88,7 @@ export abstract class OutputField<
     });
   };
 
-  public setResolve = <R>(
-    resolve: ResolverFnOfStaticGraphQLTypeAndArgs<B, A, R>,
-  ): void => {
+  public setResolve = <R>(resolve: ResolverFnOfTypeAndArgs<B, A, R>): void => {
     this.resolve = resolve;
   };
 
@@ -114,12 +104,12 @@ export abstract class OutputField<
 }
 
 export class SimpleOutputField<
-  B extends AnyOutputStaticGraphQLType,
+  B extends AnyOutputType,
   A extends OutputFieldArgumentMap
 > extends OutputField<B, A> {}
 
 export class RootQueryOutputField<
-  B extends AnyOutputStaticGraphQLType,
+  B extends AnyOutputType,
   A extends OutputFieldArgumentMap
 > extends OutputField<B, A> {
   constructor(params: {
@@ -127,7 +117,7 @@ export class RootQueryOutputField<
     args: A;
     description?: string;
     deprecationReason?: string;
-    resolve: ResolverFnOfStaticGraphQLTypeAndArgs<B, A, undefined>;
+    resolve: ResolverFnOfTypeAndArgs<B, A, undefined>;
   }) {
     super(params);
     this.resolve = params.resolve;

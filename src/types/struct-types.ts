@@ -1,26 +1,19 @@
-import {
-  AnyStaticGraphQLType,
-  AnySemiStaticGraphQLType,
-  SemiTypeOf,
-  TypeOf,
-} from '../StaticGraphQLType';
-import { InterfaceSemiStaticGraphQLType } from './Interface';
-import { OutputObjectSemiStaticGraphQLType } from './OutputObject';
+import { AnyType, AnySemiType, SemiTypeOf, TypeOf } from '../Type';
+import { InterfaceSemiType } from './Interface';
+import { OutputObjectSemiType } from './OutputObject';
 
-export type ListTypeOf<SB extends AnySemiStaticGraphQLType> = Array<
-  SemiTypeOf<SB>
->;
+export type ListTypeOf<SB extends AnySemiType> = Array<SemiTypeOf<SB>>;
 
 // TODO: can we do recursive output objects?
 
-export interface StaticGraphQLTypeMap<B extends AnyStaticGraphQLType> {
+export interface TypeMap<B extends AnyType> {
   [key: string]: {
     brick: B;
   };
 }
 
 export interface ArgumentConfig {
-  brick: AnyInputStaticGraphQLType;
+  brick: AnyInputType;
   description?: string;
   deprecationReason?: string;
   // defaultValue?: any; // TODO: implement
@@ -37,37 +30,31 @@ export type OutputKind =
   | 'interface'
   | 'outputlist';
 
-export type AnyOutputStaticGraphQLType = AnyStaticGraphQLType<OutputKind>;
-export type AnyOutputSemiStaticGraphQLType = AnySemiStaticGraphQLType<
-  OutputKind
->;
+export type AnyOutputType = AnyType<OutputKind>;
+export type AnyOutputSemiType = AnySemiType<OutputKind>;
 
-export type TMap<M extends StaticGraphQLTypeMap<any>> = {
+export type TMap<M extends TypeMap<any>> = {
   [K in keyof M]: TypeOf<M[K]['brick']>;
 };
 
-export type AnyOutputObjectSemiStaticGraphQLType = OutputObjectSemiStaticGraphQLType<
-  any,
-  any
->;
+export type AnyOutputObjectSemiType = OutputObjectSemiType<any, any>;
 
 // We need this to guarantee uniqueness of registered interfaces
-export interface InterfaceSemiStaticGraphQLTypeMap {
-  [key: string]: InterfaceSemiStaticGraphQLType<any, any, any>;
+export interface InterfaceSemiTypeMap {
+  [key: string]: InterfaceSemiType<any, any, any>;
 }
 
 export interface InputFieldConfig {
-  brick: AnyInputStaticGraphQLType;
+  brick: AnyInputType;
   description?: string;
   deprecationReason?: string;
   // defaultValue?: any; // TODO: implement
 }
 
-export interface InputFieldConfigMap
-  extends StaticGraphQLTypeMap<AnyInputStaticGraphQLType> {
+export interface InputFieldConfigMap extends TypeMap<AnyInputType> {
   [key: string]: InputFieldConfig;
 }
 
 export type InputKind = 'scalar' | 'enum' | 'inputlist' | 'inputobject';
-export type AnyInputStaticGraphQLType = AnyStaticGraphQLType<InputKind>;
-export type AnyInputSemiStaticGraphQLType = AnySemiStaticGraphQLType<InputKind>;
+export type AnyInputType = AnyType<InputKind>;
+export type AnyInputSemiType = AnySemiType<InputKind>;

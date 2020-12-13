@@ -94,7 +94,7 @@ export const User = fac.outputObject({
 
 export const bestFriend = fac.union({
   name: 'BestFriend',
-  semiStaticGraphQLTypes: [Person, Animal],
+  semiTypes: [Person, Animal],
 });
 
 const idInterface = fac.interface({

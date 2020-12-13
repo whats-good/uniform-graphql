@@ -1,26 +1,26 @@
 import { GraphQLUnionType } from 'graphql';
 import {
-  StaticGraphQLType,
-  NonNullableStaticGraphQLTypeOf,
-  NullableStaticGraphQLTypeOf,
-  SemiStaticGraphQLType,
+  Type,
+  NonNullableTypeOf,
+  NullableTypeOf,
+  SemiType,
   SemiTypeOf,
-} from '../StaticGraphQLType';
-import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
-import { AnyOutputObjectSemiStaticGraphQLType } from './struct-types';
+} from '../Type';
+import { TypeFactory } from '../TypeFactory';
+import { AnyOutputObjectSemiType } from './struct-types';
 
-export type UnitableSemiStaticGraphQLTypes = [
-  AnyOutputObjectSemiStaticGraphQLType,
-  AnyOutputObjectSemiStaticGraphQLType,
-  ...Array<AnyOutputObjectSemiStaticGraphQLType>
+export type UnitableSemiTypes = [
+  AnyOutputObjectSemiType,
+  AnyOutputObjectSemiType,
+  ...Array<AnyOutputObjectSemiType>
 ];
 
-type UtdTypes<T extends UnitableSemiStaticGraphQLTypes> = SemiTypeOf<T[number]>;
+type UtdTypes<T extends UnitableSemiTypes> = SemiTypeOf<T[number]>;
 
-export class UnionSemiStaticGraphQLType<
-  SBS extends UnitableSemiStaticGraphQLTypes,
+export class UnionSemiType<
+  SBS extends UnitableSemiTypes,
   N extends string
-> extends SemiStaticGraphQLType<
+> extends SemiType<
   'union',
   N,
   GraphQLUnionType,
@@ -28,31 +28,27 @@ export class UnionSemiStaticGraphQLType<
   UtdTypes<SBS> & { __typename: SBS[number]['name'] }
 > {
   public readonly kind = 'union' as const;
-  public readonly semiStaticGraphQLTypes: SBS;
+  public readonly semiTypes: SBS;
 
-  public readonly nullable: NullableStaticGraphQLTypeOf<
-    UnionSemiStaticGraphQLType<SBS, N>
-  >;
-  public readonly nonNullable: NonNullableStaticGraphQLTypeOf<
-    UnionSemiStaticGraphQLType<SBS, N>
-  >;
+  public readonly nullable: NullableTypeOf<UnionSemiType<SBS, N>>;
+  public readonly nonNullable: NonNullableTypeOf<UnionSemiType<SBS, N>>;
 
   public constructor(params: {
     typeFactory: TypeFactory;
     name: N;
-    semiStaticGraphQLTypes: SBS;
+    semiTypes: SBS;
   }) {
     super(params);
-    this.semiStaticGraphQLTypes = params.semiStaticGraphQLTypes;
+    this.semiTypes = params.semiTypes;
 
-    this.nullable = StaticGraphQLType.initNullable(this);
-    this.nonNullable = StaticGraphQLType.initNonNullable(this);
+    this.nullable = Type.initNullable(this);
+    this.nonNullable = Type.initNonNullable(this);
   }
 
   public readonly getFreshSemiGraphQLType = (): GraphQLUnionType => {
     return new GraphQLUnionType({
       name: this.name,
-      types: this.semiStaticGraphQLTypes.map((sb) => sb.getSemiGraphQLType()),
+      types: this.semiTypes.map((sb) => sb.getSemiGraphQLType()),
     });
   };
 }

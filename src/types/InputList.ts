@@ -1,17 +1,10 @@
 import { GraphQLList } from 'graphql';
-import {
-  StaticGraphQLType,
-  NonNullableStaticGraphQLTypeOf,
-  NullableStaticGraphQLTypeOf,
-  SemiStaticGraphQLType,
-} from '../StaticGraphQLType';
-import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
-import { AnyInputSemiStaticGraphQLType, ListTypeOf } from './struct-types';
+import { Type, NonNullableTypeOf, NullableTypeOf, SemiType } from '../Type';
+import { TypeFactory } from '../TypeFactory';
+import { AnyInputSemiType, ListTypeOf } from './struct-types';
 
 // TODO: combine the input and output lists into one super class, and then specialize.
-export class InputListSemiStaticGraphQLType<
-  SB extends AnyInputSemiStaticGraphQLType
-> extends SemiStaticGraphQLType<
+export class InputListSemiType<SB extends AnyInputSemiType> extends SemiType<
   'inputlist',
   string, // TODO: differentiate between named and non-named types so that you can avoid unnecessary generics
   GraphQLList<any>,
@@ -19,18 +12,14 @@ export class InputListSemiStaticGraphQLType<
 > {
   public readonly kind = 'inputlist';
   public readonly listOf: SB;
-  public readonly nonNullable: NonNullableStaticGraphQLTypeOf<
-    InputListSemiStaticGraphQLType<SB>
-  >;
-  public readonly nullable: NullableStaticGraphQLTypeOf<
-    InputListSemiStaticGraphQLType<SB>
-  >;
+  public readonly nonNullable: NonNullableTypeOf<InputListSemiType<SB>>;
+  public readonly nullable: NullableTypeOf<InputListSemiType<SB>>;
 
   constructor(params: { typeFactory: TypeFactory; name: string; listOf: SB }) {
     super(params);
     this.listOf = params.listOf;
-    this.nonNullable = StaticGraphQLType.initNonNullable(this);
-    this.nullable = StaticGraphQLType.initNullable(this);
+    this.nonNullable = Type.initNonNullable(this);
+    this.nullable = Type.initNullable(this);
   }
 
   public readonly getFreshSemiGraphQLType = (): GraphQLList<any> => {
