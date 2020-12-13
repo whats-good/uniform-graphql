@@ -1,10 +1,22 @@
 {
-  "name": "@whatsgood/static-graphql",
+  "name": "@whatsgood/statically-typed-graphql",
   "version": "0.1.0",
-  "description": "",
+  "description": "A library to create statically typed GraphQL backends. Absolutely everything is written in a typesafe manner, including nullability, union types, interface types and so on",
   "main": "build/index.js",
   "author": "Kerem Kazan",
   "license": "MIT",
+  "keywords": [
+    "graphql",
+    "typescript",
+    "statically",
+    "static",
+    "typed",
+    "strongly",
+    "strong",
+    "compile",
+    "time",
+    "compiler"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint '*/**/*.{ts,tsx}'",
