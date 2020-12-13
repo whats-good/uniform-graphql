@@ -29,15 +29,6 @@ export abstract class SemiType<
 
   abstract readonly nullable: NullableTypeOf<SemiType<K, N, SB_G, SB_A>>;
   abstract readonly nonNullable: NonNullableTypeOf<SemiType<K, N, SB_G, SB_A>>;
-  // TODO: find a way for this "resolveAs" method to handle promises and thunks
-
-  // public resolveAs = async (x: SB_A) => {
-  //   const resolvedX = await x;
-  //   return {
-  //     ...resolvedX,
-  //     __typename: this.name,
-  //   };
-  // };
 
   public getSemiGraphQLType = (): SB_G => {
     return this.semiTypeFactory.getSemiGraphQLTypeOf(
@@ -69,36 +60,36 @@ interface Named {
 }
 export type NameOf<T extends Named> = T['name'];
 export type KindOf<T extends Kinded> = T['kind'];
-export type SemiTypeOf<SB extends AnySemiType> = SB['SB_A'];
-export type SemiGraphQLTypeOf<SB extends AnySemiType> = ReturnType<
-  SB['getSemiGraphQLType']
+export type SemiTypeOf<ST extends AnySemiType> = ST['SB_A'];
+export type SemiGraphQLTypeOf<ST extends AnySemiType> = ReturnType<
+  ST['getSemiGraphQLType']
 >;
 export type TypeOf<B extends AnyType> = B['B_A'];
 export type GraphQLTypeOf<B extends AnyType> = B['B_G'];
 
-export type NullableTypeOf<SB extends AnySemiType> = Type<
-  KindOf<SB>,
-  SB['name'],
-  SemiGraphQLTypeOf<SB>,
-  SB,
-  SemiTypeOf<SB> | null | undefined,
-  SB['SB_R'] | null | undefined
+export type NullableTypeOf<ST extends AnySemiType> = Type<
+  KindOf<ST>,
+  ST['name'],
+  SemiGraphQLTypeOf<ST>,
+  ST,
+  SemiTypeOf<ST> | null | undefined,
+  ST['SB_R'] | null | undefined
 >;
 
-export type NonNullableTypeOf<SB extends AnySemiType> = Type<
-  KindOf<SB>,
-  SB['name'],
+export type NonNullableTypeOf<ST extends AnySemiType> = Type<
+  KindOf<ST>,
+  ST['name'],
   GraphQLNonNull<any>,
-  SB,
-  SemiTypeOf<SB>,
-  SB['SB_R']
+  ST,
+  SemiTypeOf<ST>,
+  ST['SB_R']
 >;
 
 export class Type<
   K extends Kind,
-  N extends SB['name'],
+  N extends ST['name'],
   B_G extends GraphQLType,
-  SB extends AnySemiType<K>,
+  ST extends AnySemiType<K>,
   B_A,
   B_R
 > {
@@ -108,14 +99,14 @@ export class Type<
 
   public readonly name: N;
   public readonly kind: K;
-  public readonly semiType: SB;
+  public readonly semiType: ST;
   public readonly getGraphQLType: () => B_G;
 
   constructor(params: {
-    name: SB['name'];
+    name: ST['name'];
     kind: K;
     getGraphQLType: () => B_G;
-    semiType: SB;
+    semiType: ST;
   }) {
     this.name = params.name;
     this.kind = params.kind;
@@ -123,23 +114,23 @@ export class Type<
     this.semiType = params.semiType;
   }
 
-  static initNullable<SB extends AnySemiType>(sb: SB): NullableTypeOf<SB> {
+  static initNullable<ST extends AnySemiType>(st: ST): NullableTypeOf<ST> {
     return new Type({
-      name: sb.name,
-      kind: sb.kind,
-      getGraphQLType: sb.getSemiGraphQLType,
-      semiType: sb,
+      name: st.name,
+      kind: st.kind,
+      getGraphQLType: st.getSemiGraphQLType,
+      semiType: st,
     });
   }
 
-  static initNonNullable<SB extends AnySemiType>(
-    sb: SB,
-  ): NonNullableTypeOf<SB> {
+  static initNonNullable<ST extends AnySemiType>(
+    st: ST,
+  ): NonNullableTypeOf<ST> {
     return new Type({
-      name: sb.name,
-      getGraphQLType: () => new GraphQLNonNull(sb.getSemiGraphQLType()),
-      kind: sb.kind,
-      semiType: sb,
+      name: st.name,
+      getGraphQLType: () => new GraphQLNonNull(st.getSemiGraphQLType()),
+      kind: st.kind,
+      semiType: st,
     });
   }
 }

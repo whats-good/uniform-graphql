@@ -48,7 +48,7 @@ export class UnionSemiType<
   public readonly getFreshSemiGraphQLType = (): GraphQLUnionType => {
     return new GraphQLUnionType({
       name: this.name,
-      types: this.semiTypes.map((sb) => sb.getSemiGraphQLType()),
+      types: this.semiTypes.map((st) => st.getSemiGraphQLType()),
     });
   };
 }

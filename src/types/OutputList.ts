@@ -3,21 +3,21 @@ import { Type, NonNullableTypeOf, NullableTypeOf, SemiType } from '../Type';
 import { SemiTypeFactory } from '../SemiTypeFactory';
 import { AnyOutputSemiType, ListTypeOf } from './struct-types';
 
-export class OutputListSemiType<SB extends AnyOutputSemiType> extends SemiType<
+export class OutputListSemiType<ST extends AnyOutputSemiType> extends SemiType<
   'outputlist',
   string,
   GraphQLList<any>,
-  ListTypeOf<SB>
+  ListTypeOf<ST>
 > {
   public readonly kind = 'outputlist';
-  public readonly listOf: SB;
-  public readonly nonNullable: NonNullableTypeOf<OutputListSemiType<SB>>;
-  public readonly nullable: NullableTypeOf<OutputListSemiType<SB>>;
+  public readonly listOf: ST;
+  public readonly nonNullable: NonNullableTypeOf<OutputListSemiType<ST>>;
+  public readonly nullable: NullableTypeOf<OutputListSemiType<ST>>;
 
   constructor(params: {
     name: string;
     semiTypeFactory: SemiTypeFactory;
-    listOf: SB;
+    listOf: ST;
   }) {
     super(params);
     this.listOf = params.listOf;

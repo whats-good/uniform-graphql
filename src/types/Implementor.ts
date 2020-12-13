@@ -59,9 +59,9 @@ export abstract class ImplementorSemiType<
   // TODO: i need to flatten the entire tree of interfaces that this interface itself may be extending, and register all of them here.
 
   public implements = <I extends OutputFieldMap>(
-    sb: InterfaceSemiType<I, any, any>,
+    st: InterfaceSemiType<I, any, any>,
   ): void => {
-    this.shallowInterfaces[sb.name] = sb;
+    this.shallowInterfaces[st.name] = st;
   };
 
   public getFlattenedInterfaces = (): InterfaceSemiTypeMap => {
@@ -81,8 +81,8 @@ export abstract class ImplementorSemiType<
   protected getGraphQLTypeConstructor = (): ImplementorGraphQLConfig => {
     return {
       name: this.name,
-      interfaces: Object.values(this.getFlattenedInterfaces()).map((sb) =>
-        sb.getSemiGraphQLType(),
+      interfaces: Object.values(this.getFlattenedInterfaces()).map((st) =>
+        st.getSemiGraphQLType(),
       ),
       fields: () =>
         _.mapValues(this.fields, (field) => field.getGraphQLTypeConstructor()),

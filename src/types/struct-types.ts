@@ -2,7 +2,7 @@ import { AnyType, AnySemiType, SemiTypeOf, TypeOf } from '../Type';
 import { InterfaceSemiType } from './Interface';
 import { OutputObjectSemiType } from './OutputObject';
 
-export type ListTypeOf<SB extends AnySemiType> = Array<SemiTypeOf<SB>>;
+export type ListTypeOf<ST extends AnySemiType> = Array<SemiTypeOf<ST>>;
 
 export interface TypeMap<B extends AnyType> {
   [key: string]: {

@@ -35,32 +35,32 @@ export class SemiTypeFactory {
   private readonly mutationFieldMaps: RootOutputFieldMap[] = [];
 
   public getAllNamedSemiGraphQLTypes = (): GraphQLNamedType[] => {
-    const allSemiGraphQLTypes = Object.values(this.semiTypes).map((sb) =>
-      sb.getSemiGraphQLType(),
+    const allSemiGraphQLTypes = Object.values(this.semiTypes).map((st) =>
+      st.getSemiGraphQLType(),
     );
     return allSemiGraphQLTypes.filter((x) => !(x instanceof GraphQLList));
   };
 
-  private registerSemiType = (sb: AnySemiType) => {
-    if (this.semiTypes[sb.name]) {
+  public registerSemiType = (st: AnySemiType) => {
+    if (this.semiTypes[st.name]) {
       throw new Error(
-        `SemiType with name: ${sb.name} already exists. Try a different name.`,
+        `SemiType with name: ${st.name} already exists. Try a different name.`,
       );
     }
-    this.semiTypes[sb.name] = sb;
-    return sb;
+    this.semiTypes[st.name] = st;
+    return st;
   };
 
   public getSemiGraphQLTypeOf = (
-    sb: AnySemiType,
-    fallback: () => SemiGraphQLTypeOf<typeof sb>,
-  ): SemiGraphQLTypeOf<typeof sb> => {
-    const cachedType: GraphQLType | undefined = this.graphQLTypes[sb.name];
+    st: AnySemiType,
+    fallback: () => SemiGraphQLTypeOf<typeof st>,
+  ): SemiGraphQLTypeOf<typeof st> => {
+    const cachedType: GraphQLType | undefined = this.graphQLTypes[st.name];
     if (cachedType) {
       return cachedType;
     }
     const fresh = fallback();
-    this.graphQLTypes[sb.name] = fresh;
+    this.graphQLTypes[st.name] = fresh;
 
     return fresh;
   };
@@ -70,38 +70,38 @@ export class SemiTypeFactory {
     description?: string;
     keys: D;
   }): EnumSemiType<N, D> => {
-    const sb = new EnumSemiType({
+    const st = new EnumSemiType({
       semiTypeFactory: this,
       name: params.name,
       keys: params.keys,
     });
-    this.registerSemiType(sb);
-    return sb;
+    this.registerSemiType(st);
+    return st;
   };
 
-  inputList = <SB extends AnyInputSemiType>(
-    listOf: SB,
-  ): InputListSemiType<SB> => {
-    const sb = new InputListSemiType({
+  inputList = <ST extends AnyInputSemiType>(
+    listOf: ST,
+  ): InputListSemiType<ST> => {
+    const st = new InputListSemiType({
       semiTypeFactory: this,
       name: `InputListOf<${listOf.name}>`,
       listOf: listOf,
     });
-    this.registerSemiType(sb);
-    return sb;
+    this.registerSemiType(st);
+    return st;
   };
 
   inputObject = <F extends InputFieldConfigMap, N extends string>(params: {
     name: N;
     fields: F;
   }): InputObjectSemiType<F, N> => {
-    const sb = new InputObjectSemiType({
+    const st = new InputObjectSemiType({
       semiTypeFactory: this,
       name: params.name,
       fields: params.fields,
     });
-    this.registerSemiType(sb);
-    return sb;
+    this.registerSemiType(st);
+    return st;
   };
 
   interface = <
@@ -113,41 +113,41 @@ export class SemiTypeFactory {
     fields: F;
     implementors: I;
   }): InterfaceSemiType<F, I, N> => {
-    const sb = new InterfaceSemiType({
+    const st = new InterfaceSemiType({
       semiTypeFactory: this,
       name: params.name,
       fields: params.fields,
       implementors: params.implementors,
     });
-    this.registerSemiType(sb);
-    return sb;
+    this.registerSemiType(st);
+    return st;
   };
 
-  outputList = <SB extends AnyOutputSemiType>(params: {
-    listOf: SB;
-  }): OutputListSemiType<SB> => {
-    const sb = new OutputListSemiType({
+  outputList = <ST extends AnyOutputSemiType>(params: {
+    listOf: ST;
+  }): OutputListSemiType<ST> => {
+    const st = new OutputListSemiType({
       semiTypeFactory: this,
       name: `OutputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
     });
-    this.registerSemiType(sb);
-    return sb;
+    this.registerSemiType(st);
+    return st;
   };
 
   outputObject = <F extends OutputFieldMap, N extends string>(params: {
     name: N;
     fields: F;
   }): OutputObjectSemiType<F, N> => {
-    const sb = new OutputObjectSemiType({
+    const st = new OutputObjectSemiType({
       semiTypeFactory: this,
       name: params.name,
       fields: {},
     });
-    this.registerSemiType(sb);
+    this.registerSemiType(st);
     // @ts-ignore // TODO: figure this out
-    sb.fields = params.fields;
-    return sb as any;
+    st.fields = params.fields;
+    return st as any;
   };
 
   recursive = <F extends OutputFieldMap, N extends string>(params: {
@@ -169,13 +169,13 @@ export class SemiTypeFactory {
     name: N;
     semiTypes: SBS;
   }): UnionSemiType<SBS, N> => {
-    const sb = new UnionSemiType({
+    const st = new UnionSemiType({
       semiTypeFactory: this,
       name: params.name,
       semiTypes: params.semiTypes,
     });
-    this.registerSemiType(sb);
-    return sb;
+    this.registerSemiType(st);
+    return st;
   };
 
   getGraphQLSchema = (): GraphQLSchema => {

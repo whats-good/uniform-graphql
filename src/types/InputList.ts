@@ -4,21 +4,21 @@ import { SemiTypeFactory } from '../SemiTypeFactory';
 import { AnyInputSemiType, ListTypeOf } from './struct-types';
 
 // TODO: combine the input and output lists into one super class, and then specialize.
-export class InputListSemiType<SB extends AnyInputSemiType> extends SemiType<
+export class InputListSemiType<ST extends AnyInputSemiType> extends SemiType<
   'inputlist',
   string, // TODO: differentiate between named and non-named types so that you can avoid unnecessary generics
   GraphQLList<any>,
-  ListTypeOf<SB>
+  ListTypeOf<ST>
 > {
   public readonly kind = 'inputlist';
-  public readonly listOf: SB;
-  public readonly nonNullable: NonNullableTypeOf<InputListSemiType<SB>>;
-  public readonly nullable: NullableTypeOf<InputListSemiType<SB>>;
+  public readonly listOf: ST;
+  public readonly nonNullable: NonNullableTypeOf<InputListSemiType<ST>>;
+  public readonly nullable: NullableTypeOf<InputListSemiType<ST>>;
 
   constructor(params: {
     semiTypeFactory: SemiTypeFactory;
     name: string;
-    listOf: SB;
+    listOf: ST;
   }) {
     super(params);
     this.listOf = params.listOf;

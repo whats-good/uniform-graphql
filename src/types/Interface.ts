@@ -32,7 +32,7 @@ export class InterfaceSemiType<
     super(params);
     this.fields = params.fields;
     this.implementors = params.implementors;
-    this.implementors.forEach((sb) => sb.implements(this));
+    this.implementors.forEach((st) => st.implements(this));
 
     this.nullable = Type.initNullable(this);
     this.nonNullable = Type.initNonNullable(this);
