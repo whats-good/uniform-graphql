@@ -2,12 +2,12 @@ import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import {
   SemiTypeFactory,
-  SimpleOutputField,
   RootOutputField,
   float,
   boolean,
   id,
   string,
+  field,
 } from './src';
 import { SemiTypeOf } from './src/Type';
 
@@ -38,24 +38,16 @@ const someInput = fac.inputObject({
 const Person = fac.outputObject({
   name: 'Person',
   fields: {
-    id: new SimpleOutputField({
-      type: id.nullable,
-    }),
-    firstName: new SimpleOutputField({
-      type: string.nonNullable,
-    }),
+    id: field(id.nullable),
+    firstName: field(string.nonNullable),
   },
 });
 
 const EmployeeInterface = fac.interface({
   name: 'EmployeeInterface',
   fields: {
-    firstName: new SimpleOutputField({
-      type: string.nonNullable,
-    }),
-    id: new SimpleOutputField({
-      type: id.nullable,
-    }),
+    id: field(id.nullable),
+    firstName: field(string.nonNullable),
   },
   implementors: [Person],
 });
@@ -69,12 +61,8 @@ Person.fieldResolverize({
 const Animal = fac.outputObject({
   name: 'Animal',
   fields: {
-    id: new SimpleOutputField({
-      type: id.nullable,
-    }),
-    owner: new SimpleOutputField({
-      type: Person.nullable,
-    }),
+    id: field(id.nullable),
+    owner: field(Person.nullable),
   },
 });
 
@@ -82,14 +70,13 @@ const User = fac.outputObject({
   name: 'User',
   get fields() {
     return {
-      id: new SimpleOutputField({
-        type: id.nullable,
-      }),
-      friends: new SimpleOutputField({
-        type: fac.outputList({
+      id: field(id.nullable),
+      // TODO: fix the list signature
+      friends: field(
+        fac.outputList({
           listOf: fac.recursive(this),
         }).nonNullable,
-      }),
+      ),
     };
   },
 });
@@ -102,9 +89,7 @@ const bestFriend = fac.union({
 const idInterface = fac.interface({
   name: 'IDInterface',
   fields: {
-    id: new SimpleOutputField({
-      type: id.nullable,
-    }),
+    id: field(id.nullable),
   },
   implementors: [Animal],
 });
@@ -112,9 +97,7 @@ const idInterface = fac.interface({
 const firstNameInterface = fac.interface({
   name: 'FirstNameInterface',
   fields: {
-    firstName: new SimpleOutputField({
-      type: string.nonNullable,
-    }),
+    firstName: field(string.nonNullable),
   },
   implementors: [Person],
 });

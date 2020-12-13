@@ -114,6 +114,26 @@ export class SimpleOutputField<
   A extends OutputFieldArgumentMap
 > extends OutputField<B, A> {}
 
+export const field = <
+  T extends AnyOutputType,
+  A extends OutputFieldArgumentMap
+>(
+  type: T,
+  // @ts-ignore TODO: see if we can fix this
+  args?: A = {},
+  options: {
+    description?: string;
+    deprecationreason?: string;
+  } = {},
+): SimpleOutputField<T, OutputFieldArgumentMap> => {
+  return new SimpleOutputField({
+    type,
+    args,
+    deprecationReason: options.deprecationreason,
+    description: options.description,
+  });
+};
+
 export class RootOutputField<
   B extends AnyOutputType,
   A extends OutputFieldArgumentMap

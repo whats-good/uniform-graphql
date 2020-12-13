@@ -34,14 +34,14 @@ export class SemiTypeFactory {
   private readonly rootQueryFieldMaps: RootOutputFieldMap[] = [];
   private readonly mutationFieldMaps: RootOutputFieldMap[] = [];
 
-  public getAllNamedSemiGraphQLTypes = (): GraphQLNamedType[] => {
+  getAllNamedSemiGraphQLTypes = (): GraphQLNamedType[] => {
     const allSemiGraphQLTypes = Object.values(this.semiTypes).map((st) =>
       st.getSemiGraphQLType(),
     );
     return allSemiGraphQLTypes.filter((x) => !(x instanceof GraphQLList));
   };
 
-  public registerSemiType = (st: AnySemiType) => {
+  registerSemiType = (st: AnySemiType) => {
     if (this.semiTypes[st.name]) {
       throw new Error(
         `SemiType with name: ${st.name} already exists. Try a different name.`,
@@ -51,7 +51,7 @@ export class SemiTypeFactory {
     return st;
   };
 
-  public getSemiGraphQLTypeOf = (
+  getSemiGraphQLTypeOf = (
     st: AnySemiType,
     fallback: () => SemiGraphQLTypeOf<typeof st>,
   ): SemiGraphQLTypeOf<typeof st> => {
