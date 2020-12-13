@@ -10,7 +10,7 @@ import {
   OutputFieldArgumentMap,
   BrickMap,
   TMap,
-} from './semi-bricks/struct-types';
+} from './types/struct-types';
 
 export interface OutputFieldMap extends BrickMap<AnyOutputBrick> {
   [key: string]: OutputField<AnyOutputBrick, OutputFieldArgumentMap>;

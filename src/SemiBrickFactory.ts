@@ -9,20 +9,20 @@ import {
   GraphQLType,
 } from 'graphql';
 import { AnySemiBrick, SemiGraphQLTypeOf } from './Brick';
-import { EnumSemiBrick, StringKeys } from './semi-bricks/Enum';
-import { Implementors } from './semi-bricks/Implementor';
-import { InputListSemiBrick } from './semi-bricks/InputList';
-import { InputObjectSemiBrick } from './semi-bricks/InputObject';
-import { InterfaceSemiBrick } from './semi-bricks/Interface';
-import { OutputListSemiBrick } from './semi-bricks/OutputList';
-import { OutputObjectSemiBrick } from './semi-bricks/OutputObject';
-import { ScalarSemiBrick } from './semi-bricks/Scalar';
+import { EnumSemiBrick, StringKeys } from './types/Enum';
+import { Implementors } from './types/Implementor';
+import { InputListSemiBrick } from './types/InputList';
+import { InputObjectSemiBrick } from './types/InputObject';
+import { InterfaceSemiBrick } from './types/Interface';
+import { OutputListSemiBrick } from './types/OutputList';
+import { OutputObjectSemiBrick } from './types/OutputObject';
+import { ScalarSemiBrick } from './types/Scalar';
 import {
   AnyOutputSemiBrick,
   AnyInputSemiBrick,
   InputFieldConfigMap,
-} from './semi-bricks/struct-types';
-import { UnionSemiBrick, UnitableSemiBricks } from './semi-bricks/Union';
+} from './types/struct-types';
+import { UnionSemiBrick, UnitableSemiBricks } from './types/Union';
 import { OutputFieldMap, RootQueryOutputFieldMap } from './OutputField';
 
 interface SemiBricksMap {
