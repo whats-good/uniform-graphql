@@ -1,12 +1,12 @@
 import { GraphQLEnumType } from 'graphql';
 import _ from 'lodash';
 import {
-  SemiBrick,
-  Brick,
-  NullableBrickOf,
-  NonNullableBrickOf,
-} from '../Brick';
-import { SemiBrickFactory } from '../SemiBrickFactory';
+  SemiStaticGraphQLType,
+  StaticGraphQLType,
+  NullableStaticGraphQLTypeOf,
+  NonNullableStaticGraphQLTypeOf,
+} from '../StaticGraphQLType';
+import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
 
 export interface StringKeys {
   [key: string]: unknown;
@@ -14,25 +14,29 @@ export interface StringKeys {
 
 // TODO: expose the enum values as a public property.
 // TODO: allow the developer to make the enums actually enumerable
-export class EnumSemiBrick<
+export class EnumSemiStaticGraphQLType<
   N extends string,
   D extends StringKeys
-> extends SemiBrick<'enum', N, GraphQLEnumType, keyof D> {
+> extends SemiStaticGraphQLType<'enum', N, GraphQLEnumType, keyof D> {
   public readonly kind = 'enum' as const;
   public readonly keys: D;
 
-  public readonly nullable: NullableBrickOf<EnumSemiBrick<N, D>>;
-  public readonly nonNullable: NonNullableBrickOf<EnumSemiBrick<N, D>>;
+  public readonly nullable: NullableStaticGraphQLTypeOf<
+    EnumSemiStaticGraphQLType<N, D>
+  >;
+  public readonly nonNullable: NonNullableStaticGraphQLTypeOf<
+    EnumSemiStaticGraphQLType<N, D>
+  >;
 
   constructor(params: {
     name: N;
-    semiBrickFactory: SemiBrickFactory;
+    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
     keys: D;
   }) {
     super(params);
     this.keys = params.keys;
-    this.nullable = Brick.initNullable(this);
-    this.nonNullable = Brick.initNonNullable(this);
+    this.nullable = StaticGraphQLType.initNullable(this);
+    this.nonNullable = StaticGraphQLType.initNonNullable(this);
   }
 
   public readonly getFreshSemiGraphQLType = (): GraphQLEnumType => {

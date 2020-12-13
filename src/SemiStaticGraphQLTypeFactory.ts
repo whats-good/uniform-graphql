@@ -8,62 +8,68 @@ import {
   GraphQLString,
   GraphQLType,
 } from 'graphql';
-import { AnySemiBrick, SemiGraphQLTypeOf } from './Brick';
-import { EnumSemiBrick, StringKeys } from './types/Enum';
-import { Implementors } from './types/Implementor';
-import { InputListSemiBrick } from './types/InputList';
-import { InputObjectSemiBrick } from './types/InputObject';
-import { InterfaceSemiBrick } from './types/Interface';
-import { OutputListSemiBrick } from './types/OutputList';
-import { OutputObjectSemiBrick } from './types/OutputObject';
-import { ScalarSemiBrick } from './types/Scalar';
 import {
-  AnyOutputSemiBrick,
-  AnyInputSemiBrick,
+  AnySemiStaticGraphQLType,
+  SemiGraphQLTypeOf,
+} from './StaticGraphQLType';
+import { EnumSemiStaticGraphQLType, StringKeys } from './types/Enum';
+import { Implementors } from './types/Implementor';
+import { InputListSemiStaticGraphQLType } from './types/InputList';
+import { InputObjectSemiStaticGraphQLType } from './types/InputObject';
+import { InterfaceSemiStaticGraphQLType } from './types/Interface';
+import { OutputListSemiStaticGraphQLType } from './types/OutputList';
+import { OutputObjectSemiStaticGraphQLType } from './types/OutputObject';
+import { ScalarSemiStaticGraphQLType } from './types/Scalar';
+import {
+  AnyOutputSemiStaticGraphQLType,
+  AnyInputSemiStaticGraphQLType,
   InputFieldConfigMap,
 } from './types/struct-types';
-import { UnionSemiBrick, UnitableSemiBricks } from './types/Union';
+import {
+  UnionSemiStaticGraphQLType,
+  UnitableSemiStaticGraphQLTypes,
+} from './types/Union';
 import { OutputFieldMap, RootQueryOutputFieldMap } from './OutputField';
 
-interface SemiBricksMap {
-  [key: string]: AnySemiBrick;
+interface SemiStaticGraphQLTypesMap {
+  [key: string]: AnySemiStaticGraphQLType;
 }
 
 interface GraphQLTypesMap {
   [key: string]: GraphQLType;
 }
 
-export class SemiBrickFactory {
+export class SemiStaticGraphQLTypeFactory {
   // TODO: put all the semibricks in the order they are initialized here.
-  private readonly semiBricks: SemiBricksMap = {};
+  private readonly semiStaticGraphQLTypes: SemiStaticGraphQLTypesMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
   private readonly rootQueryFieldMaps: RootQueryOutputFieldMap[] = [];
   private readonly mutationFieldMaps: RootQueryOutputFieldMap[] = [];
 
   constructor() {
     const scalar = this.scalar();
-    Object.values(scalar).forEach(this.registerSemiBrick);
+    Object.values(scalar).forEach(this.registerSemiStaticGraphQLType);
   }
 
   public getAllNamedSemiGraphQLTypes = (): GraphQLNamedType[] => {
-    const allSemiGraphQLTypes = Object.values(this.semiBricks).map((sb) =>
-      sb.getSemiGraphQLType(),
-    );
+    const allSemiGraphQLTypes = Object.values(
+      this.semiStaticGraphQLTypes,
+    ).map((sb) => sb.getSemiGraphQLType());
     return allSemiGraphQLTypes.filter((x) => !(x instanceof GraphQLList));
   };
 
-  private registerSemiBrick = (sb: AnySemiBrick) => {
-    if (this.semiBricks[sb.name]) {
+  private registerSemiStaticGraphQLType = (sb: AnySemiStaticGraphQLType) => {
+    if (this.semiStaticGraphQLTypes[sb.name]) {
       throw new Error(
-        `SemiBrick with name: ${sb.name} already exists. Try a different name.`,
+        `SemiStaticGraphQLType with name: ${sb.name} already exists. Try a different name.`,
       );
     }
-    this.semiBricks[sb.name] = sb;
+    this.semiStaticGraphQLTypes[sb.name] = sb;
     return sb;
   };
 
   public getSemiGraphQLTypeOf = (
-    sb: AnySemiBrick,
+    sb: AnySemiStaticGraphQLType,
     fallback: () => SemiGraphQLTypeOf<typeof sb>,
   ): SemiGraphQLTypeOf<typeof sb> => {
     const cachedType: GraphQLType | undefined = this.graphQLTypes[sb.name];
@@ -78,33 +84,33 @@ export class SemiBrickFactory {
 
   // TODO: find a way to avoid doing this delayed execution
   scalar = () => ({
-    id: new ScalarSemiBrick<string | number, 'ID'>({
-      semiBrickFactory: this,
+    id: new ScalarSemiStaticGraphQLType<string | number, 'ID'>({
+      semiStaticGraphQLTypeFactory: this,
       name: 'ID',
       semiGraphQLType: GraphQLID,
     }),
 
     // TODO: see if you can avoid typing the Name param twice
-    string: new ScalarSemiBrick<string, 'String'>({
-      semiBrickFactory: this,
+    string: new ScalarSemiStaticGraphQLType<string, 'String'>({
+      semiStaticGraphQLTypeFactory: this,
       name: 'String',
       semiGraphQLType: GraphQLString,
     }),
 
-    float: new ScalarSemiBrick<number, 'Float'>({
-      semiBrickFactory: this,
+    float: new ScalarSemiStaticGraphQLType<number, 'Float'>({
+      semiStaticGraphQLTypeFactory: this,
       name: 'Float',
       semiGraphQLType: GraphQLFloat,
     }),
 
-    // int: new ScalarSemiBrick({ // TODO: get back here and reimplement
-    //   semiBrickFactory: this,
+    // int: new ScalarSemiStaticGraphQLType({ // TODO: get back here and reimplement
+    //   semiStaticGraphQLTypeFactory: this,
     //   name: 'Int',
     //   semiGraphQLType: GraphQLInt,
     // }),
 
-    boolean: new ScalarSemiBrick<boolean, 'Boolean'>({
-      semiBrickFactory: this,
+    boolean: new ScalarSemiStaticGraphQLType<boolean, 'Boolean'>({
+      semiStaticGraphQLTypeFactory: this,
       name: 'Boolean',
       semiGraphQLType: GraphQLBoolean,
     }),
@@ -114,38 +120,38 @@ export class SemiBrickFactory {
     name: N;
     description?: string;
     keys: D;
-  }): EnumSemiBrick<N, D> => {
-    const sb = new EnumSemiBrick({
-      semiBrickFactory: this,
+  }): EnumSemiStaticGraphQLType<N, D> => {
+    const sb = new EnumSemiStaticGraphQLType({
+      semiStaticGraphQLTypeFactory: this,
       name: params.name,
       keys: params.keys,
     });
-    this.registerSemiBrick(sb);
+    this.registerSemiStaticGraphQLType(sb);
     return sb;
   };
 
-  inputList = <SB extends AnyInputSemiBrick>(
+  inputList = <SB extends AnyInputSemiStaticGraphQLType>(
     listOf: SB,
-  ): InputListSemiBrick<SB> => {
-    const sb = new InputListSemiBrick({
-      semiBrickFactory: this,
+  ): InputListSemiStaticGraphQLType<SB> => {
+    const sb = new InputListSemiStaticGraphQLType({
+      semiStaticGraphQLTypeFactory: this,
       name: `InputListOf<${listOf.name}>`,
       listOf: listOf,
     });
-    this.registerSemiBrick(sb);
+    this.registerSemiStaticGraphQLType(sb);
     return sb;
   };
 
   inputObject = <F extends InputFieldConfigMap, N extends string>(params: {
     name: N;
     fields: F;
-  }): InputObjectSemiBrick<F, N> => {
-    const sb = new InputObjectSemiBrick({
-      semiBrickFactory: this,
+  }): InputObjectSemiStaticGraphQLType<F, N> => {
+    const sb = new InputObjectSemiStaticGraphQLType({
+      semiStaticGraphQLTypeFactory: this,
       name: params.name,
       fields: params.fields,
     });
-    this.registerSemiBrick(sb);
+    this.registerSemiStaticGraphQLType(sb);
     return sb;
   };
 
@@ -157,39 +163,39 @@ export class SemiBrickFactory {
     name: N;
     fields: F;
     implementors: I;
-  }): InterfaceSemiBrick<F, I, N> => {
-    const sb = new InterfaceSemiBrick({
-      semiBrickFactory: this,
+  }): InterfaceSemiStaticGraphQLType<F, I, N> => {
+    const sb = new InterfaceSemiStaticGraphQLType({
+      semiStaticGraphQLTypeFactory: this,
       name: params.name,
       fields: params.fields,
       implementors: params.implementors,
     });
-    this.registerSemiBrick(sb);
+    this.registerSemiStaticGraphQLType(sb);
     return sb;
   };
 
-  outputList = <SB extends AnyOutputSemiBrick>(params: {
+  outputList = <SB extends AnyOutputSemiStaticGraphQLType>(params: {
     listOf: SB;
-  }): OutputListSemiBrick<SB> => {
-    const sb = new OutputListSemiBrick({
-      semiBrickFactory: this,
+  }): OutputListSemiStaticGraphQLType<SB> => {
+    const sb = new OutputListSemiStaticGraphQLType({
+      semiStaticGraphQLTypeFactory: this,
       name: `OutputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
     });
-    this.registerSemiBrick(sb);
+    this.registerSemiStaticGraphQLType(sb);
     return sb;
   };
 
   outputObject = <F extends OutputFieldMap, N extends string>(params: {
     name: N;
     fields: F;
-  }): OutputObjectSemiBrick<F, N> => {
-    const sb = new OutputObjectSemiBrick({
-      semiBrickFactory: this,
+  }): OutputObjectSemiStaticGraphQLType<F, N> => {
+    const sb = new OutputObjectSemiStaticGraphQLType({
+      semiStaticGraphQLTypeFactory: this,
       name: params.name,
       fields: {},
     });
-    this.registerSemiBrick(sb);
+    this.registerSemiStaticGraphQLType(sb);
     // @ts-ignore // TODO: figure this out
     sb.fields = params.fields;
     return sb as any;
@@ -198,8 +204,8 @@ export class SemiBrickFactory {
   recursive = <F extends OutputFieldMap, N extends string>(params: {
     name: N;
     fields: F;
-  }): OutputObjectSemiBrick<F, N> => {
-    return this.semiBricks[params.name] as any;
+  }): OutputObjectSemiStaticGraphQLType<F, N> => {
+    return this.semiStaticGraphQLTypes[params.name] as any;
   };
   // TODO: warn the user when they try to register the same query field.
   rootQuery = <F extends RootQueryOutputFieldMap>(params: {
@@ -214,16 +220,19 @@ export class SemiBrickFactory {
     this.mutationFieldMaps.push(params.fields);
   };
 
-  union = <SBS extends UnitableSemiBricks, N extends string>(params: {
+  union = <
+    SBS extends UnitableSemiStaticGraphQLTypes,
+    N extends string
+  >(params: {
     name: N;
-    semiBricks: SBS;
-  }): UnionSemiBrick<SBS, N> => {
-    const sb = new UnionSemiBrick({
-      semiBrickFactory: this,
+    semiStaticGraphQLTypes: SBS;
+  }): UnionSemiStaticGraphQLType<SBS, N> => {
+    const sb = new UnionSemiStaticGraphQLType({
+      semiStaticGraphQLTypeFactory: this,
       name: params.name,
-      semiBricks: params.semiBricks,
+      semiStaticGraphQLTypes: params.semiStaticGraphQLTypes,
     });
-    this.registerSemiBrick(sb);
+    this.registerSemiStaticGraphQLType(sb);
     return sb;
   };
 
@@ -236,14 +245,14 @@ export class SemiBrickFactory {
     this.mutationFieldMaps.forEach((cur) => {
       Object.assign(mutationFields, cur);
     });
-    const Query = new OutputObjectSemiBrick({
+    const Query = new OutputObjectSemiStaticGraphQLType({
       name: 'Query',
-      semiBrickFactory: this,
+      semiStaticGraphQLTypeFactory: this,
       fields: rootQueryFields,
     });
-    const Mutation = new OutputObjectSemiBrick({
+    const Mutation = new OutputObjectSemiStaticGraphQLType({
       name: 'Mutation',
-      semiBrickFactory: this,
+      semiStaticGraphQLTypeFactory: this,
       fields: mutationFields,
     });
     return new GraphQLSchema({

@@ -1,32 +1,41 @@
 import { GraphQLInputObjectType } from 'graphql';
 import _ from 'lodash';
 import {
-  Brick,
-  SemiBrick,
-  NullableBrickOf,
-  NonNullableBrickOf,
-} from '../Brick';
-import { SemiBrickFactory } from '../SemiBrickFactory';
+  StaticGraphQLType,
+  SemiStaticGraphQLType,
+  NullableStaticGraphQLTypeOf,
+  NonNullableStaticGraphQLTypeOf,
+} from '../StaticGraphQLType';
+import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
 import { InputFieldConfigMap, TMap } from './struct-types';
 
-export class InputObjectSemiBrick<
+export class InputObjectSemiStaticGraphQLType<
   F extends InputFieldConfigMap,
   N extends string
-> extends SemiBrick<'inputobject', N, GraphQLInputObjectType, TMap<F>> {
+> extends SemiStaticGraphQLType<
+  'inputobject',
+  N,
+  GraphQLInputObjectType,
+  TMap<F>
+> {
   public readonly kind = 'inputobject' as const;
   public readonly fields: F;
-  public readonly nullable: NullableBrickOf<InputObjectSemiBrick<F, N>>;
-  public readonly nonNullable: NonNullableBrickOf<InputObjectSemiBrick<F, N>>;
+  public readonly nullable: NullableStaticGraphQLTypeOf<
+    InputObjectSemiStaticGraphQLType<F, N>
+  >;
+  public readonly nonNullable: NonNullableStaticGraphQLTypeOf<
+    InputObjectSemiStaticGraphQLType<F, N>
+  >;
 
   constructor(params: {
-    semiBrickFactory: SemiBrickFactory;
+    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
     name: N;
     fields: F;
   }) {
     super(params);
     this.fields = params.fields;
-    this.nullable = Brick.initNullable(this);
-    this.nonNullable = Brick.initNonNullable(this);
+    this.nullable = StaticGraphQLType.initNullable(this);
+    this.nonNullable = StaticGraphQLType.initNonNullable(this);
   }
 
   public readonly getFreshSemiGraphQLType = (): GraphQLInputObjectType => {

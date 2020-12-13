@@ -1,17 +1,21 @@
 import { GraphQLInterfaceType } from 'graphql';
-import { Brick, NullableBrickOf, NonNullableBrickOf } from '../Brick';
+import {
+  StaticGraphQLType,
+  NullableStaticGraphQLTypeOf,
+  NonNullableStaticGraphQLTypeOf,
+} from '../StaticGraphQLType';
 import { OutputFieldMap } from '../OutputField';
-import { SemiBrickFactory } from '../SemiBrickFactory';
-import { ImplementorSemiBrick, Implementors } from './Implementor';
+import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { ImplementorSemiStaticGraphQLType, Implementors } from './Implementor';
 import { TMap } from './struct-types';
 
 // TODO: unions and interfaces will both need a "resolveType" field
 
-export class InterfaceSemiBrick<
+export class InterfaceSemiStaticGraphQLType<
   F extends OutputFieldMap,
   I extends Implementors<F>,
   N extends string
-> extends ImplementorSemiBrick<
+> extends ImplementorSemiStaticGraphQLType<
   'interface',
   N,
   GraphQLInterfaceType,
@@ -22,22 +26,26 @@ export class InterfaceSemiBrick<
   public readonly fields: F;
   public readonly implementors: I;
 
-  public readonly nullable: NullableBrickOf<InterfaceSemiBrick<F, I, N>>;
-  public readonly nonNullable: NonNullableBrickOf<InterfaceSemiBrick<F, I, N>>;
+  public readonly nullable: NullableStaticGraphQLTypeOf<
+    InterfaceSemiStaticGraphQLType<F, I, N>
+  >;
+  public readonly nonNullable: NonNullableStaticGraphQLTypeOf<
+    InterfaceSemiStaticGraphQLType<F, I, N>
+  >;
 
   constructor(params: {
     name: N;
     fields: F;
-    implementors: InterfaceSemiBrick<F, I, N>['implementors'];
-    semiBrickFactory: SemiBrickFactory;
+    implementors: InterfaceSemiStaticGraphQLType<F, I, N>['implementors'];
+    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
   }) {
     super(params);
     this.fields = params.fields;
     this.implementors = params.implementors;
     this.implementors.forEach((sb) => sb.implements(this));
 
-    this.nullable = Brick.initNullable(this);
-    this.nonNullable = Brick.initNonNullable(this);
+    this.nullable = StaticGraphQLType.initNullable(this);
+    this.nonNullable = StaticGraphQLType.initNonNullable(this);
   }
 
   public readonly getFreshSemiGraphQLType = (): GraphQLInterfaceType => {

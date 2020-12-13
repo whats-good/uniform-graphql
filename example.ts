@@ -1,11 +1,11 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import {
-  SemiBrickFactory,
+  SemiStaticGraphQLTypeFactory,
   SimpleOutputField,
   RootQueryOutputField,
 } from './src';
-export const fac = new SemiBrickFactory();
+export const fac = new SemiStaticGraphQLTypeFactory();
 
 const membership = fac.enum({
   name: 'Membership',
@@ -97,7 +97,7 @@ export const User = fac.outputObject({
 
 export const bestFriend = fac.union({
   name: 'BestFriend',
-  semiBricks: [Person, Animal],
+  semiStaticGraphQLTypes: [Person, Animal],
 });
 
 const idInterface = fac.interface({

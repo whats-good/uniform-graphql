@@ -4,11 +4,11 @@ import {
   GraphQLObjectType,
 } from 'graphql';
 import _ from 'lodash';
-import { SemiBrick } from '../Brick';
+import { SemiStaticGraphQLType } from '../StaticGraphQLType';
 import { OutputFieldMap } from '../OutputField';
-import { SemiBrickFactory } from '../SemiBrickFactory';
-import { InterfaceSemiBrick } from './Interface';
-import { InterfaceSemiBrickMap, TMap } from './struct-types';
+import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { InterfaceSemiStaticGraphQLType } from './Interface';
+import { InterfaceSemiStaticGraphQLTypeMap, TMap } from './struct-types';
 
 type ImplementorKind = 'interface' | 'outputobject';
 
@@ -20,34 +20,34 @@ interface ImplementorGraphQLConfig {
   fields: () => GraphQLFieldConfigMap<any, any>;
 }
 
-export type AnyImplementorSemiBrickOf<
+export type AnyImplementorSemiStaticGraphQLTypeOf<
   F extends OutputFieldMap
-> = ImplementorSemiBrick<any, any, any, F>;
+> = ImplementorSemiStaticGraphQLType<any, any, any, F>;
 
 type ExtendsFieldConfigMap<F extends OutputFieldMap> = {
   [K in keyof F]: F[K];
 };
 
-type Implements<F extends OutputFieldMap> = AnyImplementorSemiBrickOf<
-  ExtendsFieldConfigMap<F>
->;
+type Implements<
+  F extends OutputFieldMap
+> = AnyImplementorSemiStaticGraphQLTypeOf<ExtendsFieldConfigMap<F>>;
 
 // TODO: find a way to make sure the sbs implement the interface
 export type Implementors<F extends OutputFieldMap> = Implements<F>[];
-export abstract class ImplementorSemiBrick<
+export abstract class ImplementorSemiStaticGraphQLType<
   K extends ImplementorKind,
   N extends string,
   SB_G extends GraphQLInterfaceType | GraphQLObjectType,
   F extends OutputFieldMap,
   SB_R = TMap<F>
-> extends SemiBrick<K, N, SB_G, TMap<F>, SB_R> {
+> extends SemiStaticGraphQLType<K, N, SB_G, TMap<F>, SB_R> {
   public readonly fields: F;
-  private readonly shallowInterfaces: InterfaceSemiBrickMap = {};
+  private readonly shallowInterfaces: InterfaceSemiStaticGraphQLTypeMap = {};
 
   constructor(params: {
     name: N;
     fields: F;
-    semiBrickFactory: SemiBrickFactory;
+    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
   }) {
     super(params);
     this.fields = params.fields;
@@ -58,13 +58,13 @@ export abstract class ImplementorSemiBrick<
   // TODO: i need to flatten the entire tree of interfaces that this interface itself may be extending, and register all of them here.
 
   public implements = <I extends OutputFieldMap>(
-    sb: InterfaceSemiBrick<I, any, any>,
+    sb: InterfaceSemiStaticGraphQLType<I, any, any>,
   ): void => {
     this.shallowInterfaces[sb.name] = sb;
   };
 
-  public getFlattenedInterfaces = (): InterfaceSemiBrickMap => {
-    const interfacesMap: InterfaceSemiBrickMap = {};
+  public getFlattenedInterfaces = (): InterfaceSemiStaticGraphQLTypeMap => {
+    const interfacesMap: InterfaceSemiStaticGraphQLTypeMap = {};
     Object.entries(this.shallowInterfaces).forEach(([key, value]) => {
       const curFlattenedInterfaces = value.getFlattenedInterfaces();
       Object.entries(curFlattenedInterfaces).forEach(
