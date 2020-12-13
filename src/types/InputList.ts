@@ -5,7 +5,7 @@ import {
   NullableStaticGraphQLTypeOf,
   SemiStaticGraphQLType,
 } from '../StaticGraphQLType';
-import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
 import { AnyInputSemiStaticGraphQLType, ListTypeOf } from './struct-types';
 
 // TODO: combine the input and output lists into one super class, and then specialize.
@@ -26,11 +26,7 @@ export class InputListSemiStaticGraphQLType<
     InputListSemiStaticGraphQLType<SB>
   >;
 
-  constructor(params: {
-    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
-    name: string;
-    listOf: SB;
-  }) {
+  constructor(params: { typeFactory: TypeFactory; name: string; listOf: SB }) {
     super(params);
     this.listOf = params.listOf;
     this.nonNullable = StaticGraphQLType.initNonNullable(this);

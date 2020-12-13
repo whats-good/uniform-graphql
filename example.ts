@@ -1,11 +1,8 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import {
-  SemiStaticGraphQLTypeFactory,
-  SimpleOutputField,
-  RootQueryOutputField,
-} from './src';
-export const fac = new SemiStaticGraphQLTypeFactory();
+import { TypeFactory, SimpleOutputField, RootQueryOutputField } from './src';
+
+export const fac = new TypeFactory();
 
 const membership = fac.enum({
   name: 'Membership',

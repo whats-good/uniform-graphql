@@ -5,7 +5,7 @@ import {
   NullableStaticGraphQLTypeOf,
   NonNullableStaticGraphQLTypeOf,
 } from '../StaticGraphQLType';
-import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
 
 export class ScalarSemiStaticGraphQLType<
   SB_A,
@@ -21,7 +21,7 @@ export class ScalarSemiStaticGraphQLType<
   >;
 
   constructor(params: {
-    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
+    typeFactory: TypeFactory;
     name: N;
     semiGraphQLType: GraphQLScalarType;
   }) {
@@ -37,11 +37,11 @@ export class ScalarSemiStaticGraphQLType<
   // TODO: enable developers to import existing scalars from third party libraries
   // TODO: enable developers to create their own scalars
   // static curried = <N extends string>(name: N) => <SB_A>(params: {
-  //   semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
+  //   typeFactory: SemiStaticGraphQLTypeFactory;
   // }): ScalarSemiStaticGraphQLType<SB_A, N> => {
   //   return new ScalarSemiStaticGraphQLType({
   //     name,
-  //     semiStaticGraphQLTypeFactory: params.semiStaticGraphQLTypeFactory,
+  //     typeFactory: params.typeFactory,
   //     semiGraphQLType: new GraphQLScalarType({
   //       name,
   //     }),

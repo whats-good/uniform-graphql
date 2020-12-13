@@ -6,7 +6,7 @@ import {
   NullableStaticGraphQLTypeOf,
   NonNullableStaticGraphQLTypeOf,
 } from '../StaticGraphQLType';
-import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
 import { InputFieldConfigMap, TMap } from './struct-types';
 
 export class InputObjectSemiStaticGraphQLType<
@@ -27,11 +27,7 @@ export class InputObjectSemiStaticGraphQLType<
     InputObjectSemiStaticGraphQLType<F, N>
   >;
 
-  constructor(params: {
-    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
-    name: N;
-    fields: F;
-  }) {
+  constructor(params: { typeFactory: TypeFactory; name: N; fields: F }) {
     super(params);
     this.fields = params.fields;
     this.nullable = StaticGraphQLType.initNullable(this);

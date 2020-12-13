@@ -6,7 +6,7 @@ import {
   SemiStaticGraphQLType,
   SemiTypeOf,
 } from '../StaticGraphQLType';
-import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
 import { AnyOutputObjectSemiStaticGraphQLType } from './struct-types';
 
 export type UnitableSemiStaticGraphQLTypes = [
@@ -38,7 +38,7 @@ export class UnionSemiStaticGraphQLType<
   >;
 
   public constructor(params: {
-    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
+    typeFactory: TypeFactory;
     name: N;
     semiStaticGraphQLTypes: SBS;
   }) {

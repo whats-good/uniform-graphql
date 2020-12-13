@@ -6,7 +6,7 @@ import {
   NullableStaticGraphQLTypeOf,
   NonNullableStaticGraphQLTypeOf,
 } from '../StaticGraphQLType';
-import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
 
 export interface StringKeys {
   [key: string]: unknown;
@@ -28,11 +28,7 @@ export class EnumSemiStaticGraphQLType<
     EnumSemiStaticGraphQLType<N, D>
   >;
 
-  constructor(params: {
-    name: N;
-    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
-    keys: D;
-  }) {
+  constructor(params: { name: N; typeFactory: TypeFactory; keys: D }) {
     super(params);
     this.keys = params.keys;
     this.nullable = StaticGraphQLType.initNullable(this);

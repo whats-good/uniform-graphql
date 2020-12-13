@@ -5,7 +5,7 @@ import {
   NullableStaticGraphQLTypeOf,
 } from '../StaticGraphQLType';
 import { FieldResolversOf, OutputFieldMap } from '../OutputField';
-import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
 import { ImplementorSemiStaticGraphQLType } from './Implementor';
 import { InterfaceSemiStaticGraphQLTypeMap } from './struct-types';
 
@@ -29,11 +29,7 @@ export class OutputObjectSemiStaticGraphQLType<
     OutputObjectSemiStaticGraphQLType<F, N>
   >;
 
-  constructor(params: {
-    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
-    name: N;
-    fields: F;
-  }) {
+  constructor(params: { typeFactory: TypeFactory; name: N; fields: F }) {
     super(params);
     this.fields = params.fields;
     this.nullable = StaticGraphQLType.initNullable(this);

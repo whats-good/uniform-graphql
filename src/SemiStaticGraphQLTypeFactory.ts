@@ -39,7 +39,7 @@ interface GraphQLTypesMap {
   [key: string]: GraphQLType;
 }
 
-export class SemiStaticGraphQLTypeFactory {
+export class TypeFactory {
   // TODO: put all the semibricks in the order they are initialized here.
   private readonly semiStaticGraphQLTypes: SemiStaticGraphQLTypesMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
@@ -85,32 +85,32 @@ export class SemiStaticGraphQLTypeFactory {
   // TODO: find a way to avoid doing this delayed execution
   scalar = () => ({
     id: new ScalarSemiStaticGraphQLType<string | number, 'ID'>({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: 'ID',
       semiGraphQLType: GraphQLID,
     }),
 
     // TODO: see if you can avoid typing the Name param twice
     string: new ScalarSemiStaticGraphQLType<string, 'String'>({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: 'String',
       semiGraphQLType: GraphQLString,
     }),
 
     float: new ScalarSemiStaticGraphQLType<number, 'Float'>({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: 'Float',
       semiGraphQLType: GraphQLFloat,
     }),
 
     // int: new ScalarSemiStaticGraphQLType({ // TODO: get back here and reimplement
-    //   semiStaticGraphQLTypeFactory: this,
+    //   typeFactory: this,
     //   name: 'Int',
     //   semiGraphQLType: GraphQLInt,
     // }),
 
     boolean: new ScalarSemiStaticGraphQLType<boolean, 'Boolean'>({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: 'Boolean',
       semiGraphQLType: GraphQLBoolean,
     }),
@@ -122,7 +122,7 @@ export class SemiStaticGraphQLTypeFactory {
     keys: D;
   }): EnumSemiStaticGraphQLType<N, D> => {
     const sb = new EnumSemiStaticGraphQLType({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: params.name,
       keys: params.keys,
     });
@@ -134,7 +134,7 @@ export class SemiStaticGraphQLTypeFactory {
     listOf: SB,
   ): InputListSemiStaticGraphQLType<SB> => {
     const sb = new InputListSemiStaticGraphQLType({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: `InputListOf<${listOf.name}>`,
       listOf: listOf,
     });
@@ -147,7 +147,7 @@ export class SemiStaticGraphQLTypeFactory {
     fields: F;
   }): InputObjectSemiStaticGraphQLType<F, N> => {
     const sb = new InputObjectSemiStaticGraphQLType({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: params.name,
       fields: params.fields,
     });
@@ -165,7 +165,7 @@ export class SemiStaticGraphQLTypeFactory {
     implementors: I;
   }): InterfaceSemiStaticGraphQLType<F, I, N> => {
     const sb = new InterfaceSemiStaticGraphQLType({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: params.name,
       fields: params.fields,
       implementors: params.implementors,
@@ -178,7 +178,7 @@ export class SemiStaticGraphQLTypeFactory {
     listOf: SB;
   }): OutputListSemiStaticGraphQLType<SB> => {
     const sb = new OutputListSemiStaticGraphQLType({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: `OutputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
     });
@@ -191,7 +191,7 @@ export class SemiStaticGraphQLTypeFactory {
     fields: F;
   }): OutputObjectSemiStaticGraphQLType<F, N> => {
     const sb = new OutputObjectSemiStaticGraphQLType({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: params.name,
       fields: {},
     });
@@ -228,7 +228,7 @@ export class SemiStaticGraphQLTypeFactory {
     semiStaticGraphQLTypes: SBS;
   }): UnionSemiStaticGraphQLType<SBS, N> => {
     const sb = new UnionSemiStaticGraphQLType({
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       name: params.name,
       semiStaticGraphQLTypes: params.semiStaticGraphQLTypes,
     });
@@ -247,12 +247,12 @@ export class SemiStaticGraphQLTypeFactory {
     });
     const Query = new OutputObjectSemiStaticGraphQLType({
       name: 'Query',
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       fields: rootQueryFields,
     });
     const Mutation = new OutputObjectSemiStaticGraphQLType({
       name: 'Mutation',
-      semiStaticGraphQLTypeFactory: this,
+      typeFactory: this,
       fields: mutationFields,
     });
     return new GraphQLSchema({

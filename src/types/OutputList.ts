@@ -5,7 +5,7 @@ import {
   NullableStaticGraphQLTypeOf,
   SemiStaticGraphQLType,
 } from '../StaticGraphQLType';
-import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
 import { AnyOutputSemiStaticGraphQLType, ListTypeOf } from './struct-types';
 
 export class OutputListSemiStaticGraphQLType<
@@ -25,11 +25,7 @@ export class OutputListSemiStaticGraphQLType<
     OutputListSemiStaticGraphQLType<SB>
   >;
 
-  constructor(params: {
-    name: string;
-    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
-    listOf: SB;
-  }) {
+  constructor(params: { name: string; typeFactory: TypeFactory; listOf: SB }) {
     super(params);
     this.listOf = params.listOf;
     this.nonNullable = StaticGraphQLType.initNonNullable(this);

@@ -5,7 +5,7 @@ import {
   NonNullableStaticGraphQLTypeOf,
 } from '../StaticGraphQLType';
 import { OutputFieldMap } from '../OutputField';
-import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
 import { ImplementorSemiStaticGraphQLType, Implementors } from './Implementor';
 import { TMap } from './struct-types';
 
@@ -37,7 +37,7 @@ export class InterfaceSemiStaticGraphQLType<
     name: N;
     fields: F;
     implementors: InterfaceSemiStaticGraphQLType<F, I, N>['implementors'];
-    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
+    typeFactory: TypeFactory;
   }) {
     super(params);
     this.fields = params.fields;

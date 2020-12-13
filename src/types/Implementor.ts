@@ -6,7 +6,7 @@ import {
 import _ from 'lodash';
 import { SemiStaticGraphQLType } from '../StaticGraphQLType';
 import { OutputFieldMap } from '../OutputField';
-import { SemiStaticGraphQLTypeFactory } from '../SemiStaticGraphQLTypeFactory';
+import { TypeFactory } from '../SemiStaticGraphQLTypeFactory';
 import { InterfaceSemiStaticGraphQLType } from './Interface';
 import { InterfaceSemiStaticGraphQLTypeMap, TMap } from './struct-types';
 
@@ -44,11 +44,7 @@ export abstract class ImplementorSemiStaticGraphQLType<
   public readonly fields: F;
   private readonly shallowInterfaces: InterfaceSemiStaticGraphQLTypeMap = {};
 
-  constructor(params: {
-    name: N;
-    fields: F;
-    semiStaticGraphQLTypeFactory: SemiStaticGraphQLTypeFactory;
-  }) {
+  constructor(params: { name: N; fields: F; typeFactory: TypeFactory }) {
     super(params);
     this.fields = params.fields;
   }
