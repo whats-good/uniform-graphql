@@ -123,13 +123,13 @@ export class SemiTypeFactory {
     return st;
   };
 
-  outputList = <ST extends AnyOutputSemiType>(params: {
-    listOf: ST;
-  }): OutputListSemiType<ST> => {
+  outputList = <ST extends AnyOutputSemiType>(
+    listOf: ST,
+  ): OutputListSemiType<ST> => {
     const st = new OutputListSemiType({
       semiTypeFactory: this,
-      name: `OutputListOf<${params.listOf.name}>`,
-      listOf: params.listOf,
+      name: `OutputListOf<${listOf.name}>`,
+      listOf,
     });
     this.registerSemiType(st);
     return st;

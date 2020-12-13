@@ -71,12 +71,7 @@ const User = fac.outputObject({
   get fields() {
     return {
       id: field(id.nullable),
-      // TODO: fix the list signature
-      friends: field(
-        fac.outputList({
-          listOf: fac.recursive(this),
-        }).nonNullable,
-      ),
+      friends: field(fac.outputList(fac.recursive(this)).nonNullable),
     };
   },
 });
@@ -220,9 +215,7 @@ fac.rootQuery({
       },
     }),
     people: new RootOutputField({
-      type: fac.outputList({
-        listOf: Person,
-      }).nonNullable,
+      type: fac.outputList(Person).nonNullable,
       args: {
         // TODO: instead of multiple key-value pairs, describe the non-essentials via decorators.
         numPeople: {
