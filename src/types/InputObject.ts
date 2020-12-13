@@ -1,7 +1,7 @@
 import { GraphQLInputObjectType } from 'graphql';
 import _ from 'lodash';
 import { Type, SemiType, NullableTypeOf, NonNullableTypeOf } from '../Type';
-import { TypeFactory } from '../TypeFactory';
+import { SemiTypeFactory } from '../SemiTypeFactory';
 import { InputFieldConfigMap, TMap } from './struct-types';
 
 export class InputObjectSemiType<
@@ -13,7 +13,11 @@ export class InputObjectSemiType<
   public readonly nullable: NullableTypeOf<InputObjectSemiType<F, N>>;
   public readonly nonNullable: NonNullableTypeOf<InputObjectSemiType<F, N>>;
 
-  constructor(params: { typeFactory: TypeFactory; name: N; fields: F }) {
+  constructor(params: {
+    SemiTypeFactory: SemiTypeFactory;
+    name: N;
+    fields: F;
+  }) {
     super(params);
     this.fields = params.fields;
     this.nullable = Type.initNullable(this);

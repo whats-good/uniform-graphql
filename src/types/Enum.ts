@@ -1,7 +1,7 @@
 import { GraphQLEnumType } from 'graphql';
 import _ from 'lodash';
 import { SemiType, Type, NullableTypeOf, NonNullableTypeOf } from '../Type';
-import { TypeFactory } from '../TypeFactory';
+import { SemiTypeFactory } from '../SemiTypeFactory';
 
 export interface StringKeys {
   [key: string]: unknown;
@@ -19,7 +19,7 @@ export class EnumSemiType<
   public readonly nullable: NullableTypeOf<EnumSemiType<N, D>>;
   public readonly nonNullable: NonNullableTypeOf<EnumSemiType<N, D>>;
 
-  constructor(params: { name: N; typeFactory: TypeFactory; keys: D }) {
+  constructor(params: { name: N; SemiTypeFactory: SemiTypeFactory; keys: D }) {
     super(params);
     this.keys = params.keys;
     this.nullable = Type.initNullable(this);

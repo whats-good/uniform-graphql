@@ -1,8 +1,9 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import { TypeFactory, SimpleOutputField, RootOutputField } from './src';
+import { SemiTypeFactory, SimpleOutputField, RootOutputField } from './src';
+import { SemiTypeOf } from './src/Type';
 
-export const fac = new TypeFactory();
+export const fac = new SemiTypeFactory();
 
 const membership = fac.enum({
   name: 'Membership',
@@ -222,7 +223,7 @@ fac.rootQuery({
         },
       },
       resolve: (root, args) => {
-        const toReturn: any[] = [];
+        const toReturn: Array<SemiTypeOf<typeof Person>> = [];
         const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
         for (let i = 0; i < args.numPeople; i++) {
           toReturn.push({

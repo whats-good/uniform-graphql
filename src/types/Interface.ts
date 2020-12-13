@@ -1,7 +1,7 @@
 import { GraphQLInterfaceType } from 'graphql';
 import { Type, NullableTypeOf, NonNullableTypeOf } from '../Type';
 import { OutputFieldMap } from '../OutputField';
-import { TypeFactory } from '../TypeFactory';
+import { SemiTypeFactory } from '../SemiTypeFactory';
 import { ImplementorSemiType, Implementors } from './Implementor';
 import { TMap } from './struct-types';
 
@@ -29,7 +29,7 @@ export class InterfaceSemiType<
     name: N;
     fields: F;
     implementors: InterfaceSemiType<F, I, N>['implementors'];
-    typeFactory: TypeFactory;
+    SemiTypeFactory: SemiTypeFactory;
   }) {
     super(params);
     this.fields = params.fields;

@@ -33,7 +33,7 @@ interface GraphQLTypesMap {
   [key: string]: GraphQLType;
 }
 
-export class TypeFactory {
+export class SemiTypeFactory {
   // TODO: put all the semitypes in the order they are initialized here.
   private readonly semiTypes: SemiTypesMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
@@ -79,32 +79,32 @@ export class TypeFactory {
   // TODO: find a way to avoid doing this delayed execution
   scalar = () => ({
     id: new ScalarSemiType<string | number, 'ID'>({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: 'ID',
       semiGraphQLType: GraphQLID,
     }),
 
     // TODO: see if you can avoid typing the Name param twice
     string: new ScalarSemiType<string, 'String'>({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: 'String',
       semiGraphQLType: GraphQLString,
     }),
 
     float: new ScalarSemiType<number, 'Float'>({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: 'Float',
       semiGraphQLType: GraphQLFloat,
     }),
 
     // int: new ScalarSemiType({ // TODO: get back here and reimplement
-    //   typeFactory: this,
+    //   SemiTypeFactory: this,
     //   name: 'Int',
     //   semiGraphQLType: GraphQLInt,
     // }),
 
     boolean: new ScalarSemiType<boolean, 'Boolean'>({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: 'Boolean',
       semiGraphQLType: GraphQLBoolean,
     }),
@@ -116,7 +116,7 @@ export class TypeFactory {
     keys: D;
   }): EnumSemiType<N, D> => {
     const sb = new EnumSemiType({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: params.name,
       keys: params.keys,
     });
@@ -128,7 +128,7 @@ export class TypeFactory {
     listOf: SB,
   ): InputListSemiType<SB> => {
     const sb = new InputListSemiType({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: `InputListOf<${listOf.name}>`,
       listOf: listOf,
     });
@@ -141,7 +141,7 @@ export class TypeFactory {
     fields: F;
   }): InputObjectSemiType<F, N> => {
     const sb = new InputObjectSemiType({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: params.name,
       fields: params.fields,
     });
@@ -159,7 +159,7 @@ export class TypeFactory {
     implementors: I;
   }): InterfaceSemiType<F, I, N> => {
     const sb = new InterfaceSemiType({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: params.name,
       fields: params.fields,
       implementors: params.implementors,
@@ -172,7 +172,7 @@ export class TypeFactory {
     listOf: SB;
   }): OutputListSemiType<SB> => {
     const sb = new OutputListSemiType({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: `OutputListOf<${params.listOf.name}>`,
       listOf: params.listOf,
     });
@@ -185,7 +185,7 @@ export class TypeFactory {
     fields: F;
   }): OutputObjectSemiType<F, N> => {
     const sb = new OutputObjectSemiType({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: params.name,
       fields: {},
     });
@@ -215,7 +215,7 @@ export class TypeFactory {
     semiTypes: SBS;
   }): UnionSemiType<SBS, N> => {
     const sb = new UnionSemiType({
-      typeFactory: this,
+      SemiTypeFactory: this,
       name: params.name,
       semiTypes: params.semiTypes,
     });
@@ -234,12 +234,12 @@ export class TypeFactory {
     });
     const Query = new OutputObjectSemiType({
       name: 'Query',
-      typeFactory: this,
+      SemiTypeFactory: this,
       fields: rootQueryFields,
     });
     const Mutation = new OutputObjectSemiType({
       name: 'Mutation',
-      typeFactory: this,
+      SemiTypeFactory: this,
       fields: mutationFields,
     });
     return new GraphQLSchema({

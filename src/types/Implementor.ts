@@ -6,7 +6,7 @@ import {
 import _ from 'lodash';
 import { SemiType } from '../Type';
 import { OutputFieldMap } from '../OutputField';
-import { TypeFactory } from '../TypeFactory';
+import { SemiTypeFactory } from '../SemiTypeFactory';
 import { InterfaceSemiType } from './Interface';
 import { InterfaceSemiTypeMap, TMap } from './struct-types';
 
@@ -44,7 +44,11 @@ export abstract class ImplementorSemiType<
   public readonly fields: F;
   private readonly shallowInterfaces: InterfaceSemiTypeMap = {};
 
-  constructor(params: { name: N; fields: F; typeFactory: TypeFactory }) {
+  constructor(params: {
+    name: N;
+    fields: F;
+    SemiTypeFactory: SemiTypeFactory;
+  }) {
     super(params);
     this.fields = params.fields;
   }

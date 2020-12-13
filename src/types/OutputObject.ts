@@ -1,7 +1,7 @@
 import { GraphQLObjectType } from 'graphql';
 import { Type, NonNullableTypeOf, NullableTypeOf } from '../Type';
 import { FieldResolversOf, OutputFieldMap } from '../OutputField';
-import { TypeFactory } from '../TypeFactory';
+import { SemiTypeFactory } from '../SemiTypeFactory';
 import { ImplementorSemiType } from './Implementor';
 import { InterfaceSemiTypeMap } from './struct-types';
 
@@ -16,7 +16,11 @@ export class OutputObjectSemiType<
   public readonly nullable: NullableTypeOf<OutputObjectSemiType<F, N>>;
   public readonly nonNullable: NonNullableTypeOf<OutputObjectSemiType<F, N>>;
 
-  constructor(params: { typeFactory: TypeFactory; name: N; fields: F }) {
+  constructor(params: {
+    SemiTypeFactory: SemiTypeFactory;
+    name: N;
+    fields: F;
+  }) {
     super(params);
     this.fields = params.fields;
     this.nullable = Type.initNullable(this);

@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLNullableType, GraphQLType } from 'graphql';
-import { TypeFactory } from './TypeFactory';
+import { SemiTypeFactory } from './SemiTypeFactory';
 
 export type Kind =
   | 'scalar'
@@ -23,7 +23,7 @@ export abstract class SemiType<
   SB_A!: SB_A; // the actual static type
   SB_R!: SB_R; // the resolve type. It will be almost always equal to the static type, but not always.
   readonly name: N;
-  readonly typeFactory: TypeFactory;
+  readonly SemiTypeFactory: SemiTypeFactory;
   abstract kind: K;
   abstract getFreshSemiGraphQLType(): SB_G;
 
@@ -40,15 +40,15 @@ export abstract class SemiType<
   // };
 
   public getSemiGraphQLType = (): SB_G => {
-    return this.typeFactory.getSemiGraphQLTypeOf(
+    return this.SemiTypeFactory.getSemiGraphQLTypeOf(
       this,
       this.getFreshSemiGraphQLType,
     );
   };
 
-  constructor(params: { name: N; typeFactory: TypeFactory }) {
+  constructor(params: { name: N; SemiTypeFactory: SemiTypeFactory }) {
     this.name = params.name;
-    this.typeFactory = params.typeFactory;
+    this.SemiTypeFactory = params.SemiTypeFactory;
   }
 }
 

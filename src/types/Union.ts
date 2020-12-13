@@ -6,7 +6,7 @@ import {
   SemiType,
   SemiTypeOf,
 } from '../Type';
-import { TypeFactory } from '../TypeFactory';
+import { SemiTypeFactory } from '../SemiTypeFactory';
 import { AnyOutputObjectSemiType } from './struct-types';
 
 export type UnitableSemiTypes = [
@@ -34,7 +34,7 @@ export class UnionSemiType<
   public readonly nonNullable: NonNullableTypeOf<UnionSemiType<SBS, N>>;
 
   public constructor(params: {
-    typeFactory: TypeFactory;
+    SemiTypeFactory: SemiTypeFactory;
     name: N;
     semiTypes: SBS;
   }) {
