@@ -24,7 +24,7 @@ export class InputObjectSemiType<
     return new GraphQLInputObjectType({
       name: this.name,
       fields: _.mapValues(this.fields, (field) => ({
-        type: field.brick.getGraphQLType(),
+        type: field.type.getGraphQLType(),
         deprecationReason: field.deprecationReason,
         description: field.description,
       })),

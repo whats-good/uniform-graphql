@@ -30,7 +30,7 @@ type ResolverReturnTypeOf<B extends AnyOutputType> = ResolverReturnType<
 // TODO: add Contextlater
 
 type ArgTMap<T extends OutputFieldArgumentMap> = {
-  [K in keyof T]: TypeOf<T[K]['brick']>;
+  [K in keyof T]: TypeOf<T[K]['type']>;
 };
 
 type ResolverFnOfTypeAndArgs<
@@ -48,7 +48,7 @@ type ResolverFnOfConfigMap<
   T extends OutputFieldMap,
   K extends keyof T,
   R
-> = ResolverFnOfTypeAndArgs<T[K]['brick'], T[K]['args'], R>;
+> = ResolverFnOfTypeAndArgs<T[K]['type'], T[K]['args'], R>;
 
 // TODO: later on, enable the root to be something else, but always force a return on the field.
 export type FieldResolversOf<T extends OutputFieldMap> = {
@@ -59,7 +59,7 @@ export abstract class OutputField<
   B extends AnyOutputType,
   A extends OutputFieldArgumentMap
 > {
-  readonly brick: B;
+  readonly type: B;
   readonly args: A;
   readonly description?: string;
   readonly deprecationReason?: string;
@@ -67,18 +67,18 @@ export abstract class OutputField<
   public resolve: unknown; // TODO: see if there's a better solution than any here
 
   constructor({
-    brick,
+    type,
     // @ts-ignore // TODO: see if we can fix this
     args = {},
     description,
     deprecationReason,
   }: {
-    brick: B;
+    type: B;
     args?: A;
     description?: string;
     deprecationReason?: string;
   }) {
-    this.brick = brick;
+    this.type = type;
     this.args = args;
     this.description = description;
     this.deprecationReason = deprecationReason;
@@ -87,7 +87,7 @@ export abstract class OutputField<
   private getArgsGraphQLTypeConstructor = (): GraphQLFieldConfigArgumentMap => {
     return _.mapValues(this.args, (arg) => {
       return {
-        type: arg.brick.getGraphQLType(),
+        type: arg.type.getGraphQLType(),
         description: arg.description,
         deprecationReason: arg.deprecationReason,
       };
@@ -100,7 +100,7 @@ export abstract class OutputField<
 
   public getGraphQLTypeConstructor = (): GraphQLFieldConfig<any, any> => {
     return {
-      type: this.brick.getGraphQLType(),
+      type: this.type.getGraphQLType(),
       description: this.description,
       deprecationReason: this.deprecationReason,
       args: this.getArgsGraphQLTypeConstructor(),
@@ -119,14 +119,14 @@ export class RootOutputField<
   A extends OutputFieldArgumentMap
 > extends OutputField<B, A> {
   constructor({
-    brick,
+    type,
     // @ts-ignore TODO: see if we can fix this
     args = {},
     description,
     deprecationReason,
     resolve,
   }: {
-    brick: B;
+    type: B;
     args?: A;
     description?: string;
     deprecationReason?: string;
@@ -134,7 +134,7 @@ export class RootOutputField<
   }) {
     args;
     super({
-      brick,
+      type,
       args,
       deprecationReason,
       description,

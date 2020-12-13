@@ -13,15 +13,15 @@ export const someInput = fac.inputObject({
   name: 'SomeInput',
   fields: {
     id: {
-      brick: fac.scalar().id.nullable,
+      type: fac.scalar().id.nullable,
       deprecationReason: 'id is deprecated',
       description: 'this is the description!',
     },
     firstName: {
-      brick: fac.scalar().string.nullable,
+      type: fac.scalar().string.nullable,
     },
     membership: {
-      brick: membership.nonNullable,
+      type: membership.nonNullable,
     },
   },
 });
@@ -30,10 +30,10 @@ export const Person = fac.outputObject({
   name: 'Person',
   fields: {
     id: new SimpleOutputField({
-      brick: fac.scalar().id.nullable,
+      type: fac.scalar().id.nullable,
     }),
     firstName: new SimpleOutputField({
-      brick: fac.scalar().string.nonNullable,
+      type: fac.scalar().string.nonNullable,
     }),
   },
 });
@@ -41,10 +41,10 @@ const EmployeeInterface = fac.interface({
   name: 'EmployeeInterface',
   fields: {
     firstName: new SimpleOutputField({
-      brick: fac.scalar().string.nonNullable,
+      type: fac.scalar().string.nonNullable,
     }),
     id: new SimpleOutputField({
-      brick: fac.scalar().id.nullable,
+      type: fac.scalar().id.nullable,
     }),
   },
   implementors: [Person],
@@ -60,10 +60,10 @@ export const Animal = fac.outputObject({
   name: 'Animal',
   fields: {
     id: new SimpleOutputField({
-      brick: fac.scalar().id.nullable,
+      type: fac.scalar().id.nullable,
     }),
     owner: new SimpleOutputField({
-      brick: Person.nullable,
+      type: Person.nullable,
     }),
   },
 });
@@ -73,10 +73,10 @@ export const User = fac.outputObject({
   get fields() {
     return {
       id: new SimpleOutputField({
-        brick: fac.scalar().id.nullable,
+        type: fac.scalar().id.nullable,
       }),
       friends: new SimpleOutputField({
-        brick: fac.outputList({
+        type: fac.outputList({
           listOf: fac.recursive(this),
         }).nonNullable,
       }),
@@ -93,7 +93,7 @@ const idInterface = fac.interface({
   name: 'IDInterface',
   fields: {
     id: new SimpleOutputField({
-      brick: fac.scalar().id.nullable,
+      type: fac.scalar().id.nullable,
     }),
   },
   implementors: [EmployeeInterface, Person, Animal],
@@ -103,7 +103,7 @@ const firstNameInterface = fac.interface({
   name: 'FirstNameInterface',
   fields: {
     firstName: new SimpleOutputField({
-      brick: fac.scalar().string.nonNullable,
+      type: fac.scalar().string.nonNullable,
     }),
   },
   implementors: [EmployeeInterface],
@@ -112,9 +112,9 @@ const firstNameInterface = fac.interface({
 fac.rootQuery({
   fields: {
     kerem: new RootOutputField({
-      brick: Person.nonNullable,
+      type: Person.nonNullable,
       args: {
-        id: { brick: fac.scalar().id.nonNullable },
+        id: { type: fac.scalar().id.nonNullable },
       },
       resolve: (root, args, context) => {
         return {
@@ -130,16 +130,16 @@ fac.rootQuery({
 fac.rootQuery({
   fields: {
     anotherThing: new RootOutputField({
-      brick: fac.scalar().string.nonNullable,
+      type: fac.scalar().string.nonNullable,
       args: {
-        someArg: { brick: fac.scalar().boolean.nonNullable },
+        someArg: { type: fac.scalar().boolean.nonNullable },
       },
       resolve: (root, args, context) => {
         return 'abc';
       },
     }),
     currentUser: new RootOutputField({
-      brick: User.nullable,
+      type: User.nullable,
       resolve: (root, args, context) => {
         return {
           id: 'yo',
@@ -150,7 +150,7 @@ fac.rootQuery({
       },
     }),
     employeeInterface: new RootOutputField({
-      brick: EmployeeInterface.nullable,
+      type: EmployeeInterface.nullable,
       resolve: (_, args, ctx) => {
         return {
           __typename: 'Person' as const,
@@ -160,10 +160,10 @@ fac.rootQuery({
       },
     }),
     something: new RootOutputField({
-      brick: fac.scalar().string.nonNullable,
+      type: fac.scalar().string.nonNullable,
       args: {
         inputObjectArg: {
-          brick: someInput.nonNullable,
+          type: someInput.nonNullable,
         },
       },
       resolve: (_, args) => {
@@ -171,7 +171,7 @@ fac.rootQuery({
       },
     }),
     animal: new RootOutputField({
-      brick: Animal.nonNullable,
+      type: Animal.nonNullable,
       resolve: (_, __) => {
         return {
           id: 'yo',
@@ -183,10 +183,10 @@ fac.rootQuery({
       },
     }),
     person: new RootOutputField({
-      brick: Person.nonNullable,
+      type: Person.nonNullable,
       args: {
         flag: {
-          brick: fac.scalar().boolean.nonNullable,
+          type: fac.scalar().boolean.nonNullable,
         },
       },
       resolve: (_, args, ctx, info) => {
@@ -197,7 +197,7 @@ fac.rootQuery({
       },
     }),
     bestFriend: new RootOutputField({
-      brick: bestFriend.nonNullable,
+      type: bestFriend.nonNullable,
       resolve: async (_, __) => {
         return {
           __typename: 'Animal' as const,
@@ -210,15 +210,15 @@ fac.rootQuery({
       },
     }),
     people: new RootOutputField({
-      brick: fac.outputList({
+      type: fac.outputList({
         listOf: Person,
       }).nonNullable,
       args: {
         numPeople: {
-          brick: fac.scalar().float.nonNullable,
+          type: fac.scalar().float.nonNullable,
         },
         listArg: {
-          brick: fac.inputList(membership).nonNullable,
+          type: fac.inputList(membership).nonNullable,
         },
       },
       resolve: (root, args) => {
@@ -239,10 +239,10 @@ fac.rootQuery({
 fac.mutation({
   fields: {
     doThis: new RootOutputField({
-      brick: Person.nonNullable,
+      type: Person.nonNullable,
       args: {
         x: {
-          brick: fac.scalar().boolean.nonNullable,
+          type: fac.scalar().boolean.nonNullable,
         },
       },
       resolve: (root, args, context) => {

@@ -34,7 +34,7 @@ interface GraphQLTypesMap {
 }
 
 export class TypeFactory {
-  // TODO: put all the semibricks in the order they are initialized here.
+  // TODO: put all the semitypes in the order they are initialized here.
   private readonly semiTypes: SemiTypesMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
   private readonly rootQueryFieldMaps: RootOutputFieldMap[] = [];

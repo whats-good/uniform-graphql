@@ -6,12 +6,12 @@ export type ListTypeOf<SB extends AnySemiType> = Array<SemiTypeOf<SB>>;
 
 export interface TypeMap<B extends AnyType> {
   [key: string]: {
-    brick: B;
+    type: B;
   };
 }
 
 export interface ArgumentConfig {
-  brick: AnyInputType;
+  type: AnyInputType;
   description?: string;
   deprecationReason?: string;
   // defaultValue?: any; // TODO: implement
@@ -32,7 +32,7 @@ export type AnyOutputType = AnyType<OutputKind>;
 export type AnyOutputSemiType = AnySemiType<OutputKind>;
 
 export type TMap<M extends TypeMap<any>> = {
-  [K in keyof M]: TypeOf<M[K]['brick']>;
+  [K in keyof M]: TypeOf<M[K]['type']>;
 };
 
 export type AnyOutputObjectSemiType = OutputObjectSemiType<any, any>;
@@ -43,7 +43,7 @@ export interface InterfaceSemiTypeMap {
 }
 
 export interface InputFieldConfig {
-  brick: AnyInputType;
+  type: AnyInputType;
   description?: string;
   deprecationReason?: string;
   // defaultValue?: any; // TODO: implement
