@@ -11,14 +11,14 @@ import {
 } from './src';
 import { SemiTypeOf } from './src/Type';
 
-export const fac = new SemiTypeFactory();
+const fac = new SemiTypeFactory();
 
 const membership = fac.enum({
   name: 'Membership',
-  keys: { free: null, paid: null, enterprise: null }, // TODO: enable the dev to give values to the values too.
+  keys: { free: null, paid: null, enterprise: null },
 });
 
-export const someInput = fac.inputObject({
+const someInput = fac.inputObject({
   name: 'SomeInput',
   fields: {
     id: {
@@ -35,7 +35,7 @@ export const someInput = fac.inputObject({
   },
 });
 
-export const Person = fac.outputObject({
+const Person = fac.outputObject({
   name: 'Person',
   fields: {
     id: new SimpleOutputField({
@@ -46,6 +46,7 @@ export const Person = fac.outputObject({
     }),
   },
 });
+
 const EmployeeInterface = fac.interface({
   name: 'EmployeeInterface',
   fields: {
@@ -65,7 +66,7 @@ Person.fieldResolverize({
   },
 });
 
-export const Animal = fac.outputObject({
+const Animal = fac.outputObject({
   name: 'Animal',
   fields: {
     id: new SimpleOutputField({
@@ -77,7 +78,7 @@ export const Animal = fac.outputObject({
   },
 });
 
-export const User = fac.outputObject({
+const User = fac.outputObject({
   name: 'User',
   get fields() {
     return {
@@ -93,7 +94,7 @@ export const User = fac.outputObject({
   },
 });
 
-export const bestFriend = fac.union({
+const bestFriend = fac.union({
   name: 'BestFriend',
   semiTypes: [Person, Animal],
 });
