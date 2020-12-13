@@ -23,7 +23,7 @@ import {
   InputFieldConfigMap,
 } from './types/struct-types';
 import { UnionSemiType, UnitableSemiTypes } from './types/Union';
-import { OutputFieldMap, RootQueryOutputFieldMap } from './OutputField';
+import { OutputFieldMap, RootOutputFieldMap } from './OutputField';
 
 interface SemiTypesMap {
   [key: string]: AnySemiType;
@@ -37,8 +37,8 @@ export class TypeFactory {
   // TODO: put all the semibricks in the order they are initialized here.
   private readonly semiTypes: SemiTypesMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
-  private readonly rootQueryFieldMaps: RootQueryOutputFieldMap[] = [];
-  private readonly mutationFieldMaps: RootQueryOutputFieldMap[] = [];
+  private readonly rootQueryFieldMaps: RootOutputFieldMap[] = [];
+  private readonly mutationFieldMaps: RootOutputFieldMap[] = [];
 
   constructor() {
     const scalar = this.scalar();
@@ -202,15 +202,11 @@ export class TypeFactory {
     return this.semiTypes[params.name] as any;
   };
   // TODO: warn the user when they try to register the same query field.
-  rootQuery = <F extends RootQueryOutputFieldMap>(params: {
-    fields: F;
-  }): void => {
+  rootQuery = <F extends RootOutputFieldMap>(params: { fields: F }): void => {
     this.rootQueryFieldMaps.push(params.fields);
   };
 
-  mutation = <F extends RootQueryOutputFieldMap>(params: {
-    fields: F;
-  }): void => {
+  mutation = <F extends RootOutputFieldMap>(params: { fields: F }): void => {
     this.mutationFieldMaps.push(params.fields);
   };
 

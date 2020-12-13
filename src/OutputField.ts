@@ -16,8 +16,8 @@ export interface OutputFieldMap extends TypeMap<AnyOutputType> {
   [key: string]: OutputField<AnyOutputType, OutputFieldArgumentMap>;
 }
 
-export interface RootQueryOutputFieldMap extends TypeMap<AnyOutputType> {
-  [key: string]: RootQueryOutputField<AnyOutputType, OutputFieldArgumentMap>;
+export interface RootOutputFieldMap extends TypeMap<AnyOutputType> {
+  [key: string]: RootOutputField<AnyOutputType, OutputFieldArgumentMap>;
 }
 
 // type Thunk<T> = () => T;
@@ -114,7 +114,7 @@ export class SimpleOutputField<
   A extends OutputFieldArgumentMap
 > extends OutputField<B, A> {}
 
-export class RootQueryOutputField<
+export class RootOutputField<
   B extends AnyOutputType,
   A extends OutputFieldArgumentMap
 > extends OutputField<B, A> {

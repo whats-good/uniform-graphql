@@ -1,6 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import { TypeFactory, SimpleOutputField, RootQueryOutputField } from './src';
+import { TypeFactory, SimpleOutputField, RootOutputField } from './src';
 
 export const fac = new TypeFactory();
 
@@ -111,7 +111,7 @@ const firstNameInterface = fac.interface({
 
 fac.rootQuery({
   fields: {
-    kerem: new RootQueryOutputField({
+    kerem: new RootOutputField({
       brick: Person.nonNullable,
       args: {
         id: { brick: fac.scalar().id.nonNullable },
@@ -129,7 +129,7 @@ fac.rootQuery({
 // TODO: find a way to get this done without having to call the classes directly. just via passing the constructors
 fac.rootQuery({
   fields: {
-    anotherThing: new RootQueryOutputField({
+    anotherThing: new RootOutputField({
       brick: fac.scalar().string.nonNullable,
       args: {
         someArg: { brick: fac.scalar().boolean.nonNullable },
@@ -138,7 +138,7 @@ fac.rootQuery({
         return 'abc';
       },
     }),
-    currentUser: new RootQueryOutputField({
+    currentUser: new RootOutputField({
       brick: User.nullable,
       resolve: (root, args, context) => {
         return {
@@ -149,7 +149,7 @@ fac.rootQuery({
         };
       },
     }),
-    employeeInterface: new RootQueryOutputField({
+    employeeInterface: new RootOutputField({
       brick: EmployeeInterface.nullable,
       resolve: (_, args, ctx) => {
         return {
@@ -159,7 +159,7 @@ fac.rootQuery({
         };
       },
     }),
-    something: new RootQueryOutputField({
+    something: new RootOutputField({
       brick: fac.scalar().string.nonNullable,
       args: {
         inputObjectArg: {
@@ -170,7 +170,7 @@ fac.rootQuery({
         return 'yo';
       },
     }),
-    animal: new RootQueryOutputField({
+    animal: new RootOutputField({
       brick: Animal.nonNullable,
       resolve: (_, __) => {
         return {
@@ -182,7 +182,7 @@ fac.rootQuery({
         };
       },
     }),
-    person: new RootQueryOutputField({
+    person: new RootOutputField({
       brick: Person.nonNullable,
       args: {
         flag: {
@@ -196,7 +196,7 @@ fac.rootQuery({
         };
       },
     }),
-    bestFriend: new RootQueryOutputField({
+    bestFriend: new RootOutputField({
       brick: bestFriend.nonNullable,
       resolve: async (_, __) => {
         return {
@@ -209,7 +209,7 @@ fac.rootQuery({
         };
       },
     }),
-    people: new RootQueryOutputField({
+    people: new RootOutputField({
       brick: fac.outputList({
         listOf: Person,
       }).nonNullable,
@@ -238,8 +238,7 @@ fac.rootQuery({
 
 fac.mutation({
   fields: {
-    // TODO: since it's reused in mutations, RootQueryOutput isn't that appropriate here.
-    doThis: new RootQueryOutputField({
+    doThis: new RootOutputField({
       brick: Person.nonNullable,
       args: {
         x: {
