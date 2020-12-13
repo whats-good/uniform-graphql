@@ -16,7 +16,7 @@ export class InputListSemiType<SB extends AnyInputSemiType> extends SemiType<
   public readonly nullable: NullableTypeOf<InputListSemiType<SB>>;
 
   constructor(params: {
-    SemiTypeFactory: SemiTypeFactory;
+    semiTypeFactory: SemiTypeFactory;
     name: string;
     listOf: SB;
   }) {

@@ -19,7 +19,7 @@ export class EnumSemiType<
   public readonly nullable: NullableTypeOf<EnumSemiType<N, D>>;
   public readonly nonNullable: NonNullableTypeOf<EnumSemiType<N, D>>;
 
-  constructor(params: { name: N; SemiTypeFactory: SemiTypeFactory; keys: D }) {
+  constructor(params: { name: N; semiTypeFactory: SemiTypeFactory; keys: D }) {
     super(params);
     this.keys = params.keys;
     this.nullable = Type.initNullable(this);

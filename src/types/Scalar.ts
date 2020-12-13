@@ -14,7 +14,7 @@ export class ScalarSemiType<SB_A, N extends string> extends SemiType<
   public readonly nonNullable: NonNullableTypeOf<ScalarSemiType<SB_A, N>>;
 
   constructor(params: {
-    SemiTypeFactory: SemiTypeFactory;
+    semiTypeFactory: SemiTypeFactory;
     name: N;
     semiGraphQLType: GraphQLScalarType;
   }) {
@@ -30,11 +30,11 @@ export class ScalarSemiType<SB_A, N extends string> extends SemiType<
   // TODO: enable developers to import existing scalars from third party libraries
   // TODO: enable developers to create their own scalars
   // static curried = <N extends string>(name: N) => <SB_A>(params: {
-  //   SemiTypeFactory: SemiTypeFactory;
+  //   semiTypeFactory: SemiTypeFactory;
   // }): ScalarSemiType<SB_A, N> => {
   //   return new ScalarSemiType({
   //     name,
-  //     SemiTypeFactory: params.SemiTypeFactory,
+  //     SemiTypeFactory: params.semiTypeFactory,
   //     semiGraphQLType: new GraphQLScalarType({
   //       name,
   //     }),

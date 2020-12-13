@@ -1,6 +1,14 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import { SemiTypeFactory, SimpleOutputField, RootOutputField } from './src';
+import {
+  SemiTypeFactory,
+  SimpleOutputField,
+  RootOutputField,
+  float,
+  boolean,
+  id,
+  string,
+} from './src';
 import { SemiTypeOf } from './src/Type';
 
 export const fac = new SemiTypeFactory();
@@ -14,12 +22,12 @@ export const someInput = fac.inputObject({
   name: 'SomeInput',
   fields: {
     id: {
-      type: fac.scalar().id.nullable,
+      type: id.nullable,
       deprecationReason: 'id is deprecated',
       description: 'this is the description!',
     },
     firstName: {
-      type: fac.scalar().string.nullable,
+      type: string.nullable,
     },
     membership: {
       type: membership.nonNullable,
@@ -31,10 +39,10 @@ export const Person = fac.outputObject({
   name: 'Person',
   fields: {
     id: new SimpleOutputField({
-      type: fac.scalar().id.nullable,
+      type: id.nullable,
     }),
     firstName: new SimpleOutputField({
-      type: fac.scalar().string.nonNullable,
+      type: string.nonNullable,
     }),
   },
 });
@@ -42,10 +50,10 @@ const EmployeeInterface = fac.interface({
   name: 'EmployeeInterface',
   fields: {
     firstName: new SimpleOutputField({
-      type: fac.scalar().string.nonNullable,
+      type: string.nonNullable,
     }),
     id: new SimpleOutputField({
-      type: fac.scalar().id.nullable,
+      type: id.nullable,
     }),
   },
   implementors: [Person],
@@ -61,7 +69,7 @@ export const Animal = fac.outputObject({
   name: 'Animal',
   fields: {
     id: new SimpleOutputField({
-      type: fac.scalar().id.nullable,
+      type: id.nullable,
     }),
     owner: new SimpleOutputField({
       type: Person.nullable,
@@ -74,7 +82,7 @@ export const User = fac.outputObject({
   get fields() {
     return {
       id: new SimpleOutputField({
-        type: fac.scalar().id.nullable,
+        type: id.nullable,
       }),
       friends: new SimpleOutputField({
         type: fac.outputList({
@@ -94,7 +102,7 @@ const idInterface = fac.interface({
   name: 'IDInterface',
   fields: {
     id: new SimpleOutputField({
-      type: fac.scalar().id.nullable,
+      type: id.nullable,
     }),
   },
   implementors: [EmployeeInterface, Person, Animal],
@@ -104,7 +112,7 @@ const firstNameInterface = fac.interface({
   name: 'FirstNameInterface',
   fields: {
     firstName: new SimpleOutputField({
-      type: fac.scalar().string.nonNullable,
+      type: string.nonNullable,
     }),
   },
   implementors: [EmployeeInterface],
@@ -115,7 +123,7 @@ fac.rootQuery({
     kerem: new RootOutputField({
       type: Person.nonNullable,
       args: {
-        id: { type: fac.scalar().id.nonNullable },
+        id: { type: id.nonNullable },
       },
       resolve: (root, args, context) => {
         return {
@@ -127,16 +135,25 @@ fac.rootQuery({
   },
 });
 
-// TODO: find a way to get this done without having to call the classes directly. just via passing the constructors
 fac.rootQuery({
   fields: {
     anotherThing: new RootOutputField({
-      type: fac.scalar().string.nonNullable,
+      type: string.nonNullable,
       args: {
-        someArg: { type: fac.scalar().boolean.nonNullable },
+        someArg: { type: boolean.nonNullable },
       },
       resolve: (root, args, context) => {
         return 'abc';
+      },
+    }),
+    firstName: new RootOutputField({
+      type: firstNameInterface.nullable,
+      resolve: () => {
+        return {
+          __typename: 'EmployeeInterface' as const,
+          // TODO: this should be impossible to give here. Interface types should not be allowed to appear.
+          firstName: 'some firstname',
+        };
       },
     }),
     currentUser: new RootOutputField({
@@ -161,7 +178,7 @@ fac.rootQuery({
       },
     }),
     something: new RootOutputField({
-      type: fac.scalar().string.nonNullable,
+      type: string.nonNullable,
       args: {
         inputObjectArg: {
           type: someInput.nonNullable,
@@ -187,7 +204,7 @@ fac.rootQuery({
       type: Person.nonNullable,
       args: {
         flag: {
-          type: fac.scalar().boolean.nonNullable,
+          type: boolean.nonNullable,
         },
       },
       resolve: (_, args, ctx, info) => {
@@ -216,7 +233,7 @@ fac.rootQuery({
       }).nonNullable,
       args: {
         numPeople: {
-          type: fac.scalar().float.nonNullable,
+          type: float.nonNullable,
         },
         listArg: {
           type: fac.inputList(membership).nonNullable,
@@ -243,7 +260,7 @@ fac.mutation({
       type: Person.nonNullable,
       args: {
         x: {
-          type: fac.scalar().boolean.nonNullable,
+          type: boolean.nonNullable,
         },
       },
       resolve: (root, args, context) => {

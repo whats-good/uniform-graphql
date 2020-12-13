@@ -47,7 +47,7 @@ export abstract class ImplementorSemiType<
   constructor(params: {
     name: N;
     fields: F;
-    SemiTypeFactory: SemiTypeFactory;
+    semiTypeFactory: SemiTypeFactory;
   }) {
     super(params);
     this.fields = params.fields;
