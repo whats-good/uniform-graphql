@@ -43,7 +43,17 @@ const Person = fac.object({
   },
 });
 
-const Animal = fac.object({
+type AnimalType = OutputObjectSemiType<
+  {
+    id: () => SimpleOutputField<
+      NullableTypeOf<ScalarSemiType<string | number, 'ID'>>,
+      OutputFieldArgumentMap
+    >;
+  },
+  'Animal'
+>;
+
+const Animal: AnimalType = fac.object({
   name: 'Animal',
   fields: {
     id: () => field(fac.id.nullable),
