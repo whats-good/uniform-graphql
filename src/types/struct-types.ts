@@ -10,6 +10,12 @@ export interface TypeMap<B extends AnyType> {
   };
 }
 
+export interface TypeThunkMap<B extends AnyType> {
+  [key: string]: () => {
+    type: B;
+  };
+}
+
 interface ArgumentConfig<A extends AnyInputType> {
   type: A;
   description?: string;
@@ -37,6 +43,10 @@ export type AnyOutputSemiType = AnySemiType<OutputKind>;
 
 export type TMap<M extends TypeMap<any>> = {
   [K in keyof M]: TypeOf<M[K]['type']>;
+};
+
+export type TThunkMap<M extends TypeThunkMap<any>> = {
+  [K in keyof M]: TypeOf<ReturnType<M[K]>['type']>;
 };
 
 export type AnyOutputObjectSemiType = OutputObjectSemiType<any, any>;

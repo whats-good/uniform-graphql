@@ -3,7 +3,7 @@ import { Type, NullableTypeOf, NonNullableTypeOf } from '../Type';
 import { OutputFieldMap } from '../OutputField';
 import { SemiTypeFactory } from '../SemiTypeFactory';
 import { ImplementorSemiType, Implementors } from './Implementor';
-import { TMap } from './struct-types';
+import { TThunkMap } from './struct-types';
 
 export class InterfaceSemiType<
   F extends OutputFieldMap,
@@ -14,7 +14,7 @@ export class InterfaceSemiType<
   N,
   GraphQLInterfaceType,
   F,
-  TMap<F> & { __typename: I[number]['name'] }
+  TThunkMap<F> & { __typename: I[number]['name'] }
 > {
   public readonly kind = 'interface';
   public readonly fields: F;

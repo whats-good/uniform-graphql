@@ -8,16 +8,19 @@ import { TypeOf } from './Type';
 import {
   AnyOutputType,
   OutputFieldArgumentMap,
-  TypeMap,
-  TMap,
+  TThunkMap,
 } from './types/struct-types';
 
-export interface OutputFieldMap extends TypeMap<AnyOutputType> {
-  [key: string]: OutputField<AnyOutputType, OutputFieldArgumentMap>;
+export interface OutputFieldMap {
+  [key: string]: () => OutputField<AnyOutputType, OutputFieldArgumentMap>;
 }
 
-export interface RootOutputFieldMap<C> extends TypeMap<AnyOutputType> {
-  [key: string]: RootOutputField<AnyOutputType, OutputFieldArgumentMap, C>;
+export interface RootOutputFieldMap<C> {
+  [key: string]: () => RootOutputField<
+    AnyOutputType,
+    OutputFieldArgumentMap,
+    C
+  >;
 }
 
 // type Thunk<T> = () => T;
@@ -49,9 +52,9 @@ export type ResolverFnOfTypeAndArgs<
 // TODO: fix the "any" context here
 export type FieldResolversOf<F extends OutputFieldMap, C> = {
   [K in keyof F]: ResolverFnOfTypeAndArgs<
-    F[K]['type'],
-    F[K]['args'],
-    TMap<F>,
+    ReturnType<F[K]>['type'],
+    ReturnType<F[K]>['args'],
+    TThunkMap<F>,
     C
   >;
 };

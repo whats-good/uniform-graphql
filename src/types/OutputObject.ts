@@ -1,6 +1,6 @@
 import { GraphQLObjectType } from 'graphql';
 import { Type, NonNullableTypeOf, NullableTypeOf } from '../Type';
-import { FieldResolversOf, OutputFieldMap } from '../OutputField';
+import { OutputFieldMap } from '../OutputField';
 import { SemiTypeFactory } from '../SemiTypeFactory';
 import { ImplementorSemiType } from './Implementor';
 import { InterfaceSemiTypeMap } from './struct-types';

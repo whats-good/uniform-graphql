@@ -35,16 +35,24 @@ const someInput = fac.inputObject({
 const Person = fac.object({
   name: 'Person',
   fields: {
-    id: field(fac.id.nullable),
-    firstName: field(fac.string.nonNullable),
+    id: () => field(fac.id.nullable),
+    firstName: () => field(fac.string.nonNullable),
+    pet: () => field(Animal.nonNullable),
+  },
+});
+
+const Animal = fac.object({
+  name: 'Animal',
+  fields: {
+    id: () => field(fac.id.nullable),
   },
 });
 
 const EmployeeInterface = fac.interface({
   name: 'EmployeeInterface',
   fields: {
-    id: field(fac.id.nullable),
-    firstName: field(fac.string.nonNullable),
+    id: () => field(fac.id.nullable),
+    firstName: () => field(fac.string.nonNullable),
   },
   implementors: [Person],
 });
@@ -58,20 +66,12 @@ fac.fieldResolvers(Person, {
   },
 });
 
-const Animal = fac.object({
-  name: 'Animal',
-  fields: {
-    id: field(fac.id.nullable),
-    owner: field(Person.nullable),
-  },
-});
-
 const User = fac.object({
   name: 'User',
   get fields() {
     return {
-      id: field(fac.id.nullable),
-      friends: field(fac.list(fac.recursive(this)).nonNullable),
+      id: () => field(fac.id.nullable),
+      friends: () => field(fac.list(fac.recursive(this)).nonNullable),
     };
   },
 });
@@ -84,7 +84,7 @@ const bestFriend = fac.union({
 const idInterface = fac.interface({
   name: 'IDInterface',
   fields: {
-    id: field(fac.id.nullable),
+    id: () => field(fac.id.nullable),
   },
   implementors: [Animal],
 });
@@ -92,154 +92,178 @@ const idInterface = fac.interface({
 const firstNameInterface = fac.interface({
   name: 'FirstNameInterface',
   fields: {
-    firstName: field(fac.string.nonNullable),
+    firstName: () => field(fac.string.nonNullable),
   },
   implementors: [Person],
 });
 
 fac.rootQuery({
-  kerem: fac.rootField({
-    type: Person.nonNullable,
-    args: {
-      id: arg(fac.id.nonNullable),
-    },
-    resolve: (root, args, context) => {
-      return {
-        id: 'this is the id',
-        firstName: 'this is the firstname',
-      };
-    },
-  }),
+  kerem: () =>
+    fac.rootField({
+      type: Person.nonNullable,
+      args: {
+        id: arg(fac.id.nonNullable),
+      },
+      resolve: (root, args, context) => {
+        return {
+          id: 'this is the id',
+          firstName: 'this is the firstname',
+          pet: {
+            id: 'abc',
+          },
+        };
+      },
+    }),
 });
 
 fac.rootQuery({
-  anotherThing: fac.rootField({
-    type: fac.string.nonNullable,
-    args: {
-      someArg: arg(fac.boolean.nonNullable),
-    },
-    resolve: (root, args, context) => {
-      return 'abc';
-    },
-  }),
-  firstName: fac.rootField({
-    type: firstNameInterface.nullable,
-    resolve: (root, args, context) => {
-      return {
-        __typename: 'Person' as const,
-        firstName: 'some firstname' + context.kazan,
-      };
-    },
-  }),
-  currentUser: fac.rootField({
-    type: User.nullable,
-    resolve: (root, args, context) => {
-      return {
-        id: 'yo',
-        get friends() {
-          return [this];
-        },
-      };
-    },
-  }),
-  employeeInterface: fac.rootField({
-    type: EmployeeInterface.nullable,
-    resolve: (_, args, ctx) => {
-      return {
-        __typename: 'Person' as const,
-        id: 'yo',
-        firstName: 'kazan',
-      };
-    },
-  }),
-  idInterface: fac.rootField({
-    type: idInterface.nullable,
-    resolve: (root, args, context) => {
-      return {
-        __typename: 'Animal' as const,
-        id: 'x',
-      };
-    },
-  }),
-  something: fac.rootField({
-    type: fac.string.nonNullable,
-    args: {
-      inputObjectArg: arg(someInput.nonNullable),
-    },
-    resolve: (_, args) => {
-      return 'yo';
-    },
-  }),
-  animal: fac.rootField({
-    type: Animal.nonNullable,
-    resolve: (_, __) => {
-      return {
-        id: 'yo',
-        owner: {
+  anotherThing: () =>
+    fac.rootField({
+      type: fac.string.nonNullable,
+      args: {
+        someArg: arg(fac.boolean.nonNullable),
+      },
+      resolve: (root, args, context) => {
+        return 'abc';
+      },
+    }),
+  firstName: () =>
+    fac.rootField({
+      type: firstNameInterface.nullable,
+      resolve: (root, args, context) => {
+        return {
+          __typename: 'Person' as const,
+          firstName: 'some firstname' + context.kazan,
+        };
+      },
+    }),
+  currentUser: () =>
+    fac.rootField({
+      type: User.nullable,
+      resolve: (root, args, context) => {
+        return {
+          id: 'yo',
+          get friends() {
+            return [this];
+          },
+        };
+      },
+    }),
+  employeeInterface: () =>
+    fac.rootField({
+      type: EmployeeInterface.nullable,
+      resolve: (_, args, ctx) => {
+        return {
+          __typename: 'Person' as const,
+          id: 'yo',
+          firstName: 'kazan',
+        };
+      },
+    }),
+  idInterface: () =>
+    fac.rootField({
+      type: idInterface.nullable,
+      resolve: (root, args, context) => {
+        return {
+          __typename: 'Animal' as const,
+          id: 'x',
+        };
+      },
+    }),
+  something: () =>
+    fac.rootField({
+      type: fac.string.nonNullable,
+      args: {
+        inputObjectArg: arg(someInput.nonNullable),
+      },
+      resolve: (_, args) => {
+        return 'yo';
+      },
+    }),
+  animal: () =>
+    fac.rootField({
+      type: Animal.nonNullable,
+      resolve: (_, __) => {
+        return {
+          id: 'yo',
+          owner: {
+            firstName: 'kerem',
+            id: 'kazan',
+          },
+        };
+      },
+    }),
+  person: () =>
+    fac.rootField({
+      type: Person.nonNullable,
+      args: {
+        flag: arg(fac.boolean.nonNullable),
+      },
+      resolve: (_, args, ctx, info) => {
+        return {
           firstName: 'kerem',
-          id: 'kazan',
-        },
-      };
-    },
-  }),
-  person: fac.rootField({
-    type: Person.nonNullable,
-    args: {
-      flag: arg(fac.boolean.nonNullable),
-    },
-    resolve: (_, args, ctx, info) => {
-      return {
-        firstName: 'kerem',
-        id: 1,
-      };
-    },
-  }),
-  bestFriend: fac.rootField({
-    type: bestFriend.nonNullable,
-    resolve: async (_, __) => {
-      return {
-        __typename: 'Animal' as const,
-        id: 'yo',
-        owner: {
-          id: 'this is the id',
-          firstName: 'this is the name',
-        },
-      };
-    },
-  }),
-  people: fac.rootField({
-    type: fac.list(Person).nonNullable,
-    args: {
-      numPeople: arg(fac.float.nonNullable),
-      listArg: arg(fac.inputList(membership).nonNullable),
-    },
-    resolve: (root, args) => {
-      const toReturn: Array<SemiTypeOf<typeof Person>> = [];
-      const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
-      for (let i = 0; i < args.numPeople; i++) {
-        toReturn.push({
-          firstName: `some-name-${i}-${m}`,
-          id: i,
-        });
-      }
-      return toReturn;
-    },
-  }),
+          id: 'abc',
+          pet: {
+            id: 'adf',
+          },
+        };
+      },
+    }),
+  bestFriend: () =>
+    fac.rootField({
+      type: bestFriend.nonNullable,
+      resolve: async (_, __) => {
+        return {
+          __typename: 'Animal' as const,
+          id: 'yo',
+          owner: {
+            id: 'this is the id',
+            firstName: 'this is the name',
+          },
+        };
+      },
+    }),
+  people: () =>
+    fac.rootField({
+      type: fac.list(Person).nonNullable,
+      args: {
+        numPeople: arg(fac.float.nonNullable),
+        listArg: arg(fac.inputList(membership).nonNullable),
+      },
+      resolve: (root, args) => {
+        const toReturn: Array<SemiTypeOf<typeof Person>> = [];
+        const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
+        for (let i = 0; i < args.numPeople; i++) {
+          toReturn.push({
+            firstName: `some-name-${i}-${m}`,
+            id: i,
+            pet: {
+              id: 'adfa',
+            },
+          });
+        }
+        return toReturn;
+      },
+    }),
 });
 
 fac.mutation({
-  doThis: fac.rootField({
-    type: Person.nonNullable,
-    args: {
-      x: arg(fac.boolean.nonNullable),
-    },
-    resolve: (root, args, context) => {
-      return {
-        id: 'yo',
-        firstName: 'yeah',
-      };
-    },
-  }),
+  doThis: () =>
+    fac.rootField({
+      type: Person.nonNullable,
+      args: {
+        x: arg(fac.boolean.nonNullable),
+      },
+      resolve: (root, args, context) => {
+        return {
+          id: 'yo',
+          firstName: 'yeah',
+          pet: {
+            id: 'asdfasd',
+          },
+        };
+      },
+    }),
 });
 
 const schema = fac.getGraphQLSchema();

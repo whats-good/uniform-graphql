@@ -8,7 +8,7 @@ import { SemiType } from '../Type';
 import { OutputFieldMap } from '../OutputField';
 import { SemiTypeFactory } from '../SemiTypeFactory';
 import { InterfaceSemiType } from './Interface';
-import { InterfaceSemiTypeMap, TMap } from './struct-types';
+import { InterfaceSemiTypeMap, TMap, TThunkMap } from './struct-types';
 import { OutputObjectSemiType } from './OutputObject';
 
 type ImplementorKind = 'interface' | 'outputobject';
@@ -40,8 +40,8 @@ export abstract class ImplementorSemiType<
   N extends string,
   SB_G extends GraphQLInterfaceType | GraphQLObjectType,
   F extends OutputFieldMap,
-  SB_R = TMap<F>
-> extends SemiType<K, N, SB_G, TMap<F>, SB_R> {
+  SB_R = TThunkMap<F>
+> extends SemiType<K, N, SB_G, TThunkMap<F>, SB_R> {
   public readonly fields: F;
   private readonly shallowInterfaces: InterfaceSemiTypeMap = {};
 
@@ -85,7 +85,9 @@ export abstract class ImplementorSemiType<
         st.getSemiGraphQLType(),
       ),
       fields: () =>
-        _.mapValues(this.fields, (field) => field.getGraphQLTypeConstructor()),
+        _.mapValues(this.fields, (field) =>
+          field().getGraphQLTypeConstructor(),
+        ),
     };
   };
 }
