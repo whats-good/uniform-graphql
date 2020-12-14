@@ -1,4 +1,4 @@
 export * from './SemiTypeFactory';
 export * from './OutputField';
-export * from './utils';
+export * from './scalars';
 // TODO: export the default scalars directly.

@@ -8,8 +8,6 @@ import {
   id,
   string,
   field,
-  outputList,
-  inputList,
 } from './src';
 import { SemiTypeOf } from './src/Type';
 import { arg } from './src/types/struct-types';
@@ -74,7 +72,7 @@ const User = fac.outputObject({
   get fields() {
     return {
       id: field(id.nullable),
-      friends: field(outputList(fac.recursive(this)).nonNullable),
+      friends: field(fac.outputList(fac.recursive(this)).nonNullable),
     };
   },
 });
@@ -214,10 +212,10 @@ fac.rootQuery({
       },
     }),
     people: new RootOutputField({
-      type: outputList(Person).nonNullable,
+      type: fac.outputList(Person).nonNullable,
       args: {
         numPeople: arg(float.nonNullable),
-        listArg: arg(inputList(membership).nonNullable),
+        listArg: arg(fac.inputList(membership).nonNullable),
       },
       resolve: (root, args) => {
         const toReturn: Array<SemiTypeOf<typeof Person>> = [];

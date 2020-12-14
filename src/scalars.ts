@@ -5,33 +5,10 @@ import {
   GraphQLString,
 } from 'graphql';
 import { SemiTypeFactory } from './SemiTypeFactory';
-import { InputListSemiType } from './types/InputList';
-import { OutputListSemiType } from './types/OutputList';
 
 import { ScalarSemiType } from './types/Scalar';
-import { AnyOutputSemiType, AnyInputSemiType } from './types/struct-types';
 
 const defaultFactory = new SemiTypeFactory();
-
-export const outputList = <ST extends AnyOutputSemiType>(
-  listOf: ST,
-): OutputListSemiType<ST> => {
-  return new OutputListSemiType({
-    semiTypeFactory: defaultFactory,
-    name: `OutputListOf<${listOf.name}>`,
-    listOf,
-  });
-};
-
-export const inputList = <ST extends AnyInputSemiType>(
-  listOf: ST,
-): InputListSemiType<ST> => {
-  return new InputListSemiType({
-    semiTypeFactory: defaultFactory,
-    name: `InputListOf<${listOf.name}>`,
-    listOf: listOf,
-  });
-};
 
 export const id = new ScalarSemiType<string | number, 'ID'>({
   semiTypeFactory: defaultFactory,
@@ -39,6 +16,7 @@ export const id = new ScalarSemiType<string | number, 'ID'>({
   semiGraphQLType: GraphQLID,
 });
 
+// TODO: see if you can avoid typing the Name param twice
 export const string = new ScalarSemiType<string, 'String'>({
   semiTypeFactory: defaultFactory,
   name: 'String',

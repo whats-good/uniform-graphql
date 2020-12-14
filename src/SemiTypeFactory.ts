@@ -79,6 +79,18 @@ export class SemiTypeFactory {
     return st;
   };
 
+  inputList = <ST extends AnyInputSemiType>(
+    listOf: ST,
+  ): InputListSemiType<ST> => {
+    const st = new InputListSemiType({
+      semiTypeFactory: this,
+      name: `InputListOf<${listOf.name}>`,
+      listOf: listOf,
+    });
+    this.registerSemiType(st);
+    return st;
+  };
+
   inputObject = <F extends InputFieldConfigMap, N extends string>(params: {
     name: N;
     fields: F;
@@ -106,6 +118,18 @@ export class SemiTypeFactory {
       name: params.name,
       fields: params.fields,
       implementors: params.implementors,
+    });
+    this.registerSemiType(st);
+    return st;
+  };
+
+  outputList = <ST extends AnyOutputSemiType>(
+    listOf: ST,
+  ): OutputListSemiType<ST> => {
+    const st = new OutputListSemiType({
+      semiTypeFactory: this,
+      name: `OutputListOf<${listOf.name}>`,
+      listOf,
     });
     this.registerSemiType(st);
     return st;
