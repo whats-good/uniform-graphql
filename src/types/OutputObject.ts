@@ -30,12 +30,4 @@ export class OutputObjectSemiType<
   public getFreshSemiGraphQLType = (): GraphQLObjectType => {
     return new GraphQLObjectType(this.getGraphQLTypeConstructor());
   };
-
-  public fieldResolverize = (resolvers: Partial<FieldResolversOf<F>>): void => {
-    // TODO: should this be a complete / stateless overwrite, or can it have history and state?
-    // TODO: should we create new fields or mutate the existing ones?
-    Object.entries(resolvers).forEach(([key, value]) => {
-      this.fields[key].setResolve(value);
-    });
-  };
 }

@@ -47,12 +47,12 @@ export type ResolverFnOfTypeAndArgs<
 
 // TODO: later on, enable the root to be something else, but always force a return on the field.
 // TODO: fix the "any" context here
-export type FieldResolversOf<F extends OutputFieldMap> = {
+export type FieldResolversOf<F extends OutputFieldMap, C> = {
   [K in keyof F]: ResolverFnOfTypeAndArgs<
     F[K]['type'],
     F[K]['args'],
     TMap<F>,
-    any
+    C
   >;
 };
 

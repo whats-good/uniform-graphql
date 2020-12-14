@@ -49,9 +49,9 @@ const EmployeeInterface = fac.interface({
   implementors: [Person],
 });
 
-Person.fieldResolverize({
+fac.fieldResolverize(Person, {
   firstName: (root, args, context) => {
-    return root.firstName + root.firstName;
+    return root.firstName + root.firstName + context.kazan;
   },
 });
 

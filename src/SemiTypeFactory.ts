@@ -25,6 +25,7 @@ import {
 } from './types/struct-types';
 import { UnionSemiType, UnitableSemiTypes } from './types/Union';
 import {
+  FieldResolversOf,
   OutputFieldMap,
   ResolverFnOfTypeAndArgs,
   RootOutputField,
@@ -241,6 +242,16 @@ export class SemiTypeFactory<C> {
     });
   };
 
+  fieldResolverize = <F extends OutputFieldMap>(
+    object: OutputObjectSemiType<F, any>,
+    resolvers: Partial<FieldResolversOf<F, C>>,
+  ): void => {
+    // TODO: should this be a complete / stateless overwrite, or can it have history and state?
+    // TODO: should we create new fields or mutate the existing ones?
+    Object.entries(resolvers).forEach(([key, value]) => {
+      object.fields[key].setResolve(value);
+    });
+  };
   // TODO: add memoization
   // TODO: find a way to avoid repetition
 
