@@ -206,16 +206,19 @@ export class SemiTypeFactory<C> {
       semiTypeFactory: this,
       fields: rootQueryFields,
     });
-    const Mutation = new OutputObjectSemiType({
-      name: 'Mutation',
-      semiTypeFactory: this,
-      fields: mutationFields,
-    });
-    return new GraphQLSchema({
+    const schemaArgs: any = {
       query: Query.getSemiGraphQLType(),
-      mutation: Mutation.getSemiGraphQLType(),
       types: this.getAllNamedSemiGraphQLTypes(),
-    });
+    };
+    if (this.mutationFieldMaps.length) {
+      const Mutation = new OutputObjectSemiType({
+        name: 'Mutation',
+        semiTypeFactory: this,
+        fields: mutationFields,
+      });
+      schemaArgs.mutation = Mutation.getSemiGraphQLType();
+    }
+    return new GraphQLSchema(schemaArgs);
   };
 
   rootField = <B extends AnyOutputType, A extends OutputFieldArgumentMap>({
