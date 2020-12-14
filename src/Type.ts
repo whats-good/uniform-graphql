@@ -23,7 +23,7 @@ export abstract class SemiType<
   SB_A!: SB_A; // the actual static type
   SB_R!: SB_R; // the resolve type. It will be almost always equal to the static type, but not always.
   readonly name: N;
-  readonly semiTypeFactory: SemiTypeFactory;
+  readonly semiTypeFactory: SemiTypeFactory<any>;
   abstract kind: K;
   abstract getFreshSemiGraphQLType(): SB_G;
 
@@ -37,7 +37,7 @@ export abstract class SemiType<
     );
   };
 
-  constructor(params: { name: N; semiTypeFactory: SemiTypeFactory }) {
+  constructor(params: { name: N; semiTypeFactory: SemiTypeFactory<any> }) {
     this.name = params.name;
     this.semiTypeFactory = params.semiTypeFactory;
   }
