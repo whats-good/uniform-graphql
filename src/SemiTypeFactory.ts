@@ -171,14 +171,12 @@ export class SemiTypeFactory<C> {
     return this.semiTypes[params.name] as any;
   };
   // TODO: warn the user when they try to register the same query field.
-  rootQuery = <F extends RootOutputFieldMap<C>>(params: {
-    fields: F;
-  }): void => {
-    this.rootQueryFieldMaps.push(params.fields);
+  rootQuery = <F extends RootOutputFieldMap<C>>(fields: F): void => {
+    this.rootQueryFieldMaps.push(fields);
   };
 
-  mutation = <F extends RootOutputFieldMap<C>>(params: { fields: F }): void => {
-    this.mutationFieldMaps.push(params.fields);
+  mutation = <F extends RootOutputFieldMap<C>>(fields: F): void => {
+    this.mutationFieldMaps.push(fields);
   };
 
   union = <SBS extends UnitableSemiTypes, N extends string>(params: {
