@@ -44,15 +44,9 @@ type ResolverFnOfTypeAndArgs<
   info: GraphQLResolveInfo,
 ) => ResolverReturnTypeOf<B>;
 
-type ResolverFnOfConfigMap<
-  T extends OutputFieldMap,
-  K extends keyof T,
-  R
-> = ResolverFnOfTypeAndArgs<T[K]['type'], T[K]['args'], R>;
-
 // TODO: later on, enable the root to be something else, but always force a return on the field.
-export type FieldResolversOf<T extends OutputFieldMap> = {
-  [K in keyof T]: ResolverFnOfConfigMap<T, K, TMap<T>>;
+export type FieldResolversOf<F extends OutputFieldMap> = {
+  [K in keyof F]: ResolverFnOfTypeAndArgs<F[K]['type'], F[K]['args'], TMap<F>>;
 };
 
 export abstract class OutputField<
