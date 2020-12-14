@@ -33,20 +33,27 @@ type ArgTMap<T extends OutputFieldArgumentMap> = {
   [K in keyof T]: TypeOf<T[K]['type']>;
 };
 
-type ResolverFnOfTypeAndArgs<
+export type ResolverFnOfTypeAndArgs<
   B extends AnyOutputType,
   A extends OutputFieldArgumentMap,
-  R
+  R,
+  C
 > = (
   root: R,
   args: ArgTMap<A>,
-  ctx: any,
+  ctx: C,
   info: GraphQLResolveInfo,
 ) => ResolverReturnTypeOf<B>;
 
 // TODO: later on, enable the root to be something else, but always force a return on the field.
+// TODO: fix the "any" context here
 export type FieldResolversOf<F extends OutputFieldMap> = {
-  [K in keyof F]: ResolverFnOfTypeAndArgs<F[K]['type'], F[K]['args'], TMap<F>>;
+  [K in keyof F]: ResolverFnOfTypeAndArgs<
+    F[K]['type'],
+    F[K]['args'],
+    TMap<F>,
+    any
+  >;
 };
 
 export abstract class OutputField<
@@ -62,8 +69,7 @@ export abstract class OutputField<
 
   constructor({
     type,
-    // @ts-ignore // TODO: see if we can fix this
-    args = {},
+    args = {} as any,
     description,
     deprecationReason,
   }: {
@@ -88,7 +94,10 @@ export abstract class OutputField<
     });
   };
 
-  public setResolve = <R>(resolve: ResolverFnOfTypeAndArgs<B, A, R>): void => {
+  public setResolve = <R>(
+    // TODO: fix the any resolver here
+    resolve: ResolverFnOfTypeAndArgs<B, A, R, any>,
+  ): void => {
     this.resolve = resolve;
   };
 
@@ -130,21 +139,21 @@ export const field = <
 
 export class RootOutputField<
   B extends AnyOutputType,
-  A extends OutputFieldArgumentMap
+  A extends OutputFieldArgumentMap,
+  C
 > extends OutputField<B, A> {
   constructor({
     type,
-    // @ts-ignore TODO: see if we can fix this
-    args = {},
+    args,
     description,
     deprecationReason,
     resolve,
   }: {
     type: B;
-    args?: A;
+    args: A;
     description?: string;
     deprecationReason?: string;
-    resolve: ResolverFnOfTypeAndArgs<B, A, undefined>;
+    resolve: ResolverFnOfTypeAndArgs<B, A, undefined, C>;
   }) {
     args;
     super({

@@ -16,9 +16,16 @@ import {
   AnyOutputSemiType,
   AnyInputSemiType,
   InputFieldConfigMap,
+  AnyOutputType,
+  OutputFieldArgumentMap,
 } from './types/struct-types';
 import { UnionSemiType, UnitableSemiTypes } from './types/Union';
-import { OutputFieldMap, RootOutputFieldMap } from './OutputField';
+import {
+  OutputFieldMap,
+  ResolverFnOfTypeAndArgs,
+  RootOutputField,
+  RootOutputFieldMap,
+} from './OutputField';
 
 interface SemiTypesMap {
   [key: string]: AnySemiType;
@@ -28,11 +35,14 @@ interface GraphQLTypesMap {
   [key: string]: GraphQLType;
 }
 
-export class SemiTypeFactory {
+export class SemiTypeFactory<C> {
+  public readonly _C!: C;
   private readonly semiTypes: SemiTypesMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
   private readonly rootQueryFieldMaps: RootOutputFieldMap[] = [];
   private readonly mutationFieldMaps: RootOutputFieldMap[] = [];
+
+  constructor(public readonly getContext: () => C) {}
 
   getAllNamedSemiGraphQLTypes = (): GraphQLNamedType[] => {
     const allSemiGraphQLTypes = Object.values(this.semiTypes).map((st) =>
@@ -199,6 +209,28 @@ export class SemiTypeFactory {
       query: Query.getSemiGraphQLType(),
       mutation: Mutation.getSemiGraphQLType(),
       types: this.getAllNamedSemiGraphQLTypes(),
+    });
+  };
+
+  rootField = <B extends AnyOutputType, A extends OutputFieldArgumentMap>({
+    type,
+    args = {} as any,
+    description,
+    deprecationReason,
+    resolve,
+  }: {
+    type: B;
+    args?: A;
+    description?: string;
+    deprecationReason?: string;
+    resolve: ResolverFnOfTypeAndArgs<B, A, undefined, C>;
+  }): RootOutputField<B, A, C> => {
+    return new RootOutputField({
+      type,
+      resolve,
+      args,
+      deprecationReason,
+      description,
     });
   };
 }

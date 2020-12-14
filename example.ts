@@ -1,18 +1,14 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import {
-  SemiTypeFactory,
-  RootOutputField,
-  float,
-  boolean,
-  id,
-  string,
-  field,
-} from './src';
+import { SemiTypeFactory, float, boolean, id, string, field } from './src';
 import { SemiTypeOf } from './src/Type';
 import { arg } from './src/types/struct-types';
 
-const fac = new SemiTypeFactory();
+const fac = new SemiTypeFactory(() => ({
+  kerem: 'something',
+  kazan: 'something',
+  currentUser: 'another thing',
+}));
 
 const membership = fac.enum({
   name: 'Membership',
@@ -100,7 +96,7 @@ const firstNameInterface = fac.interface({
 
 fac.rootQuery({
   fields: {
-    kerem: new RootOutputField({
+    kerem: fac.rootField({
       type: Person.nonNullable,
       args: {
         id: arg(id.nonNullable),
@@ -117,7 +113,7 @@ fac.rootQuery({
 
 fac.rootQuery({
   fields: {
-    anotherThing: new RootOutputField({
+    anotherThing: fac.rootField({
       type: string.nonNullable,
       args: {
         someArg: arg(boolean.nonNullable),
@@ -126,7 +122,7 @@ fac.rootQuery({
         return 'abc';
       },
     }),
-    firstName: new RootOutputField({
+    firstName: fac.rootField({
       type: firstNameInterface.nullable,
       resolve: () => {
         return {
@@ -135,7 +131,7 @@ fac.rootQuery({
         };
       },
     }),
-    currentUser: new RootOutputField({
+    currentUser: fac.rootField({
       type: User.nullable,
       resolve: (root, args, context) => {
         return {
@@ -146,7 +142,7 @@ fac.rootQuery({
         };
       },
     }),
-    employeeInterface: new RootOutputField({
+    employeeInterface: fac.rootField({
       type: EmployeeInterface.nullable,
       resolve: (_, args, ctx) => {
         return {
@@ -156,16 +152,16 @@ fac.rootQuery({
         };
       },
     }),
-    idInterface: new RootOutputField({
+    idInterface: fac.rootField({
       type: idInterface.nullable,
-      resolve: () => {
+      resolve: (root, args, context) => {
         return {
           __typename: 'Animal' as const,
           id: 'x',
         };
       },
     }),
-    something: new RootOutputField({
+    something: fac.rootField({
       type: string.nonNullable,
       args: {
         inputObjectArg: arg(someInput.nonNullable),
@@ -174,7 +170,7 @@ fac.rootQuery({
         return 'yo';
       },
     }),
-    animal: new RootOutputField({
+    animal: fac.rootField({
       type: Animal.nonNullable,
       resolve: (_, __) => {
         return {
@@ -186,7 +182,7 @@ fac.rootQuery({
         };
       },
     }),
-    person: new RootOutputField({
+    person: fac.rootField({
       type: Person.nonNullable,
       args: {
         flag: arg(boolean.nonNullable),
@@ -198,7 +194,7 @@ fac.rootQuery({
         };
       },
     }),
-    bestFriend: new RootOutputField({
+    bestFriend: fac.rootField({
       type: bestFriend.nonNullable,
       resolve: async (_, __) => {
         return {
@@ -211,7 +207,7 @@ fac.rootQuery({
         };
       },
     }),
-    people: new RootOutputField({
+    people: fac.rootField({
       type: fac.list(Person).nonNullable,
       args: {
         numPeople: arg(float.nonNullable),
@@ -234,7 +230,7 @@ fac.rootQuery({
 
 fac.mutation({
   fields: {
-    doThis: new RootOutputField({
+    doThis: fac.rootField({
       type: Person.nonNullable,
       args: {
         x: arg(boolean.nonNullable),
