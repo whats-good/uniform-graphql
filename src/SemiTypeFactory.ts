@@ -123,9 +123,7 @@ export class SemiTypeFactory {
     return st;
   };
 
-  outputList = <ST extends AnyOutputSemiType>(
-    listOf: ST,
-  ): OutputListSemiType<ST> => {
+  list = <ST extends AnyOutputSemiType>(listOf: ST): OutputListSemiType<ST> => {
     const st = new OutputListSemiType({
       semiTypeFactory: this,
       name: `OutputListOf<${listOf.name}>`,
@@ -135,7 +133,7 @@ export class SemiTypeFactory {
     return st;
   };
 
-  outputObject = <F extends OutputFieldMap, N extends string>(params: {
+  object = <F extends OutputFieldMap, N extends string>(params: {
     name: N;
     fields: F;
   }): OutputObjectSemiType<F, N> => {

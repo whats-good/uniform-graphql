@@ -36,7 +36,7 @@ const someInput = fac.inputObject({
   },
 });
 
-const Person = fac.outputObject({
+const Person = fac.object({
   name: 'Person',
   fields: {
     id: field(id.nullable),
@@ -59,7 +59,7 @@ Person.fieldResolverize({
   },
 });
 
-const Animal = fac.outputObject({
+const Animal = fac.object({
   name: 'Animal',
   fields: {
     id: field(id.nullable),
@@ -67,12 +67,12 @@ const Animal = fac.outputObject({
   },
 });
 
-const User = fac.outputObject({
+const User = fac.object({
   name: 'User',
   get fields() {
     return {
       id: field(id.nullable),
-      friends: field(fac.outputList(fac.recursive(this)).nonNullable),
+      friends: field(fac.list(fac.recursive(this)).nonNullable),
     };
   },
 });
@@ -212,7 +212,7 @@ fac.rootQuery({
       },
     }),
     people: new RootOutputField({
-      type: fac.outputList(Person).nonNullable,
+      type: fac.list(Person).nonNullable,
       args: {
         numPeople: arg(float.nonNullable),
         listArg: arg(fac.inputList(membership).nonNullable),
