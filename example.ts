@@ -1,9 +1,8 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import { field, SemiTypeFactory, SimpleOutputField } from './src';
-import { NullableTypeOf, SemiTypeOf } from './src/Type';
+import { SemiTypeOf } from './src/Type';
 import { OutputObjectSemiType } from './src/types/OutputObject';
-import { ScalarSemiType } from './src/types/Scalar';
 import { arg, OutputFieldArgumentMap } from './src/types/struct-types';
 
 const fac = new SemiTypeFactory(() => ({
@@ -11,6 +10,14 @@ const fac = new SemiTypeFactory(() => ({
   kazan: 'kazan',
   currentUser: 'currentUser',
 }));
+
+// TODO: understand why removing this object breaks things.
+fac.object({
+  name: 'kazan',
+  fields: {
+    kerem: () => field(fac.float.nullable),
+  },
+});
 
 const membership = fac.enum({
   name: 'Membership',
@@ -34,33 +41,7 @@ const someInput = fac.inputObject({
   },
 });
 
-const Person = fac.object({
-  name: 'Person',
-  fields: {
-    id: () => field(fac.id.nullable),
-    firstName: () => field(fac.string.nonNullable),
-    pet: () => field(Animal.nonNullable),
-  },
-});
-
-type AnimalType = OutputObjectSemiType<
-  {
-    id: () => SimpleOutputField<
-      typeof fac['id']['nullable'],
-      OutputFieldArgumentMap
-    >;
-  },
-  'Animal'
->;
-
-const Animal: AnimalType = fac.object({
-  name: 'Animal',
-  fields: {
-    id: () => field(fac.id.nullable),
-  },
-});
-
-type FirstGuyType = OutputObjectSemiType<
+type PersonType = OutputObjectSemiType<
   {
     id: () => SimpleOutputField<
       typeof fac['id']['nullable'],
@@ -71,41 +52,41 @@ type FirstGuyType = OutputObjectSemiType<
       OutputFieldArgumentMap
     >;
     pet: () => SimpleOutputField<
-      SecondGuyType['nullable'],
+      AnimalType['nullable'],
       OutputFieldArgumentMap
     >;
   },
-  'FirstGuy'
+  'Person'
 >;
 
-const FirstGuy: FirstGuyType = fac.object({
-  name: 'FirstGuy',
+const Person: PersonType = fac.object({
+  name: 'Person',
   fields: {
     id: () => field(fac.id.nullable),
     firstName: () => field(fac.string.nonNullable),
-    pet: () => field(SecondGuy.nullable),
+    pet: () => field(Animal.nullable),
   },
 });
 
-type SecondGuyType = OutputObjectSemiType<
+type AnimalType = OutputObjectSemiType<
   {
     id: () => SimpleOutputField<
       typeof fac['id']['nullable'],
       OutputFieldArgumentMap
     >;
     owner: () => SimpleOutputField<
-      FirstGuyType['nullable'],
+      PersonType['nullable'],
       OutputFieldArgumentMap
     >;
   },
-  'SecondGuy'
+  'Animal'
 >;
 
-const SecondGuy: SecondGuyType = fac.object({
-  name: 'SecondGuy',
+const Animal: AnimalType = fac.object({
+  name: 'Animal',
   fields: {
     id: () => field(fac.id.nullable),
-    owner: () => field(FirstGuy.nullable),
+    owner: () => field(Person.nullable),
   },
 });
 
@@ -115,10 +96,10 @@ const EmployeeInterface = fac.interface({
     id: () => field(fac.id.nullable),
     firstName: () => field(fac.string.nonNullable),
   },
-  implementors: [FirstGuy],
+  implementors: [Person],
 });
 
-fac.fieldResolvers(FirstGuy, {
+fac.fieldResolvers(Person, {
   firstName: (root, args, context) => {
     return root.firstName + root.firstName + context.kazan;
   },
@@ -147,7 +128,7 @@ const idInterface = fac.interface({
   fields: {
     id: () => field(fac.id.nullable),
   },
-  implementors: [Animal],
+  implementors: [Person],
 });
 
 const firstNameInterface = fac.interface({
@@ -169,9 +150,7 @@ fac.rootQuery({
         return {
           id: 'this is the id',
           firstName: 'this is the firstname',
-          pet: {
-            id: 'abc',
-          },
+          pet: null,
         };
       },
     }),
@@ -180,7 +159,7 @@ fac.rootQuery({
 fac.rootQuery({
   firstGuy: () =>
     fac.rootField({
-      type: FirstGuy.nonNullable,
+      type: Person.nonNullable,
       args: {},
       resolve: (root, args, context) => {
         return {
@@ -232,7 +211,7 @@ fac.rootQuery({
       type: EmployeeInterface.nullable,
       resolve: (_, args, ctx) => {
         return {
-          __typename: 'FirstGuy' as const,
+          __typename: 'Person' as const,
           id: 'yo',
           firstName: 'kazan',
         };
@@ -243,7 +222,7 @@ fac.rootQuery({
       type: idInterface.nullable,
       resolve: (root, args, context) => {
         return {
-          __typename: 'Animal' as const,
+          __typename: 'Person' as const,
           id: 'x',
         };
       },
@@ -258,19 +237,6 @@ fac.rootQuery({
         return 'yo';
       },
     }),
-  animal: () =>
-    fac.rootField({
-      type: Animal.nonNullable,
-      resolve: (_, __) => {
-        return {
-          id: 'yo',
-          owner: {
-            firstName: 'kerem',
-            id: 'kazan',
-          },
-        };
-      },
-    }),
   person: () =>
     fac.rootField({
       type: Person.nonNullable,
@@ -281,9 +247,7 @@ fac.rootQuery({
         return {
           firstName: 'kerem',
           id: 'abc',
-          pet: {
-            id: 'adf',
-          },
+          pet: null,
         };
       },
     }),
@@ -294,9 +258,12 @@ fac.rootQuery({
         return {
           __typename: 'Animal' as const,
           id: 'yo',
-          owner: {
-            id: 'this is the id',
-            firstName: 'this is the name',
+          get owner() {
+            return {
+              id: 'this is the id',
+              firstName: 'this is the name',
+              pet: this,
+            };
           },
         };
       },
@@ -312,13 +279,17 @@ fac.rootQuery({
         const toReturn: Array<SemiTypeOf<typeof Person>> = [];
         const m = args.listArg.reduce((acc, cur) => acc + cur, 'x');
         for (let i = 0; i < args.numPeople; i++) {
-          toReturn.push({
+          const person = {
             firstName: `some-name-${i}-${m}`,
             id: i,
-            pet: {
-              id: 'adfa',
+            get pet() {
+              return {
+                id: 'adfa',
+                owner: this,
+              };
             },
-          });
+          };
+          toReturn.push(person);
         }
         return toReturn;
       },
@@ -336,9 +307,7 @@ fac.mutation({
         return {
           id: 'yo',
           firstName: 'yeah',
-          pet: {
-            id: 'asdfasd',
-          },
+          pet: null,
         };
       },
     }),
