@@ -66,7 +66,11 @@ type FirstGuyType = OutputObjectSemiType<
       typeof fac['id']['nullable'],
       OutputFieldArgumentMap
     >;
-    secondGuy: () => SimpleOutputField<
+    firstName: () => SimpleOutputField<
+      typeof fac['string']['nonNullable'],
+      OutputFieldArgumentMap
+    >;
+    pet: () => SimpleOutputField<
       SecondGuyType['nullable'],
       OutputFieldArgumentMap
     >;
@@ -78,7 +82,8 @@ const FirstGuy: FirstGuyType = fac.object({
   name: 'FirstGuy',
   fields: {
     id: () => field(fac.id.nullable),
-    secondGuy: () => field(SecondGuy.nullable),
+    firstName: () => field(fac.string.nonNullable),
+    pet: () => field(SecondGuy.nullable),
   },
 });
 
@@ -88,7 +93,7 @@ type SecondGuyType = OutputObjectSemiType<
       typeof fac['id']['nullable'],
       OutputFieldArgumentMap
     >;
-    firstGuy: () => SimpleOutputField<
+    owner: () => SimpleOutputField<
       FirstGuyType['nullable'],
       OutputFieldArgumentMap
     >;
@@ -100,7 +105,7 @@ const SecondGuy: SecondGuyType = fac.object({
   name: 'SecondGuy',
   fields: {
     id: () => field(fac.id.nullable),
-    firstGuy: () => field(FirstGuy.nullable),
+    owner: () => field(FirstGuy.nullable),
   },
 });
 
@@ -110,10 +115,10 @@ const EmployeeInterface = fac.interface({
     id: () => field(fac.id.nullable),
     firstName: () => field(fac.string.nonNullable),
   },
-  implementors: [Person],
+  implementors: [FirstGuy],
 });
 
-fac.fieldResolvers(Person, {
+fac.fieldResolvers(FirstGuy, {
   firstName: (root, args, context) => {
     return root.firstName + root.firstName + context.kazan;
   },
@@ -180,10 +185,11 @@ fac.rootQuery({
       resolve: (root, args, context) => {
         return {
           id: 'abc',
-          get secondGuy() {
+          firstName: 'yo',
+          get pet() {
             return {
               id: 'x',
-              firstGuy: this,
+              owner: this,
             };
           },
         };
@@ -226,7 +232,7 @@ fac.rootQuery({
       type: EmployeeInterface.nullable,
       resolve: (_, args, ctx) => {
         return {
-          __typename: 'Person' as const,
+          __typename: 'FirstGuy' as const,
           id: 'yo',
           firstName: 'kazan',
         };
