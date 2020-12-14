@@ -1,8 +1,10 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import { field, SemiTypeFactory } from './src';
-import { SemiTypeOf } from './src/Type';
-import { arg } from './src/types/struct-types';
+import { field, SemiTypeFactory, SimpleOutputField } from './src';
+import { NullableTypeOf, SemiTypeOf } from './src/Type';
+import { OutputObjectSemiType } from './src/types/OutputObject';
+import { ScalarSemiType } from './src/types/Scalar';
+import { arg, OutputFieldArgumentMap } from './src/types/struct-types';
 
 const fac = new SemiTypeFactory(() => ({
   kerem: 'kerem',
@@ -45,6 +47,50 @@ const Animal = fac.object({
   name: 'Animal',
   fields: {
     id: () => field(fac.id.nullable),
+  },
+});
+
+type FirstGuyType = OutputObjectSemiType<
+  {
+    id: () => SimpleOutputField<
+      NullableTypeOf<ScalarSemiType<string | number, 'ID'>>,
+      OutputFieldArgumentMap
+    >;
+    secondGuy: () => SimpleOutputField<
+      NullableTypeOf<SecondGuyType>,
+      OutputFieldArgumentMap
+    >;
+  },
+  'FirstGuy'
+>;
+
+const FirstGuy: FirstGuyType = fac.object({
+  name: 'FirstGuy',
+  fields: {
+    id: () => field(fac.id.nullable),
+    secondGuy: () => field(SecondGuy.nullable),
+  },
+});
+
+type SecondGuyType = OutputObjectSemiType<
+  {
+    id: () => SimpleOutputField<
+      NullableTypeOf<ScalarSemiType<string | number, 'ID'>>,
+      OutputFieldArgumentMap
+    >;
+    firstGuy: () => SimpleOutputField<
+      NullableTypeOf<FirstGuyType>,
+      OutputFieldArgumentMap
+    >;
+  },
+  'SecondGuy'
+>;
+
+const SecondGuy: SecondGuyType = fac.object({
+  name: 'SecondGuy',
+  fields: {
+    id: () => field(fac.id.nullable),
+    firstGuy: () => field(FirstGuy.nullable),
   },
 });
 
@@ -117,6 +163,22 @@ fac.rootQuery({
 });
 
 fac.rootQuery({
+  firstGuy: () =>
+    fac.rootField({
+      type: FirstGuy.nonNullable,
+      args: {},
+      resolve: (root, args, context) => {
+        return {
+          id: 'abc',
+          get secondGuy() {
+            return {
+              id: 'x',
+              firstGuy: this,
+            };
+          },
+        };
+      },
+    }),
   anotherThing: () =>
     fac.rootField({
       type: fac.string.nonNullable,
