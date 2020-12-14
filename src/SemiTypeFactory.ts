@@ -39,8 +39,8 @@ export class SemiTypeFactory<C> {
   public readonly _C!: C;
   private readonly semiTypes: SemiTypesMap = {};
   private readonly graphQLTypes: GraphQLTypesMap = {};
-  private readonly rootQueryFieldMaps: RootOutputFieldMap[] = [];
-  private readonly mutationFieldMaps: RootOutputFieldMap[] = [];
+  private readonly rootQueryFieldMaps: RootOutputFieldMap<C>[] = [];
+  private readonly mutationFieldMaps: RootOutputFieldMap<C>[] = [];
 
   constructor(public readonly getContext: () => C) {}
 
@@ -165,11 +165,13 @@ export class SemiTypeFactory<C> {
     return this.semiTypes[params.name] as any;
   };
   // TODO: warn the user when they try to register the same query field.
-  rootQuery = <F extends RootOutputFieldMap>(params: { fields: F }): void => {
+  rootQuery = <F extends RootOutputFieldMap<C>>(params: {
+    fields: F;
+  }): void => {
     this.rootQueryFieldMaps.push(params.fields);
   };
 
-  mutation = <F extends RootOutputFieldMap>(params: { fields: F }): void => {
+  mutation = <F extends RootOutputFieldMap<C>>(params: { fields: F }): void => {
     this.mutationFieldMaps.push(params.fields);
   };
 
