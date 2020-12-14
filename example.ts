@@ -46,7 +46,7 @@ const Person = fac.object({
 type AnimalType = OutputObjectSemiType<
   {
     id: () => SimpleOutputField<
-      NullableTypeOf<ScalarSemiType<string | number, 'ID'>>,
+      typeof fac['id']['nullable'],
       OutputFieldArgumentMap
     >;
   },
@@ -67,7 +67,7 @@ type FirstGuyType = OutputObjectSemiType<
       OutputFieldArgumentMap
     >;
     secondGuy: () => SimpleOutputField<
-      NullableTypeOf<SecondGuyType>,
+      SecondGuyType['nullable'],
       OutputFieldArgumentMap
     >;
   },
@@ -89,7 +89,7 @@ type SecondGuyType = OutputObjectSemiType<
       OutputFieldArgumentMap
     >;
     firstGuy: () => SimpleOutputField<
-      NullableTypeOf<FirstGuyType>,
+      FirstGuyType['nullable'],
       OutputFieldArgumentMap
     >;
   },
