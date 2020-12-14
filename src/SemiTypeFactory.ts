@@ -242,7 +242,7 @@ export class SemiTypeFactory<C> {
     });
   };
 
-  fieldResolverize = <F extends OutputFieldMap>(
+  fieldResolvers = <F extends OutputFieldMap>(
     object: OutputObjectSemiType<F, any>,
     resolvers: Partial<FieldResolversOf<F, C>>,
   ): void => {

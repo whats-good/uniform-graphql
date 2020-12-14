@@ -5,9 +5,9 @@ import { SemiTypeOf } from './src/Type';
 import { arg } from './src/types/struct-types';
 
 const fac = new SemiTypeFactory(() => ({
-  kerem: 'something',
-  kazan: 'something',
-  currentUser: 'another thing',
+  kerem: 'kerem',
+  kazan: 'kazan',
+  currentUser: 'currentUser',
 }));
 
 const membership = fac.enum({
@@ -49,9 +49,12 @@ const EmployeeInterface = fac.interface({
   implementors: [Person],
 });
 
-fac.fieldResolverize(Person, {
+fac.fieldResolvers(Person, {
   firstName: (root, args, context) => {
     return root.firstName + root.firstName + context.kazan;
+  },
+  id: (root, args, context) => {
+    return context.kazan;
   },
 });
 
