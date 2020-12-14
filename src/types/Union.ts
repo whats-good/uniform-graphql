@@ -34,7 +34,7 @@ export class UnionSemiType<
   public readonly nonNullable: NonNullableTypeOf<UnionSemiType<SBS, N>>;
 
   public constructor(params: {
-    semiTypeFactory: SemiTypeFactory;
+    semiTypeFactory: SemiTypeFactory<any>;
     name: N;
     semiTypes: SBS;
   }) {

@@ -27,7 +27,7 @@ export class InterfaceSemiType<
     name: N;
     fields: F;
     implementors: InterfaceSemiType<F, I, N>['implementors'];
-    semiTypeFactory: SemiTypeFactory;
+    semiTypeFactory: SemiTypeFactory<any>;
   }) {
     super(params);
     this.fields = params.fields;

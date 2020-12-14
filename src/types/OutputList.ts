@@ -16,7 +16,7 @@ export class OutputListSemiType<ST extends AnyOutputSemiType> extends SemiType<
 
   constructor(params: {
     name: string;
-    semiTypeFactory: SemiTypeFactory;
+    semiTypeFactory: SemiTypeFactory<any>;
     listOf: ST;
   }) {
     super(params);

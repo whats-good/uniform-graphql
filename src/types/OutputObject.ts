@@ -17,7 +17,7 @@ export class OutputObjectSemiType<
   public readonly nonNullable: NonNullableTypeOf<OutputObjectSemiType<F, N>>;
 
   constructor(params: {
-    semiTypeFactory: SemiTypeFactory;
+    semiTypeFactory: SemiTypeFactory<any>;
     name: N;
     fields: F;
   }) {

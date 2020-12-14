@@ -14,7 +14,7 @@ export class ScalarSemiType<SB_A, N extends string> extends SemiType<
   public readonly nonNullable: NonNullableTypeOf<ScalarSemiType<SB_A, N>>;
 
   constructor(params: {
-    semiTypeFactory: SemiTypeFactory;
+    semiTypeFactory: SemiTypeFactory<any>;
     name: N;
     semiGraphQLType: GraphQLScalarType;
   }) {

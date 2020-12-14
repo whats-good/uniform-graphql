@@ -14,7 +14,7 @@ export class InputObjectSemiType<
   public readonly nonNullable: NonNullableTypeOf<InputObjectSemiType<F, N>>;
 
   constructor(params: {
-    semiTypeFactory: SemiTypeFactory;
+    semiTypeFactory: SemiTypeFactory<any>;
     name: N;
     fields: F;
   }) {

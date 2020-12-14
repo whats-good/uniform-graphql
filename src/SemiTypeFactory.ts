@@ -1,7 +1,11 @@
 import {
+  GraphQLBoolean,
+  GraphQLFloat,
+  GraphQLID,
   GraphQLList,
   GraphQLNamedType,
   GraphQLSchema,
+  GraphQLString,
   GraphQLType,
 } from 'graphql';
 import { AnySemiType, SemiGraphQLTypeOf } from './Type';
@@ -26,6 +30,7 @@ import {
   RootOutputField,
   RootOutputFieldMap,
 } from './OutputField';
+import { ScalarSemiType } from './types/Scalar';
 
 interface SemiTypesMap {
   [key: string]: AnySemiType;
@@ -235,4 +240,39 @@ export class SemiTypeFactory<C> {
       description,
     });
   };
+
+  // TODO: add memoization
+  // TODO: find a way to avoid repetition
+
+  get id(): ScalarSemiType<string | number, 'ID'> {
+    return new ScalarSemiType<string | number, 'ID'>({
+      semiTypeFactory: this,
+      name: 'ID',
+      semiGraphQLType: GraphQLID,
+    });
+  }
+
+  get string(): ScalarSemiType<string, 'String'> {
+    return new ScalarSemiType<string, 'String'>({
+      semiTypeFactory: this,
+      name: 'String',
+      semiGraphQLType: GraphQLString,
+    });
+  }
+
+  get float(): ScalarSemiType<number, 'Float'> {
+    return new ScalarSemiType({
+      semiTypeFactory: this,
+      name: 'Float',
+      semiGraphQLType: GraphQLFloat,
+    });
+  }
+
+  get boolean(): ScalarSemiType<boolean, 'Boolean'> {
+    return new ScalarSemiType<boolean, 'Boolean'>({
+      semiTypeFactory: this,
+      name: 'Boolean',
+      semiGraphQLType: GraphQLBoolean,
+    });
+  }
 }

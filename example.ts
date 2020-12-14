@@ -1,6 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import { SemiTypeFactory, float, boolean, id, string, field } from './src';
+import { field, SemiTypeFactory } from './src';
 import { SemiTypeOf } from './src/Type';
 import { arg } from './src/types/struct-types';
 
@@ -19,12 +19,12 @@ const someInput = fac.inputObject({
   name: 'SomeInput',
   fields: {
     id: {
-      type: id.nullable,
+      type: fac.id.nullable,
       deprecationReason: 'id is deprecated',
       description: 'this is the description!',
     },
     firstName: {
-      type: string.nullable,
+      type: fac.string.nullable,
     },
     membership: {
       type: membership.nonNullable,
@@ -35,16 +35,16 @@ const someInput = fac.inputObject({
 const Person = fac.object({
   name: 'Person',
   fields: {
-    id: field(id.nullable),
-    firstName: field(string.nonNullable),
+    id: field(fac.id.nullable),
+    firstName: field(fac.string.nonNullable),
   },
 });
 
 const EmployeeInterface = fac.interface({
   name: 'EmployeeInterface',
   fields: {
-    id: field(id.nullable),
-    firstName: field(string.nonNullable),
+    id: field(fac.id.nullable),
+    firstName: field(fac.string.nonNullable),
   },
   implementors: [Person],
 });
@@ -58,7 +58,7 @@ Person.fieldResolverize({
 const Animal = fac.object({
   name: 'Animal',
   fields: {
-    id: field(id.nullable),
+    id: field(fac.id.nullable),
     owner: field(Person.nullable),
   },
 });
@@ -67,7 +67,7 @@ const User = fac.object({
   name: 'User',
   get fields() {
     return {
-      id: field(id.nullable),
+      id: field(fac.id.nullable),
       friends: field(fac.list(fac.recursive(this)).nonNullable),
     };
   },
@@ -81,7 +81,7 @@ const bestFriend = fac.union({
 const idInterface = fac.interface({
   name: 'IDInterface',
   fields: {
-    id: field(id.nullable),
+    id: field(fac.id.nullable),
   },
   implementors: [Animal],
 });
@@ -89,7 +89,7 @@ const idInterface = fac.interface({
 const firstNameInterface = fac.interface({
   name: 'FirstNameInterface',
   fields: {
-    firstName: field(string.nonNullable),
+    firstName: field(fac.string.nonNullable),
   },
   implementors: [Person],
 });
@@ -99,7 +99,7 @@ fac.rootQuery({
     kerem: fac.rootField({
       type: Person.nonNullable,
       args: {
-        id: arg(id.nonNullable),
+        id: arg(fac.id.nonNullable),
       },
       resolve: (root, args, context) => {
         return {
@@ -114,9 +114,9 @@ fac.rootQuery({
 fac.rootQuery({
   fields: {
     anotherThing: fac.rootField({
-      type: string.nonNullable,
+      type: fac.string.nonNullable,
       args: {
-        someArg: arg(boolean.nonNullable),
+        someArg: arg(fac.boolean.nonNullable),
       },
       resolve: (root, args, context) => {
         return 'abc';
@@ -124,10 +124,10 @@ fac.rootQuery({
     }),
     firstName: fac.rootField({
       type: firstNameInterface.nullable,
-      resolve: () => {
+      resolve: (root, args, context) => {
         return {
           __typename: 'Person' as const,
-          firstName: 'some firstname',
+          firstName: 'some firstname' + context.kazan,
         };
       },
     }),
@@ -162,7 +162,7 @@ fac.rootQuery({
       },
     }),
     something: fac.rootField({
-      type: string.nonNullable,
+      type: fac.string.nonNullable,
       args: {
         inputObjectArg: arg(someInput.nonNullable),
       },
@@ -185,7 +185,7 @@ fac.rootQuery({
     person: fac.rootField({
       type: Person.nonNullable,
       args: {
-        flag: arg(boolean.nonNullable),
+        flag: arg(fac.boolean.nonNullable),
       },
       resolve: (_, args, ctx, info) => {
         return {
@@ -210,7 +210,7 @@ fac.rootQuery({
     people: fac.rootField({
       type: fac.list(Person).nonNullable,
       args: {
-        numPeople: arg(float.nonNullable),
+        numPeople: arg(fac.float.nonNullable),
         listArg: arg(fac.inputList(membership).nonNullable),
       },
       resolve: (root, args) => {
@@ -233,7 +233,7 @@ fac.mutation({
     doThis: fac.rootField({
       type: Person.nonNullable,
       args: {
-        x: arg(boolean.nonNullable),
+        x: arg(fac.boolean.nonNullable),
       },
       resolve: (root, args, context) => {
         return {
@@ -249,6 +249,7 @@ const schema = fac.getGraphQLSchema();
 
 const apolloServer = new ApolloServer({
   schema,
+  context: fac.getContext(), // TODO: find a way to get the context inserted properly
 });
 
 const PORT = 4001;
