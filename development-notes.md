@@ -103,3 +103,4 @@
 - When i look at the way type-graphql works, I'm starting to think that they chose decorators and classes not because they are easier to use, but because they make mutually recursive types possible.
 - research: type-fest
 - now that we have eliminated interface types from implementors of interfaces, should we separate the ImplementorType from the interface type?
+- look into io-ts intersection type implementation to understand how to merge two interfaces into one.
