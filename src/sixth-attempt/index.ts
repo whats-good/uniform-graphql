@@ -12,23 +12,24 @@ import {
   Kind,
   ValueNode,
 } from 'graphql';
-import { Type } from '../Type';
 
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 
 export class TypeContext {
-  public readonly savedGraphQLTypes = new Map<string, GraphQLType>();
+  public readonly savedSemiGraphQLTypes = new Map<string, GraphQLType>();
 }
 
-export abstract class SemiType<N extends string, T, R = T> {
+export abstract class SemiType<N extends string, T> {
   public readonly name: N;
-  public readonly _T!: T;
-  public readonly _R!: R;
+  public readonly __T!: T;
 
   public constructor(params: { name: N }) {
     this.name = params.name;
   }
+
+  // public abstract nullable(): Type<N, Maybe<T>, R>;
+  // public abstract nonNullable(): Type<N, T, R>;
 
   protected abstract getFreshSemiGraphQLType(
     typeContext: TypeContext,
@@ -36,16 +37,66 @@ export abstract class SemiType<N extends string, T, R = T> {
 
   // TODO: handle recursive types to avoid infinite loops
   public getSemiGraphQLType(typeContext: TypeContext): GraphQLType {
-    const existingType = typeContext.savedGraphQLTypes.get(this.name);
+    const existingType = typeContext.savedSemiGraphQLTypes.get(this.name);
     if (existingType) {
       return existingType;
     } else {
       const newType = this.getFreshSemiGraphQLType(typeContext);
-      typeContext.savedGraphQLTypes.set(this.name, newType);
+      typeContext.savedSemiGraphQLTypes.set(this.name, newType);
       return newType;
     }
   }
+
+  get nullable(): Type<N, Maybe<T>> {
+    return new Type({
+      name: this.name,
+      nullable: true,
+      semiType: this,
+    });
+  }
+
+  get nonNullable(): Type<N, T> {
+    return new Type({
+      name: this.name,
+      nullable: false,
+      semiType: this,
+    });
+  }
 }
+
+type AnySemiType = SemiType<any, any>;
+type NameOf<S extends AnySemiType> = S['name'];
+type TypeOf<S extends AnySemiType> = S['__T'];
+
+class Type<N extends string, T> {
+  public readonly name: N;
+  public readonly nullable: boolean;
+  public readonly semiType: SemiType<N, any>;
+  public readonly __T!: T;
+
+  constructor(params: {
+    name: N;
+    nullable: boolean;
+    semiType: SemiType<N, any>;
+  }) {
+    this.name = params.name;
+    this.nullable = params.nullable;
+    this.semiType = params.semiType;
+  }
+
+  public getGraphQLType(typeContext: TypeContext): GraphQLType {
+    const semiGraphQLType = this.semiType.getSemiGraphQLType(typeContext);
+    if (this.nullable) {
+      return semiGraphQLType;
+    } else {
+      return new GraphQLNonNull(semiGraphQLType);
+    }
+  }
+}
+
+type NullableOf<S extends AnySemiType> = Type<NameOf<S>, Maybe<TypeOf<S>>>;
+
+type NonNullableOf<S extends AnySemiType> = Type<NameOf<S>, Maybe<TypeOf<S>>>;
 
 export type Maybe<T> = T | null | undefined;
 
@@ -69,7 +120,7 @@ interface IScalarSemiTypeConstructor<N extends string, T> {
   parseLiteral: ScalarSemiType<N, T>['literalParser'];
 }
 
-export class ScalarSemiType<N extends string, T> extends SemiType<N, T, T> {
+export class ScalarSemiType<N extends string, T> extends SemiType<N, T> {
   public readonly description?: Maybe<string>;
   public readonly specifiedByUrl?: Maybe<string>;
 
@@ -134,7 +185,7 @@ const float = new ScalarSemiType<'Float', number>({
   specifiedByUrl: GraphQLFloat.specifiedByUrl,
 });
 
-const id = new ScalarSemiType<'ID', number>({
+const id = new ScalarSemiType<'ID', number | string>({
   name: 'ID',
   parseLiteral: GraphQLID.parseLiteral,
   parseValue: GraphQLID.parseValue,
