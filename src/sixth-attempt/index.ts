@@ -269,7 +269,7 @@ interface InputFieldMap {
 }
 type ResolveReturnTypeOf<T> = T | Promise<T> | (() => Promise<T>);
 
-type ResolveFn<T extends AnyOutputType, A, R> = (
+type ResolveFn<T, A, R> = (
   root: R,
   args: A,
   // context: C, TODO: find a way to involve the context
@@ -277,20 +277,25 @@ type ResolveFn<T extends AnyOutputType, A, R> = (
 
 class OutputField<T extends OutputRealizedType, A extends InputFieldMap, R> {
   public readonly type: T;
-  public readonly args: A;
+  public readonly args?: A;
   public readonly deprecationReason?: Maybe<string>;
   public readonly description?: Maybe<string>;
 
-  constructor(params: {
+  constructor({
+    type,
+    args,
+    deprecationReason,
+    description,
+  }: {
     type: OutputField<T, A, R>['type'];
-    args: OutputField<T, A, R>['args'];
+    args?: OutputField<T, A, R>['args'];
     deprecationReason?: OutputField<T, A, R>['deprecationReason'];
     description?: OutputField<T, A, R>['description'];
   }) {
-    this.type = params.type;
-    this.args = params.args;
-    this.deprecationReason = params.deprecationReason;
-    this.description = params.description;
+    this.type = type;
+    this.args = args;
+    this.deprecationReason = deprecationReason;
+    this.description = description;
   }
 
   getGraphQLFieldConfig = (
@@ -306,10 +311,6 @@ class OutputField<T extends OutputRealizedType, A extends InputFieldMap, R> {
       // resolve: TODO: implement
     };
   };
-}
-
-interface OutputFieldMap {
-  [key: string]: OutputField<any, any, any>;
 }
 
 export const datetime = new ScalarSemiType<'Datetime', Date>({
@@ -348,6 +349,9 @@ const schema = new GraphQLSchema({
             type: datetime.nonNullable,
           }),
         },
+      }).getGraphQLFieldConfig(typeContext),
+      z: new OutputField({
+        type: string.nonNullable,
       }).getGraphQLFieldConfig(typeContext),
     },
   }),
