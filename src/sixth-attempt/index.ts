@@ -1,6 +1,7 @@
 import {
   GraphQLArgumentConfig,
   GraphQLBoolean,
+  GraphQLFieldConfig,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
@@ -16,6 +17,8 @@ import {
 
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
+import mapValues from 'lodash/mapValues';
+import { AnyOutputType } from '../types/struct-types';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -32,7 +35,7 @@ export class TypeContext {
     } else {
       const newType = fallback(this);
       typeContext.savedSemiGraphQLTypes.set(semiType.name, newType);
-      return newType;
+      return this.getSemiGraphQLType(semiType, fallback);
     }
   }
 }
@@ -85,6 +88,8 @@ type TypeOf<T> = T extends AnyRealizedType
   ? T['__T']
   : T extends AnySemiType
   ? T['__T']
+  : T extends InputFieldMap
+  ? { [K in keyof T]: TypeOf<T[K]['type']> }
   : never;
 
 type AnyScalarSemiType = ScalarSemiType<any, any>;
@@ -252,6 +257,54 @@ class InputField<T extends InputRealizedType> {
   };
 }
 
+interface InputFieldMap {
+  [key: string]: InputField<any>;
+}
+type ResolveReturnTypeOf<T> = T | Promise<T> | (() => Promise<T>);
+
+type ResolveFn<T extends AnyOutputType, A, R> = (
+  root: R,
+  args: A,
+  // context: C, TODO: find a way to involve the context
+) => ResolveReturnTypeOf<T>;
+
+class OutputField<T extends OutputRealizedType, A extends InputFieldMap, R> {
+  public readonly type: T;
+  public readonly args: A;
+  public readonly deprecationReason?: Maybe<string>;
+  public readonly description?: Maybe<string>;
+
+  constructor(params: {
+    type: OutputField<T, A, R>['type'];
+    args: OutputField<T, A, R>['args'];
+    deprecationReason?: OutputField<T, A, R>['deprecationReason'];
+    description?: OutputField<T, A, R>['description'];
+  }) {
+    this.type = params.type;
+    this.args = params.args;
+    this.deprecationReason = params.deprecationReason;
+    this.description = params.description;
+  }
+
+  getGraphQLFieldConfig = (
+    typeContext: TypeContext,
+  ): GraphQLFieldConfig<any, any, any> => {
+    return {
+      type: this.type.getGraphQLType(typeContext) as any,
+      args: mapValues(this.args, (arg) =>
+        arg.getGraphQLArgumentConfig(typeContext),
+      ),
+      deprecationReason: this.deprecationReason,
+      description: this.description,
+      // resolve: TODO: implement
+    };
+  };
+}
+
+interface OutputFieldMap {
+  [key: string]: OutputField<any, any, any>;
+}
+
 export const datetime = new ScalarSemiType<'Datetime', Date>({
   name: 'Datetime',
   parseLiteral: (ast) => {
@@ -278,32 +331,17 @@ const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
     name: 'RootQuery',
     fields: {
-      id: {
-        type: id.getSemiGraphQLType(typeContext) as any,
-      },
-      datetime: {
-        type: datetime.nonNullable.getGraphQLType(typeContext) as any,
-        resolve: (a, b, c) => {
-          return new Date();
-        },
-      },
-      dateAsInput: {
-        type: new GraphQLNonNull(
-          datetime.getSemiGraphQLType(typeContext) as any,
-        ),
+      dateAsInputTwo: new OutputField({
+        type: string.nonNullable,
         args: {
           x: new InputField({
             type: datetime.nullable,
-            defaultValue: new Date(),
-          }).getGraphQLArgumentConfig(typeContext),
+          }),
           y: new InputField({
             type: datetime.nonNullable,
-          }).getGraphQLArgumentConfig(typeContext),
+          }),
         },
-        resolve: (a, b, c) => {
-          return b.x;
-        },
-      },
+      }).getGraphQLFieldConfig(typeContext),
     },
   }),
 });
