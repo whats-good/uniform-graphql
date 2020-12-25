@@ -23,7 +23,14 @@ import { AnyOutputType } from '../types/struct-types';
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
 export class TypeContext {
-  private readonly savedSemiGraphQLTypes = new Map<string, GraphQLType>();
+  private readonly savedSemiGraphQLTypes = new Map<string, GraphQLType>([
+    // TODO: find a better solution than this. this is done to circumvent the "Schema must contain uniquely names types" error
+    ['String', GraphQLString],
+    ['Float', GraphQLFloat],
+    ['Int', GraphQLInt],
+    ['ID', GraphQLID],
+    ['Boolean', GraphQLBoolean],
+  ]);
 
   public getSemiGraphQLType(
     semiType: AnySemiType,
