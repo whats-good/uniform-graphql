@@ -19,6 +19,7 @@ import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mapValues from 'lodash/mapValues';
 import { AnyOutputType } from '../types/struct-types';
+import { ProvidedRequiredArgumentsOnDirectivesRule } from 'graphql/validation/rules/ProvidedRequiredArgumentsRule';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -95,8 +96,6 @@ type TypeOf<T> = T extends AnyRealizedType
   ? T['__T']
   : T extends AnySemiType
   ? T['__T']
-  : T extends InputFieldMap
-  ? { [K in keyof T]: TypeOf<T[K]['type']> }
   : never;
 
 type AnyScalarSemiType = ScalarSemiType<any, any>;
@@ -117,6 +116,7 @@ class RealizedType<N extends string, T> {
   public readonly nullable: boolean;
   public readonly semiType: SemiType<N, any>;
   public readonly __T!: T;
+  public readonly __REALIZED!: 'REALIZED';
 
   constructor(params: {
     name: N;
@@ -265,8 +265,9 @@ class InputField<T extends InputRealizedType> {
 }
 
 interface InputFieldMap {
-  [key: string]: InputField<any>;
+  [key: string]: () => InputField<any>;
 }
+
 type ResolveReturnTypeOf<T> = T | Promise<T> | (() => Promise<T>);
 
 type ResolveFn<T, A, R> = (
@@ -303,8 +304,8 @@ class OutputField<T extends OutputRealizedType, A extends InputFieldMap, R> {
   ): GraphQLFieldConfig<any, any, any> => {
     return {
       type: this.type.getGraphQLType(typeContext) as any,
-      args: mapValues(this.args, (arg) =>
-        arg.getGraphQLArgumentConfig(typeContext),
+      args: mapValues(this.args, (field) =>
+        field().getGraphQLArgumentConfig(typeContext),
       ),
       deprecationReason: this.deprecationReason,
       description: this.description,
@@ -312,6 +313,59 @@ class OutputField<T extends OutputRealizedType, A extends InputFieldMap, R> {
     };
   };
 }
+
+class OutputObjectSemiType<
+  N extends string,
+  F extends OutputFieldMap
+> extends SemiType<N, TypeOfOutputFieldMap<F>> {
+  public readonly fields: F;
+  public readonly description?: Maybe<string>;
+
+  constructor(params: {
+    name: OutputObjectSemiType<N, F>['name'];
+    fields: OutputObjectSemiType<N, F>['fields'];
+    description?: OutputObjectSemiType<N, F>['description'];
+  }) {
+    super(params);
+    this.fields = params.fields;
+    this.description = params.description;
+  }
+
+  getFreshSemiGraphQLType = (typeContext: TypeContext): GraphQLType => {
+    return new GraphQLObjectType({
+      name: this.name,
+      fields: mapValues(this.fields, (field) =>
+        field().getGraphQLFieldConfig(typeContext),
+      ),
+      description: this.description,
+      // interfaces, // TODO: implement
+      // isTypeOf, // TODO: implement
+      // resolveObject, // TODO: implement
+    });
+  };
+}
+
+const user = new OutputObjectSemiType({
+  name: 'User',
+  get fields() {
+    return {
+      firstName: () =>
+        new OutputField({
+          type: string.nonNullable,
+        }),
+      lastName: () =>
+        new OutputField({
+          type: string.nonNullable,
+        }),
+      middleName: () =>
+        new OutputField({
+          type: string.nullable,
+        }),
+    };
+  },
+});
+
+type U = TypeOf<typeof user>;
 
 export const datetime = new ScalarSemiType<'Datetime', Date>({
   name: 'Datetime',
@@ -335,23 +389,42 @@ export const datetime = new ScalarSemiType<'Datetime', Date>({
 
 const typeContext = new TypeContext();
 
+const A: InputFieldMap = {
+  x: () =>
+    new InputField({
+      type: datetime.nullable,
+    }),
+  y: () =>
+    new InputField({
+      type: datetime.nonNullable,
+    }),
+};
+
+type TypeOfInputFieldMap<T extends InputFieldMap> = {
+  [K in keyof T]: TypeOf<ReturnType<T[K]>['type']>;
+};
+
+interface OutputFieldMap {
+  [key: string]: () => OutputField<any, any, any>;
+}
+
+type TypeOfOutputFieldMap<T extends OutputFieldMap> = {
+  [K in keyof T]: TypeOf<ReturnType<T[K]>['type']>;
+};
+
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
     name: 'RootQuery',
     fields: {
       dateAsInputTwo: new OutputField({
         type: string.nonNullable,
-        args: {
-          x: new InputField({
-            type: datetime.nullable,
-          }),
-          y: new InputField({
-            type: datetime.nonNullable,
-          }),
-        },
+        args: A,
       }).getGraphQLFieldConfig(typeContext),
       z: new OutputField({
         type: string.nonNullable,
+      }).getGraphQLFieldConfig(typeContext),
+      user: new OutputField({
+        type: user.nonNullable,
       }).getGraphQLFieldConfig(typeContext),
     },
   }),
