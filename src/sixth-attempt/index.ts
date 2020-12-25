@@ -47,16 +47,16 @@ export abstract class SemiType<N extends string, T> {
     }
   }
 
-  get nullable(): Type<N, Maybe<T>> {
-    return new Type({
+  get nullable(): RealizedType<N, Maybe<T>> {
+    return new RealizedType({
       name: this.name,
       nullable: true,
       semiType: this,
     });
   }
 
-  get nonNullable(): Type<N, T> {
-    return new Type({
+  get nonNullable(): RealizedType<N, T> {
+    return new RealizedType({
       name: this.name,
       nullable: false,
       semiType: this,
@@ -65,10 +65,19 @@ export abstract class SemiType<N extends string, T> {
 }
 
 type AnySemiType = SemiType<any, any>;
-type NameOf<S extends AnySemiType> = S['name'];
-type TypeOf<S extends AnySemiType> = S['__T'];
+type AnyRealizedType = RealizedType<any, any>;
+type NameOf<T> = T extends AnyRealizedType
+  ? T['name']
+  : T extends AnySemiType
+  ? T['name']
+  : never;
+type TypeOf<T> = T extends AnyRealizedType
+  ? T['__T']
+  : T extends AnySemiType
+  ? T['__T']
+  : never;
 
-class Type<N extends string, T> {
+class RealizedType<N extends string, T> {
   public readonly name: N;
   public readonly nullable: boolean;
   public readonly semiType: SemiType<N, any>;
@@ -93,10 +102,6 @@ class Type<N extends string, T> {
     }
   }
 }
-
-type NullableOf<S extends AnySemiType> = Type<NameOf<S>, Maybe<TypeOf<S>>>;
-
-type NonNullableOf<S extends AnySemiType> = Type<NameOf<S>, Maybe<TypeOf<S>>>;
 
 export type Maybe<T> = T | null | undefined;
 
