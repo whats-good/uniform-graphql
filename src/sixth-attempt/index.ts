@@ -224,15 +224,15 @@ const id = new ScalarSemiType<'ID', number | string>({
 
 class InputField<T extends InputRealizedType> {
   public readonly type: T;
-  public readonly defaultValue?: T;
+  public readonly defaultValue?: TypeOf<T>; // TODO: make this nonNullable
   public readonly deprecationReason?: Maybe<string>;
   public readonly description?: Maybe<string>;
 
   constructor(params: {
-    type: T;
-    defaultValue?: T;
-    deprecationReason?: Maybe<string>;
-    description?: Maybe<string>;
+    type: InputField<T>['type'];
+    defaultValue?: InputField<T>['defaultValue'];
+    deprecationReason?: InputField<T>['deprecationReason'];
+    description?: InputField<T>['description'];
   }) {
     this.type = params.type;
     this.defaultValue = params.defaultValue;
@@ -294,6 +294,7 @@ const schema = new GraphQLSchema({
         args: {
           x: new InputField({
             type: datetime.nullable,
+            defaultValue: new Date(),
           }).getGraphQLArgumentConfig(typeContext),
           y: new InputField({
             type: datetime.nonNullable,
