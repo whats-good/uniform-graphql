@@ -1,4 +1,5 @@
 import {
+  GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
@@ -16,8 +17,24 @@ import {
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 
+type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
+
 export class TypeContext {
-  public readonly savedSemiGraphQLTypes = new Map<string, GraphQLType>();
+  private readonly savedSemiGraphQLTypes = new Map<string, GraphQLType>();
+
+  public getSemiGraphQLType(
+    semiType: AnySemiType,
+    fallback: FallbackGraphQLTypeFn,
+  ): GraphQLType {
+    const existingType = this.savedSemiGraphQLTypes.get(semiType.name);
+    if (existingType) {
+      return existingType;
+    } else {
+      const newType = fallback(this);
+      typeContext.savedSemiGraphQLTypes.set(semiType.name, newType);
+      return newType;
+    }
+  }
 }
 
 export abstract class SemiType<N extends string, T> {
@@ -36,16 +53,9 @@ export abstract class SemiType<N extends string, T> {
   ): GraphQLType;
 
   // TODO: handle recursive types to avoid infinite loops
-  public getSemiGraphQLType(typeContext: TypeContext): GraphQLType {
-    const existingType = typeContext.savedSemiGraphQLTypes.get(this.name);
-    if (existingType) {
-      return existingType;
-    } else {
-      const newType = this.getFreshSemiGraphQLType(typeContext);
-      typeContext.savedSemiGraphQLTypes.set(this.name, newType);
-      return newType;
-    }
-  }
+  public getSemiGraphQLType = (typeContext: TypeContext): GraphQLType => {
+    return typeContext.getSemiGraphQLType(this, this.getFreshSemiGraphQLType);
+  };
 
   get nullable(): RealizedType<N, Maybe<T>> {
     return new RealizedType({
@@ -77,6 +87,19 @@ type TypeOf<T> = T extends AnyRealizedType
   ? T['__T']
   : never;
 
+type AnyScalarSemiType = ScalarSemiType<any, any>;
+
+type InputSemiType = AnyScalarSemiType;
+type OutputSemiType = AnyScalarSemiType;
+
+type RealizedTypeOf<S extends AnySemiType> = RealizedType<
+  NameOf<S>,
+  Maybe<TypeOf<S>>
+>;
+
+type InputRealizedType = RealizedTypeOf<InputSemiType>;
+type OutputRealizedType = RealizedTypeOf<OutputSemiType>;
+
 class RealizedType<N extends string, T> {
   public readonly name: N;
   public readonly nullable: boolean;
@@ -93,14 +116,14 @@ class RealizedType<N extends string, T> {
     this.semiType = params.semiType;
   }
 
-  public getGraphQLType(typeContext: TypeContext): GraphQLType {
+  public getGraphQLType = (typeContext: TypeContext): GraphQLType => {
     const semiGraphQLType = this.semiType.getSemiGraphQLType(typeContext);
     if (this.nullable) {
       return semiGraphQLType;
     } else {
       return new GraphQLNonNull(semiGraphQLType);
     }
-  }
+  };
 }
 
 export type Maybe<T> = T | null | undefined;
@@ -199,6 +222,36 @@ const id = new ScalarSemiType<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
+class InputField<T extends InputRealizedType> {
+  public readonly type: T;
+  public readonly defaultValue?: T;
+  public readonly deprecationReason?: Maybe<string>;
+  public readonly description?: Maybe<string>;
+
+  constructor(params: {
+    type: T;
+    defaultValue?: T;
+    deprecationReason?: Maybe<string>;
+    description?: Maybe<string>;
+  }) {
+    this.type = params.type;
+    this.defaultValue = params.defaultValue;
+    this.deprecationReason = params.deprecationReason;
+    this.description = params.description;
+  }
+
+  getGraphQLArgumentConfig = (
+    typeContext: TypeContext,
+  ): GraphQLArgumentConfig => {
+    return {
+      type: this.type.getGraphQLType(typeContext) as any,
+      defaultValue: this.defaultValue,
+      deprecationReason: this.deprecationReason,
+      description: this.description,
+    };
+  };
+}
+
 export const datetime = new ScalarSemiType<'Datetime', Date>({
   name: 'Datetime',
   parseLiteral: (ast) => {
@@ -229,7 +282,7 @@ const schema = new GraphQLSchema({
         type: id.getSemiGraphQLType(typeContext) as any,
       },
       datetime: {
-        type: datetime.getSemiGraphQLType(typeContext) as any,
+        type: datetime.nonNullable.getGraphQLType(typeContext) as any,
         resolve: (a, b, c) => {
           return new Date();
         },
@@ -239,9 +292,12 @@ const schema = new GraphQLSchema({
           datetime.getSemiGraphQLType(typeContext) as any,
         ),
         args: {
-          x: {
-            type: datetime.getSemiGraphQLType(typeContext) as any,
-          },
+          x: new InputField({
+            type: datetime.nullable,
+          }).getGraphQLArgumentConfig(typeContext),
+          y: new InputField({
+            type: datetime.nonNullable,
+          }).getGraphQLArgumentConfig(typeContext),
         },
         resolve: (a, b, c) => {
           return b.x;
