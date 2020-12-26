@@ -18,8 +18,6 @@ import {
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mapValues from 'lodash/mapValues';
-import { AnyOutputType } from '../types/struct-types';
-import { ProvidedRequiredArgumentsOnDirectivesRule } from 'graphql/validation/rules/ProvidedRequiredArgumentsRule';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -347,7 +345,7 @@ class OutputObjectSemiType<
     return new GraphQLObjectType({
       name: this.name,
       fields: mapValues(this.fields, (field) => {
-        const unthunkedField = field();
+        const unthunkedField = unthunk(field);
         if (unthunkedField.isRecursive) {
           return { type: GraphQLInt }; // TODO: find a way to reuse the recursive type
         } else {
@@ -368,7 +366,7 @@ type UserType = OutputObjectSemiType<
     firstName: () => OutputField<typeof string['nonNullable'], any, any>;
     lastName: () => OutputField<typeof string['nonNullable'], any, any>;
     middleName: () => OutputField<typeof string['nullable'], any, any>;
-    self: () => OutputField<UserType['nonNullable'], any, any>;
+    // self: () => OutputField<UserType['nonNullable'], any, any>;
   }
 >;
 
@@ -384,11 +382,11 @@ const user: UserType = new OutputObjectSemiType({
         new OutputField({
           type: string.nonNullable,
         }),
-      self: () =>
-        new OutputField({
-          isRecursive: true,
-          type: user.nonNullable,
-        }),
+      // self: () =>
+      //   new OutputField({
+      //     isRecursive: true,
+      //     type: user.nonNullable,
+      //   }),
       middleName: () =>
         new OutputField({
           type: string.nullable,
@@ -434,12 +432,26 @@ type TypeOfInputFieldMap<T extends InputFieldMap> = {
   [K in keyof T]: TypeOf<ReturnType<T[K]>['type']>;
 };
 
+type Thunk<T> = () => T;
+type Thunkable<T> = T | Thunk<T>;
+type Unthunked<T extends Thunkable<any>> = T extends Thunk<any>
+  ? ReturnType<T>
+  : T;
+
+const unthunk = <T extends Thunkable<any>>(t: T): Unthunked<T> => {
+  if (typeof t === 'function') {
+    return t();
+  } else {
+    return t as any;
+  }
+};
+
 interface OutputFieldMap {
-  [key: string]: () => OutputField<any, any, any>;
+  [key: string]: Thunkable<OutputField<any, any, any>>;
 }
 
 type TypeOfOutputFieldMap<T extends OutputFieldMap> = {
-  [K in keyof T]: TypeOf<ReturnType<T[K]>['type']>;
+  [K in keyof T]: TypeOf<Unthunked<T[K]>['type']>;
 };
 
 const schema = new GraphQLSchema({
