@@ -18,6 +18,7 @@ import {
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mapValues from 'lodash/mapValues';
+import { Type } from '../Type';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -187,7 +188,7 @@ export class ScalarSemiType<N extends string, T> extends SemiType<N, T> {
   };
 }
 
-const string = new ScalarSemiType<'String', string>({
+const String = new ScalarSemiType<'String', string>({
   name: 'String',
   parseLiteral: GraphQLString.parseLiteral,
   parseValue: GraphQLString.parseValue,
@@ -196,7 +197,7 @@ const string = new ScalarSemiType<'String', string>({
   specifiedByUrl: GraphQLString.specifiedByUrl,
 });
 
-const int = new ScalarSemiType<'Int', number>({
+const Int = new ScalarSemiType<'Int', number>({
   name: 'Int',
   parseLiteral: GraphQLInt.parseLiteral,
   parseValue: GraphQLInt.parseValue,
@@ -205,7 +206,7 @@ const int = new ScalarSemiType<'Int', number>({
   specifiedByUrl: GraphQLInt.specifiedByUrl,
 });
 
-const boolean = new ScalarSemiType<'Boolean', boolean>({
+const Boolean = new ScalarSemiType<'Boolean', boolean>({
   name: 'Boolean',
   parseLiteral: GraphQLBoolean.parseLiteral,
   parseValue: GraphQLBoolean.parseValue,
@@ -214,7 +215,7 @@ const boolean = new ScalarSemiType<'Boolean', boolean>({
   specifiedByUrl: GraphQLBoolean.specifiedByUrl,
 });
 
-const float = new ScalarSemiType<'Float', number>({
+const Float = new ScalarSemiType<'Float', number>({
   name: 'Float',
   parseLiteral: GraphQLFloat.parseLiteral,
   parseValue: GraphQLFloat.parseValue,
@@ -223,7 +224,7 @@ const float = new ScalarSemiType<'Float', number>({
   specifiedByUrl: GraphQLFloat.specifiedByUrl,
 });
 
-const id = new ScalarSemiType<'ID', number | string>({
+const ID = new ScalarSemiType<'ID', number | string>({
   name: 'ID',
   parseLiteral: GraphQLID.parseLiteral,
   parseValue: GraphQLID.parseValue,
@@ -274,7 +275,11 @@ type ResolveFn<T, A, R> = (
   // context: C, TODO: find a way to involve the context
 ) => ResolveReturnTypeOf<T>;
 
-class OutputField<T extends OutputRealizedType, A extends InputFieldMap, R> {
+class OutputField<
+  T extends OutputRealizedType,
+  A extends InputFieldMap = InputFieldMap,
+  R = TypeOf<T>
+> {
   public readonly type: T;
   public readonly args?: A;
   public readonly deprecationReason?: Maybe<string>;
@@ -360,13 +365,20 @@ class OutputObjectSemiType<
   };
 }
 
+type Scalars = {
+  String: typeof String;
+  Float: typeof Float;
+  Int: typeof Int;
+  Boolean: typeof Boolean;
+  ID: typeof ID;
+};
+
 type UserType = OutputObjectSemiType<
   'User',
   {
-    firstName: OutputField<typeof string['nonNullable'], any, any>;
-    lastName: OutputField<typeof string['nonNullable'], any, any>;
-    middleName: () => OutputField<typeof string['nullable'], any, any>;
-    // self: () => OutputField<UserType['nonNullable'], any, any>;
+    firstName: OutputFieldMapValue<Scalars['String']['nonNullable']>;
+    lastName: OutputFieldMapValue<Scalars['String']['nonNullable']>;
+    middleName: OutputFieldMapValue<Scalars['String']['nullable']>;
   }
 >;
 
@@ -375,25 +387,18 @@ const user: UserType = new OutputObjectSemiType({
   get fields() {
     return {
       firstName: new OutputField({
-        type: string.nonNullable,
+        type: String.nonNullable,
       }),
       lastName: new OutputField({
-        type: string.nonNullable,
+        type: String.nonNullable,
       }),
       middleName: () =>
         new OutputField({
-          type: string.nullable,
+          type: String.nullable,
         }),
-      // self: () =>
-      //   new OutputField({
-      //     isRecursive: true,
-      //     type: user.nonNullable,
-      //   }),
     };
   },
 });
-
-type D = TypeOf<typeof user>;
 
 export const datetime = new ScalarSemiType<'Datetime', Date>({
   name: 'Datetime',
@@ -446,8 +451,13 @@ const unthunk = <T extends Thunkable<any>>(t: T): Unthunked<T> => {
   }
 };
 
+type OutputFieldMapValue<
+  T extends OutputRealizedType,
+  A extends InputFieldMap = InputFieldMap,
+  R = T
+> = Thunkable<OutputField<T, A, R>>;
 interface OutputFieldMap {
-  [key: string]: Thunkable<OutputField<any, any, any>>;
+  [key: string]: OutputFieldMapValue<any, any, any>;
 }
 
 type TypeOfOutputFieldMap<T extends OutputFieldMap> = {
@@ -459,11 +469,11 @@ const schema = new GraphQLSchema({
     name: 'RootQuery',
     fields: {
       dateAsInputTwo: new OutputField({
-        type: string.nonNullable,
+        type: String.nonNullable,
         args: A,
       }).getGraphQLFieldConfig(typeContext),
       z: new OutputField({
-        type: string.nonNullable,
+        type: String.nonNullable,
       }).getGraphQLFieldConfig(typeContext),
       user: new OutputField({
         type: user.nonNullable,
