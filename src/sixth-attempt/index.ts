@@ -263,8 +263,11 @@ class InputField<T extends InputRealizedType> {
   };
 }
 
+type InputFieldMapValue<T extends OutputRealizedType> = Thunkable<
+  InputField<T>
+>;
 interface InputFieldMap {
-  [key: string]: () => InputField<any>;
+  [key: string]: InputFieldMapValue<any>;
 }
 
 type ResolveReturnTypeOf<T> = T | Promise<T> | (() => Promise<T>);
@@ -281,7 +284,7 @@ class OutputField<
   R = TypeOf<T>
 > {
   public readonly type: T;
-  public readonly args?: A;
+  public readonly args: A;
   public readonly deprecationReason?: Maybe<string>;
   public readonly description?: Maybe<string>;
 
@@ -297,7 +300,7 @@ class OutputField<
     description?: OutputField<T, A, R>['description'];
   }) {
     this.type = type;
-    this.args = args;
+    this.args = args || ({} as any);
     this.deprecationReason = deprecationReason;
     this.description = description;
   }
@@ -307,9 +310,10 @@ class OutputField<
   ): GraphQLFieldConfig<any, any, any> => {
     return {
       type: this.type.getGraphQLType(typeContext) as any,
-      args: mapValues(this.args, (field) =>
-        field().getGraphQLArgumentConfig(typeContext),
-      ),
+      args: mapValues(this.args, (field) => {
+        const unthunkedField = unthunk(field);
+        return unthunkedField.getGraphQLArgumentConfig(typeContext);
+      }),
       deprecationReason: this.deprecationReason,
       description: this.description,
       // resolve: TODO: implement
@@ -366,7 +370,14 @@ type Scalars = {
 type UserType = OutputObjectSemiType<
   'User',
   {
-    firstName: OutputFieldMapValue<Scalars['String']['nonNullable']>;
+    firstName: OutputFieldMapValue<
+      Scalars['String']['nonNullable'],
+      {
+        x: InputFieldMapValue<Scalars['String']['nullable']>;
+        y: InputFieldMapValue<Scalars['String']['nullable']>;
+        z: InputFieldMapValue<Scalars['String']['nullable']>;
+      }
+    >;
     lastName: OutputFieldMapValue<Scalars['String']['nonNullable']>;
     middleName: OutputFieldMapValue<Scalars['String']['nullable']>;
     self: OutputFieldMapValue<UserType['nonNullable']>;
@@ -379,6 +390,17 @@ const user: UserType = new OutputObjectSemiType({
     return {
       firstName: new OutputField({
         type: String.nonNullable,
+        args: {
+          x: new InputField({
+            type: String.nullable,
+          }),
+          y: new InputField({
+            type: String.nullable,
+          }),
+          z: new InputField({
+            type: String.nullable,
+          }),
+        },
       }),
       lastName: new OutputField({
         type: String.nonNullable,
@@ -393,6 +415,8 @@ const user: UserType = new OutputObjectSemiType({
     };
   },
 });
+
+// TODO: find a way to skip all the types that can be inferred
 
 export const datetime = new ScalarSemiType<'Datetime', Date>({
   name: 'Datetime',
@@ -428,7 +452,7 @@ const A: InputFieldMap = {
 };
 
 type TypeOfInputFieldMap<T extends InputFieldMap> = {
-  [K in keyof T]: TypeOf<ReturnType<T[K]>['type']>;
+  [K in keyof T]: TypeOf<Unthunked<T[K]>['type']>;
 };
 
 type Thunk<T> = () => T;
