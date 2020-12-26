@@ -18,7 +18,6 @@ import {
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mapValues from 'lodash/mapValues';
-import { Type } from '../Type';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -99,16 +98,16 @@ type TypeOf<T> = T extends AnyRealizedType
 
 type AnyScalarSemiType = ScalarSemiType<any, any>;
 
-type InputSemiType = AnyScalarSemiType;
-type OutputSemiType = AnyScalarSemiType;
+type AnyInputSemiType = AnyScalarSemiType;
+type AnyOutputSemiType = AnyScalarSemiType;
 
 type RealizedTypeOf<S extends AnySemiType> = RealizedType<
   NameOf<S>,
   Maybe<TypeOf<S>>
 >;
 
-type InputRealizedType = RealizedTypeOf<InputSemiType>;
-type OutputRealizedType = RealizedTypeOf<OutputSemiType>;
+type InputRealizedType = RealizedTypeOf<AnyInputSemiType>;
+type AnyOutputRealizedType = RealizedTypeOf<AnyOutputSemiType>;
 
 class RealizedType<N extends string, T> {
   public readonly name: N;
@@ -263,11 +262,8 @@ class InputField<T extends InputRealizedType> {
   };
 }
 
-type InputFieldMapValue<T extends OutputRealizedType> = Thunkable<
-  InputField<T>
->;
 interface InputFieldMap {
-  [key: string]: InputFieldMapValue<any>;
+  [key: string]: InputField<any>;
 }
 
 type ResolveReturnTypeOf<T> = T | Promise<T> | (() => Promise<T>);
@@ -278,10 +274,18 @@ type ResolveFn<T, A, R> = (
   // context: C, TODO: find a way to involve the context
 ) => ResolveReturnTypeOf<T>;
 
+type ResolveFnOfOutputFieldMapValue<
+  F extends OutputFieldMapValue<any, any>,
+  R extends Maybe<OutputObjectSemiType<any, any>> = undefined
+> = ResolveFn<
+  TypeOf<Unthunked<F>['type']>,
+  TypeOfInputFieldMap<Unthunked<F>['args']>,
+  R extends OutputObjectSemiType<any, any> ? TypeOf<R> : undefined
+>;
+
 class OutputField<
-  T extends OutputRealizedType,
-  A extends InputFieldMap = InputFieldMap,
-  R = TypeOf<T>
+  T extends AnyOutputRealizedType,
+  A extends InputFieldMap = InputFieldMap
 > {
   public readonly type: T;
   public readonly args: A;
@@ -294,10 +298,10 @@ class OutputField<
     deprecationReason,
     description,
   }: {
-    type: OutputField<T, A, R>['type'];
-    args?: OutputField<T, A, R>['args'];
-    deprecationReason?: OutputField<T, A, R>['deprecationReason'];
-    description?: OutputField<T, A, R>['description'];
+    type: OutputField<T, A>['type'];
+    args?: OutputField<T, A>['args'];
+    deprecationReason?: OutputField<T, A>['deprecationReason'];
+    description?: OutputField<T, A>['description'];
   }) {
     this.type = type;
     this.args = args || ({} as any);
@@ -373,9 +377,9 @@ type UserType = OutputObjectSemiType<
     firstName: OutputFieldMapValue<
       Scalars['String']['nonNullable'],
       {
-        x: InputFieldMapValue<Scalars['String']['nullable']>;
-        y: InputFieldMapValue<Scalars['String']['nullable']>;
-        z: InputFieldMapValue<Scalars['String']['nullable']>;
+        x: InputField<Scalars['String']['nullable']>;
+        y: InputField<Scalars['String']['nullable']>;
+        z: InputField<Scalars['String']['nullable']>;
       }
     >;
     lastName: OutputFieldMapValue<Scalars['String']['nonNullable']>;
@@ -411,12 +415,65 @@ const user: UserType = new OutputObjectSemiType({
       self: () =>
         new OutputField({
           type: user.nonNullable,
+          args: {
+            x: new InputField({
+              type: String.nullable,
+            }),
+          },
         }),
     };
   },
 });
+type D = Unthunked<typeof user['fields']['self']>['args'];
+type E = Unthunked<typeof user['fields']['firstName']>['args'];
+type F = typeof user['fields']['self'];
 
-// TODO: find a way to skip all the types that can be inferred
+type G = ResolveFnOfOutputFieldMapValue<F>;
+
+const fieldResolversOf = <T extends OutputObjectSemiType<any, any>>(
+  t: T,
+  resolvers: Partial<
+    {
+      [K in keyof T['fields']]: ResolveFnOfOutputFieldMapValue<
+        T['fields'][K],
+        T
+      >;
+    }
+  >,
+) => {
+  return resolvers;
+};
+
+const resolverOf = <F extends OutputFieldMapValue<any, any>>(
+  f: F,
+  resolver: ResolveFnOfOutputFieldMapValue<F, undefined>,
+) => {
+  return resolver;
+};
+
+const userResolver = resolverOf(user.fields.self, async (root, args) => {
+  return {
+    firstName: 'yo',
+    lastName: 'yoyo',
+    middleName: 'yoyoyo',
+    get self() {
+      return this;
+    },
+  };
+});
+
+const fieldResolversOfUser = fieldResolversOf(user, {
+  firstName: (root, args) => {
+    return root.firstName;
+  },
+  lastName: (root, args) => {
+    return root.lastName;
+  },
+});
+
+// TODO: is there a way to avoid typing all the other fields that can be inferred?
+// TODO: when we infer the field type but not the args, we still lose type inference on the args of the same field
+// TODO: root is never equal to the given type. It's only equal to the parent type.
 
 export const datetime = new ScalarSemiType<'Datetime', Date>({
   name: 'Datetime',
@@ -441,14 +498,12 @@ export const datetime = new ScalarSemiType<'Datetime', Date>({
 const typeContext = new TypeContext();
 
 const A: InputFieldMap = {
-  x: () =>
-    new InputField({
-      type: datetime.nullable,
-    }),
-  y: () =>
-    new InputField({
-      type: datetime.nonNullable,
-    }),
+  x: new InputField({
+    type: datetime.nullable,
+  }),
+  y: new InputField({
+    type: datetime.nonNullable,
+  }),
 };
 
 type TypeOfInputFieldMap<T extends InputFieldMap> = {
@@ -470,12 +525,11 @@ const unthunk = <T extends Thunkable<any>>(t: T): Unthunked<T> => {
 };
 
 type OutputFieldMapValue<
-  T extends OutputRealizedType,
-  A extends InputFieldMap = InputFieldMap,
-  R = T
-> = Thunkable<OutputField<T, A, R>>;
+  T extends AnyOutputRealizedType,
+  A extends InputFieldMap = InputFieldMap
+> = Thunkable<OutputField<T, A>>;
 interface OutputFieldMap {
-  [key: string]: OutputFieldMapValue<any, any, any>;
+  [key: string]: OutputFieldMapValue<any, any>;
 }
 
 type TypeOfOutputFieldMap<T extends OutputFieldMap> = {
@@ -496,6 +550,10 @@ const schema = new GraphQLSchema({
       user: new OutputField({
         type: user.nonNullable,
       }).getGraphQLFieldConfig(typeContext),
+      resolvedUser: {
+        type: user.nonNullable.getGraphQLType(typeContext) as any,
+        resolve: userResolver,
+      },
     },
   }),
 });
