@@ -284,34 +284,27 @@ class OutputField<
   public readonly args?: A;
   public readonly deprecationReason?: Maybe<string>;
   public readonly description?: Maybe<string>;
-  public readonly isRecursive: boolean;
 
   constructor({
     type,
     args,
     deprecationReason,
     description,
-    isRecursive = false,
   }: {
     type: OutputField<T, A, R>['type'];
     args?: OutputField<T, A, R>['args'];
     deprecationReason?: OutputField<T, A, R>['deprecationReason'];
     description?: OutputField<T, A, R>['description'];
-    isRecursive?: OutputField<T, A, R>['isRecursive'];
   }) {
     this.type = type;
     this.args = args;
     this.deprecationReason = deprecationReason;
     this.description = description;
-    this.isRecursive = isRecursive;
   }
 
   getGraphQLFieldConfig = (
     typeContext: TypeContext,
   ): GraphQLFieldConfig<any, any, any> => {
-    if (this.isRecursive) {
-      this;
-    }
     return {
       type: this.type.getGraphQLType(typeContext) as any,
       args: mapValues(this.args, (field) =>
@@ -349,14 +342,11 @@ class OutputObjectSemiType<
   getFreshSemiGraphQLType = (typeContext: TypeContext): GraphQLType => {
     return new GraphQLObjectType({
       name: this.name,
-      fields: mapValues(this.fields, (field) => {
-        const unthunkedField = unthunk(field);
-        if (unthunkedField.isRecursive) {
-          return { type: GraphQLInt }; // TODO: find a way to reuse the recursive type
-        } else {
+      fields: () =>
+        mapValues(this.fields, (field) => {
+          const unthunkedField = unthunk(field);
           return unthunkedField.getGraphQLFieldConfig(typeContext);
-        }
-      }),
+        }),
       description: this.description,
       // interfaces, // TODO: implement
       // isTypeOf, // TODO: implement
@@ -379,6 +369,7 @@ type UserType = OutputObjectSemiType<
     firstName: OutputFieldMapValue<Scalars['String']['nonNullable']>;
     lastName: OutputFieldMapValue<Scalars['String']['nonNullable']>;
     middleName: OutputFieldMapValue<Scalars['String']['nullable']>;
+    self: OutputFieldMapValue<UserType['nonNullable']>;
   }
 >;
 
@@ -392,9 +383,12 @@ const user: UserType = new OutputObjectSemiType({
       lastName: new OutputField({
         type: String.nonNullable,
       }),
-      middleName: () =>
+      middleName: new OutputField({
+        type: String.nullable,
+      }),
+      self: () =>
         new OutputField({
-          type: String.nullable,
+          type: user.nonNullable,
         }),
     };
   },
