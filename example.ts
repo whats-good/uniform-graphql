@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import { field, SemiTypeFactory, SimpleOutputField } from './src';
-import { SemiTypeOf } from './src/Type';
+import { SemiTypeOf, TypeOf } from './src/Type';
 import { OutputObjectSemiType } from './src/types/OutputObject';
 import { arg, OutputFieldArgumentMap } from './src/types/struct-types';
 
@@ -113,10 +113,13 @@ const User = fac.object({
   get fields() {
     return {
       id: () => field(fac.id.nullable),
-      friends: () => field(fac.list(fac.recursive(this)).nonNullable),
+      friends: () => field(fac.recursive(this).nonNullable),
     };
   },
 });
+
+type D = typeof User['fields']['friends'];
+type E = ReturnType<D>['type']['semiType']['fields'];
 
 const bestFriend = fac.union({
   name: 'BestFriend',

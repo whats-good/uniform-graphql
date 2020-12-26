@@ -281,27 +281,34 @@ class OutputField<T extends OutputRealizedType, A extends InputFieldMap, R> {
   public readonly args?: A;
   public readonly deprecationReason?: Maybe<string>;
   public readonly description?: Maybe<string>;
+  public readonly isRecursive: boolean;
 
   constructor({
     type,
     args,
     deprecationReason,
     description,
+    isRecursive = false,
   }: {
     type: OutputField<T, A, R>['type'];
     args?: OutputField<T, A, R>['args'];
     deprecationReason?: OutputField<T, A, R>['deprecationReason'];
     description?: OutputField<T, A, R>['description'];
+    isRecursive?: OutputField<T, A, R>['isRecursive'];
   }) {
     this.type = type;
     this.args = args;
     this.deprecationReason = deprecationReason;
     this.description = description;
+    this.isRecursive = isRecursive;
   }
 
   getGraphQLFieldConfig = (
     typeContext: TypeContext,
   ): GraphQLFieldConfig<any, any, any> => {
+    if (this.isRecursive) {
+      this;
+    }
     return {
       type: this.type.getGraphQLType(typeContext) as any,
       args: mapValues(this.args, (field) =>
@@ -314,6 +321,15 @@ class OutputField<T extends OutputRealizedType, A extends InputFieldMap, R> {
   };
 }
 
+interface IOutputObjectSemiTypeConstructorParams<
+  N extends string,
+  F extends OutputFieldMap
+> {
+  name: OutputObjectSemiType<N, F>['name'];
+  fields: OutputObjectSemiType<N, F>['fields'];
+  description?: OutputObjectSemiType<N, F>['description'];
+}
+
 class OutputObjectSemiType<
   N extends string,
   F extends OutputFieldMap
@@ -321,11 +337,7 @@ class OutputObjectSemiType<
   public readonly fields: F;
   public readonly description?: Maybe<string>;
 
-  constructor(params: {
-    name: OutputObjectSemiType<N, F>['name'];
-    fields: OutputObjectSemiType<N, F>['fields'];
-    description?: OutputObjectSemiType<N, F>['description'];
-  }) {
+  constructor(params: IOutputObjectSemiTypeConstructorParams<N, F>) {
     super(params);
     this.fields = params.fields;
     this.description = params.description;
@@ -334,9 +346,14 @@ class OutputObjectSemiType<
   getFreshSemiGraphQLType = (typeContext: TypeContext): GraphQLType => {
     return new GraphQLObjectType({
       name: this.name,
-      fields: mapValues(this.fields, (field) =>
-        field().getGraphQLFieldConfig(typeContext),
-      ),
+      fields: mapValues(this.fields, (field) => {
+        const unthunkedField = field();
+        if (unthunkedField.isRecursive) {
+          return { type: GraphQLInt }; // TODO: find a way to reuse the recursive type
+        } else {
+          return unthunkedField.getGraphQLFieldConfig(typeContext);
+        }
+      }),
       description: this.description,
       // interfaces, // TODO: implement
       // isTypeOf, // TODO: implement
@@ -345,7 +362,17 @@ class OutputObjectSemiType<
   };
 }
 
-const user = new OutputObjectSemiType({
+type UserType = OutputObjectSemiType<
+  'User',
+  {
+    firstName: () => OutputField<typeof string['nonNullable'], any, any>;
+    lastName: () => OutputField<typeof string['nonNullable'], any, any>;
+    middleName: () => OutputField<typeof string['nullable'], any, any>;
+    self: () => OutputField<UserType['nonNullable'], any, any>;
+  }
+>;
+
+const user: UserType = new OutputObjectSemiType({
   name: 'User',
   get fields() {
     return {
@@ -357,6 +384,11 @@ const user = new OutputObjectSemiType({
         new OutputField({
           type: string.nonNullable,
         }),
+      self: () =>
+        new OutputField({
+          isRecursive: true,
+          type: user.nonNullable,
+        }),
       middleName: () =>
         new OutputField({
           type: string.nullable,
@@ -364,8 +396,6 @@ const user = new OutputObjectSemiType({
     };
   },
 });
-
-type U = TypeOf<typeof user>;
 
 export const datetime = new ScalarSemiType<'Datetime', Date>({
   name: 'Datetime',
