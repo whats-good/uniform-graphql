@@ -363,8 +363,8 @@ class OutputObjectSemiType<
 type UserType = OutputObjectSemiType<
   'User',
   {
-    firstName: () => OutputField<typeof string['nonNullable'], any, any>;
-    lastName: () => OutputField<typeof string['nonNullable'], any, any>;
+    firstName: OutputField<typeof string['nonNullable'], any, any>;
+    lastName: OutputField<typeof string['nonNullable'], any, any>;
     middleName: () => OutputField<typeof string['nullable'], any, any>;
     // self: () => OutputField<UserType['nonNullable'], any, any>;
   }
@@ -374,26 +374,26 @@ const user: UserType = new OutputObjectSemiType({
   name: 'User',
   get fields() {
     return {
-      firstName: () =>
+      firstName: new OutputField({
+        type: string.nonNullable,
+      }),
+      lastName: new OutputField({
+        type: string.nonNullable,
+      }),
+      middleName: () =>
         new OutputField({
-          type: string.nonNullable,
-        }),
-      lastName: () =>
-        new OutputField({
-          type: string.nonNullable,
+          type: string.nullable,
         }),
       // self: () =>
       //   new OutputField({
       //     isRecursive: true,
       //     type: user.nonNullable,
       //   }),
-      middleName: () =>
-        new OutputField({
-          type: string.nullable,
-        }),
     };
   },
 });
+
+type D = TypeOf<typeof user>;
 
 export const datetime = new ScalarSemiType<'Datetime', Date>({
   name: 'Datetime',
