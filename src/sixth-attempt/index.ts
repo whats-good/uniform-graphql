@@ -14,11 +14,10 @@ import {
   Kind,
   ValueNode,
 } from 'graphql';
-
 import { ApolloServer } from 'apollo-server-express';
-import express from 'express';
 import mapValues from 'lodash/mapValues';
 import forEach from 'lodash/forEach';
+import express from 'express';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -37,6 +36,14 @@ export class TypeContext {
     ResolveFn<any, any, any> | undefined
   >();
 
+  private readonly savedRootQueryFields: {
+    [key: string]: RootOutputField<any, any>;
+  } = {};
+
+  private readonly savedRootMutationFields: {
+    [key: string]: RootOutputField<any, any>;
+  } = {};
+
   public getSemiGraphQLType(
     semiType: AnySemiType,
     fallback: FallbackGraphQLTypeFn,
@@ -46,7 +53,7 @@ export class TypeContext {
       return existingType;
     } else {
       const newType = fallback(this);
-      typeContext.savedSemiGraphQLTypes.set(semiType.name, newType);
+      typeContextObject.savedSemiGraphQLTypes.set(semiType.name, newType);
       return this.getSemiGraphQLType(semiType, fallback);
     }
   }
@@ -86,15 +93,40 @@ export class TypeContext {
     });
   };
 
-  // public resolverOf = <F extends OutputFieldMapValue<any, any>>(
-  //   f: F,
-  //   resolver: ResolveFnOfOutputFieldMapValue<F, undefined>,
-  // ): void => {
-  //   const resolveFnKey = this.getResolveFnKey({
-  //     fieldName:
-  //   })
-  //   return resolver;
-  // };
+  public query = (fields: RootOutputFieldMap): void => {
+    forEach(fields, (field, key) => {
+      this.savedRootQueryFields[key] = field;
+    });
+  };
+
+  public mutation = (fields: RootOutputFieldMap): void => {
+    forEach(fields, (field, key) => {
+      this.savedRootMutationFields[key] = field;
+    });
+  };
+
+  public getSchema = ({
+    rootQueryName = 'Query',
+    rootMutationName = 'Mutation',
+  }: {
+    rootQueryName?: string;
+    rootMutationName?: string;
+  } = {}): GraphQLSchema => {
+    return new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: rootQueryName,
+        fields: mapValues(this.savedRootQueryFields, (field) =>
+          field.getGraphQLFieldConfig(this),
+        ),
+      }),
+      mutation: new GraphQLObjectType({
+        name: rootMutationName,
+        fields: mapValues(this.savedRootMutationFields, (field) =>
+          field.getGraphQLFieldConfig(this),
+        ),
+      }),
+    });
+  };
 }
 
 export abstract class SemiType<N extends string, T> {
@@ -334,30 +366,40 @@ type ResolveFnOfOutputFieldMapValue<
   R extends OutputObjectSemiType<any, any> ? TypeOf<R> : undefined
 >;
 
-class OutputField<
+interface IOutputFieldConstructorArgs<
   T extends AnyOutputRealizedType,
   A extends InputFieldMap = InputFieldMap
 > {
+  type: OutputField<T, A>['type'];
+  args?: OutputField<T, A>['args'];
+  deprecationReason?: OutputField<T, A>['deprecationReason'];
+  description?: OutputField<T, A>['description'];
+}
+
+interface IOutputField<
+  T extends AnyOutputRealizedType,
+  A extends InputFieldMap = InputFieldMap
+> {
+  readonly type: T;
+  readonly args: A;
+  readonly deprecationReason?: Maybe<string>;
+  readonly description?: Maybe<string>;
+}
+
+class OutputField<
+  T extends AnyOutputRealizedType,
+  A extends InputFieldMap = InputFieldMap
+> implements IOutputField<T, A> {
   public readonly type: T;
   public readonly args: A;
   public readonly deprecationReason?: Maybe<string>;
   public readonly description?: Maybe<string>;
 
-  constructor({
-    type,
-    args,
-    deprecationReason,
-    description,
-  }: {
-    type: OutputField<T, A>['type'];
-    args?: OutputField<T, A>['args'];
-    deprecationReason?: OutputField<T, A>['deprecationReason'];
-    description?: OutputField<T, A>['description'];
-  }) {
-    this.type = type;
-    this.args = args || ({} as any);
-    this.deprecationReason = deprecationReason;
-    this.description = description;
+  constructor(params: IOutputFieldConstructorArgs<T, A>) {
+    this.type = params.type;
+    this.args = params.args || ({} as any);
+    this.deprecationReason = params.deprecationReason;
+    this.description = params.description;
   }
 
   public getGraphQLFieldConfig = (params: {
@@ -366,6 +408,51 @@ class OutputField<
     fieldName: string;
   }): GraphQLFieldConfig<any, any, any> => {
     return {
+      type: this.type.getGraphQLType(params.typeContext) as any,
+      args: mapValues(this.args, (field) => {
+        const unthunkedField = unthunk(field);
+        return unthunkedField.getGraphQLArgumentConfig(params.typeContext);
+      }),
+      deprecationReason: this.deprecationReason,
+      description: this.description,
+      resolve: params.typeContext.getResolveFn(params),
+    };
+  };
+}
+
+type IRootOutputFieldConstructorParams<
+  T extends AnyOutputRealizedType,
+  A extends InputFieldMap = InputFieldMap
+> = IOutputFieldConstructorArgs<T, A> & {
+  resolve: RootOutputField<T, A>['resolve'];
+};
+
+class RootOutputField<
+  T extends AnyOutputRealizedType,
+  A extends InputFieldMap = InputFieldMap
+> implements IOutputField<T, A> {
+  public readonly type: T;
+  public readonly args: A;
+  public readonly deprecationReason?: Maybe<string>;
+  public readonly description?: Maybe<string>;
+  public readonly resolve: ResolveFn<
+    TypeOf<T>,
+    TypeOfInputFieldMap<A>,
+    undefined
+  >;
+
+  constructor(params: IRootOutputFieldConstructorParams<T, A>) {
+    this.type = params.type;
+    this.args = params.args || ({} as any);
+    this.deprecationReason = params.deprecationReason;
+    this.description = params.description;
+    this.resolve = params.resolve;
+  }
+
+  public getGraphQLFieldConfig = (
+    typeContext: TypeContext,
+  ): GraphQLFieldConfig<any, any, any> => {
+    return {
       type: this.type.getGraphQLType(typeContext) as any,
       args: mapValues(this.args, (field) => {
         const unthunkedField = unthunk(field);
@@ -373,8 +460,7 @@ class OutputField<
       }),
       deprecationReason: this.deprecationReason,
       description: this.description,
-      resolve: typeContext.getResolveFn(params),
-      // resolve: TODO: implement
+      resolve: this.resolve,
     };
   };
 }
@@ -482,23 +568,6 @@ const user: UserType = new OutputObjectSemiType({
     };
   },
 });
-type D = Unthunked<typeof user['fields']['self']>['args'];
-type E = Unthunked<typeof user['fields']['firstName']>['args'];
-type F = typeof user['fields']['self'];
-
-type G = ResolveFnOfOutputFieldMapValue<F>;
-
-// const userResolver = resolverOf(user.fields.self, async (root, args) => {
-//   return {
-//     firstName: 'yo',
-//     lastName: 'yoyo',
-//     middleName: 'yoyoyo',
-//     get self() {
-//       return this;
-//     },
-//   };
-// });
-
 // TODO: is there a way to avoid typing all the other fields that can be inferred?
 // TODO: when we infer the field type but not the args, we still lose type inference on the args of the same field
 // TODO: root is never equal to the given type. It's only equal to the parent type.
@@ -522,17 +591,6 @@ export const datetime = new ScalarSemiType<'Datetime', Date>({
   },
   description: 'A datetime wrapper for the Date class',
 });
-
-const typeContext = new TypeContext();
-
-const A: InputFieldMap = {
-  x: new InputField({
-    type: datetime.nullable,
-  }),
-  y: new InputField({
-    type: datetime.nonNullable,
-  }),
-};
 
 type TypeOfInputFieldMap<T extends InputFieldMap> = {
   [K in keyof T]: TypeOf<Unthunked<T[K]>['type']>;
@@ -560,11 +618,17 @@ interface OutputFieldMap {
   [key: string]: OutputFieldMapValue<any, any>;
 }
 
+interface RootOutputFieldMap {
+  [key: string]: RootOutputField<any, any>;
+}
+
 type TypeOfOutputFieldMap<T extends OutputFieldMap> = {
   [K in keyof T]: TypeOf<Unthunked<T[K]>['type']>;
 };
 
-typeContext.setFieldResolvers(user, {
+const typeContextObject = new TypeContext();
+
+typeContextObject.setFieldResolvers(user, {
   firstName: (root, args) => {
     return root.firstName;
   },
@@ -573,27 +637,34 @@ typeContext.setFieldResolvers(user, {
   },
 });
 
-const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
-    name: 'RootQuery',
-    fields: {
-      dateAsInputTwo: new OutputField({
-        type: String.nonNullable,
-        args: A,
-      }).getGraphQLFieldConfig(typeContext),
-      z: new OutputField({
-        type: String.nonNullable,
-      }).getGraphQLFieldConfig(typeContext),
-      user: new OutputField({
-        type: user.nonNullable,
-      }).getGraphQLFieldConfig(typeContext),
-      resolvedUser: {
-        type: user.nonNullable.getGraphQLType(typeContext) as any,
-        resolve: userResolver,
-      },
+typeContextObject.query({
+  currentUser: new RootOutputField({
+    type: user.nonNullable,
+    args: {},
+    resolve: () => {
+      return {
+        firstName: 'yo',
+        lastName: 'yoyo',
+        middleName: 'yoyoyo',
+        get self() {
+          return this;
+        },
+      };
     },
   }),
 });
+
+typeContextObject.mutation({
+  signup: new RootOutputField({
+    type: user.nullable,
+    args: {},
+    resolve: () => {
+      return null;
+    },
+  }),
+});
+
+const schema = typeContextObject.getSchema();
 
 const apolloServer = new ApolloServer({
   schema,
