@@ -18,6 +18,8 @@ import { ApolloServer } from 'apollo-server-express';
 import mapValues from 'lodash/mapValues';
 import forEach from 'lodash/forEach';
 import express from 'express';
+import { argsToArgsConfig } from 'graphql/type/definition';
+import { zip } from 'lodash';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -368,7 +370,7 @@ type ResolveFnOfOutputFieldMapValue<
 
 interface IOutputFieldConstructorArgs<
   T extends AnyOutputRealizedType,
-  A extends InputFieldMap = InputFieldMap
+  A extends InputFieldMap
 > {
   type: OutputField<T, A>['type'];
   args?: OutputField<T, A>['args'];
@@ -378,7 +380,7 @@ interface IOutputFieldConstructorArgs<
 
 interface IOutputField<
   T extends AnyOutputRealizedType,
-  A extends InputFieldMap = InputFieldMap
+  A extends InputFieldMap
 > {
   readonly type: T;
   readonly args: A;
@@ -386,10 +388,8 @@ interface IOutputField<
   readonly description?: Maybe<string>;
 }
 
-class OutputField<
-  T extends AnyOutputRealizedType,
-  A extends InputFieldMap = InputFieldMap
-> implements IOutputField<T, A> {
+class OutputField<T extends AnyOutputRealizedType, A extends InputFieldMap>
+  implements IOutputField<T, A> {
   public readonly type: T;
   public readonly args: A;
   public readonly deprecationReason?: Maybe<string>;
@@ -422,15 +422,13 @@ class OutputField<
 
 type IRootOutputFieldConstructorParams<
   T extends AnyOutputRealizedType,
-  A extends InputFieldMap = InputFieldMap
+  A extends InputFieldMap
 > = IOutputFieldConstructorArgs<T, A> & {
   resolve: RootOutputField<T, A>['resolve'];
 };
 
-class RootOutputField<
-  T extends AnyOutputRealizedType,
-  A extends InputFieldMap = InputFieldMap
-> implements IOutputField<T, A> {
+class RootOutputField<T extends AnyOutputRealizedType, A extends InputFieldMap>
+  implements IOutputField<T, A> {
   public readonly type: T;
   public readonly args: A;
   public readonly deprecationReason?: Maybe<string>;
@@ -507,72 +505,38 @@ class OutputObjectSemiType<
   };
 }
 
-type Scalars = {
-  String: typeof String;
-  Float: typeof Float;
-  Int: typeof Int;
-  Boolean: typeof Boolean;
-  ID: typeof ID;
+const allOkayUserFields = {
+  firstName: new OutputField({
+    type: String.nonNullable,
+    args: {
+      x: new InputField({
+        type: String.nullable,
+      }),
+      y: new InputField({
+        type: String.nullable,
+      }),
+      z: new InputField({
+        type: String.nullable,
+      }),
+    },
+  }),
+  lastName: new OutputField({
+    type: String.nonNullable,
+  }),
+  middleName: new OutputField({
+    type: String.nullable,
+  }),
 };
 
 type UserType = OutputObjectSemiType<
   'User',
-  {
-    firstName: OutputFieldMapValue<
-      Scalars['String']['nonNullable'],
-      {
-        x: InputField<Scalars['String']['nullable']>;
-        y: InputField<Scalars['String']['nullable']>;
-        z: InputField<Scalars['String']['nullable']>;
-      }
-    >;
-    lastName: OutputFieldMapValue<Scalars['String']['nonNullable']>;
-    middleName: OutputFieldMapValue<Scalars['String']['nullable']>;
+  typeof allOkayUserFields & {
     self: OutputFieldMapValue<UserType['nonNullable']>;
+    pet: OutputFieldMapValue<AnimalType['nullable']>;
   }
 >;
 
-const user: UserType = new OutputObjectSemiType({
-  name: 'User',
-  get fields() {
-    return {
-      firstName: new OutputField({
-        type: String.nonNullable,
-        args: {
-          x: new InputField({
-            type: String.nullable,
-          }),
-          y: new InputField({
-            type: String.nullable,
-          }),
-          z: new InputField({
-            type: String.nullable,
-          }),
-        },
-      }),
-      lastName: new OutputField({
-        type: String.nonNullable,
-      }),
-      middleName: new OutputField({
-        type: String.nullable,
-      }),
-      self: () =>
-        new OutputField({
-          type: user.nonNullable,
-          args: {
-            x: new InputField({
-              type: String.nullable,
-            }),
-          },
-        }),
-    };
-  },
-});
-// TODO: is there a way to avoid typing all the other fields that can be inferred?
-// TODO: when we infer the field type but not the args, we still lose type inference on the args of the same field
-// TODO: root is never equal to the given type. It's only equal to the parent type.
-
-export const datetime = new ScalarSemiType<'Datetime', Date>({
+export const Datetime = new ScalarSemiType<'Datetime', Date>({
   name: 'Datetime',
   parseLiteral: (ast) => {
     if (ast.kind === Kind.STRING) {
@@ -590,6 +554,55 @@ export const datetime = new ScalarSemiType<'Datetime', Date>({
     return value.toISOString();
   },
   description: 'A datetime wrapper for the Date class',
+});
+
+const User: UserType = new OutputObjectSemiType({
+  name: 'User',
+  get fields() {
+    return {
+      ...allOkayUserFields,
+      self: () =>
+        new OutputField({
+          type: User.nonNullable,
+          args: {
+            x: new InputField({
+              type: String.nullable,
+            }),
+          },
+        }),
+      pet: () =>
+        new OutputField({
+          type: Animal.nullable,
+        }),
+    };
+  },
+});
+
+const allOkayAnimalFields = {
+  name: new OutputField({
+    type: String.nonNullable,
+  }),
+  birthDate: new OutputField({
+    type: Datetime.nonNullable,
+  }),
+};
+
+type AnimalType = OutputObjectSemiType<
+  'Animal',
+  typeof allOkayAnimalFields & {
+    owner: OutputFieldMapValue<UserType['nonNullable']>;
+  }
+>;
+const Animal: AnimalType = new OutputObjectSemiType({
+  name: 'Animal',
+  get fields() {
+    return {
+      ...allOkayAnimalFields,
+      owner: new OutputField({
+        type: User.nonNullable,
+      }),
+    };
+  },
 });
 
 type TypeOfInputFieldMap<T extends InputFieldMap> = {
@@ -628,9 +641,9 @@ type TypeOfOutputFieldMap<T extends OutputFieldMap> = {
 
 const typeContextObject = new TypeContext();
 
-typeContextObject.setFieldResolvers(user, {
+typeContextObject.setFieldResolvers(User, {
   firstName: (root, args) => {
-    return root.firstName;
+    return root.firstName + args.x;
   },
   lastName: (root, args) => {
     return root.lastName;
@@ -639,24 +652,52 @@ typeContextObject.setFieldResolvers(user, {
 
 typeContextObject.query({
   currentUser: new RootOutputField({
-    type: user.nonNullable,
+    type: User.nonNullable,
     args: {},
     resolve: () => {
       return {
-        firstName: 'yo',
+        firstName: 'a',
         lastName: 'yoyo',
         middleName: 'yoyoyo',
+        get pet() {
+          return {
+            birthDate: new Date(),
+            name: 'Pig',
+            owner: this,
+          };
+        },
         get self() {
           return this;
         },
       };
     },
   }),
+  // TODO: resolve this one where ths compiler gets confused:
+
+  // currentAnimal: new RootOutputField({
+  //   type: Animal.nonNullable,
+  //   args: {},
+  //   resolve: () => {
+  //     return {
+  //       birthDate: new Date(),
+  //       name: 'Pig',
+  //       get owner(): TypeOf<typeof User> {
+  //         return {
+  //           firstName: 'first name',
+  //           lastName: 'last name',
+  //           middleName: 'middle name',
+  //           self: this.owner,
+  //           pet: this,
+  //         };
+  //       },
+  //     };
+  //   },
+  // }),
 });
 
 typeContextObject.mutation({
   signup: new RootOutputField({
-    type: user.nullable,
+    type: User.nullable,
     args: {},
     resolve: () => {
       return null;
