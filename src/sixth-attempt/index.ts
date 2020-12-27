@@ -18,6 +18,7 @@ import {
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mapValues from 'lodash/mapValues';
+import forEach from 'lodash/forEach';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -30,6 +31,11 @@ export class TypeContext {
     ['ID', GraphQLID],
     ['Boolean', GraphQLBoolean],
   ]);
+
+  private readonly savedFieldResolvers = new Map<
+    string,
+    ResolveFn<any, any, any> | undefined
+  >();
 
   public getSemiGraphQLType(
     semiType: AnySemiType,
@@ -44,6 +50,51 @@ export class TypeContext {
       return this.getSemiGraphQLType(semiType, fallback);
     }
   }
+
+  private getResolveFnKey = (params: {
+    objectName: string;
+    fieldName: string;
+  }) => {
+    return `${params.objectName}:${params.fieldName}`;
+  };
+
+  public getResolveFn = (params: {
+    objectName: string;
+    fieldName: string;
+  }): ResolveFn<any, any, any> | undefined => {
+    const resolveFnKey = this.getResolveFnKey(params);
+    return this.savedFieldResolvers.get(resolveFnKey);
+  };
+
+  public setFieldResolvers = <T extends OutputObjectSemiType<any, any>>(
+    t: T,
+    resolvers: Partial<
+      {
+        [K in keyof T['fields']]: ResolveFnOfOutputFieldMapValue<
+          T['fields'][K],
+          T
+        >;
+      }
+    >,
+  ): void => {
+    forEach(resolvers, (resolveFn, fieldName) => {
+      const resolveFnKey = this.getResolveFnKey({
+        fieldName,
+        objectName: t.name,
+      });
+      this.savedFieldResolvers.set(resolveFnKey, resolveFn);
+    });
+  };
+
+  // public resolverOf = <F extends OutputFieldMapValue<any, any>>(
+  //   f: F,
+  //   resolver: ResolveFnOfOutputFieldMapValue<F, undefined>,
+  // ): void => {
+  //   const resolveFnKey = this.getResolveFnKey({
+  //     fieldName:
+  //   })
+  //   return resolver;
+  // };
 }
 
 export abstract class SemiType<N extends string, T> {
@@ -309,9 +360,11 @@ class OutputField<
     this.description = description;
   }
 
-  getGraphQLFieldConfig = (
-    typeContext: TypeContext,
-  ): GraphQLFieldConfig<any, any, any> => {
+  public getGraphQLFieldConfig = (params: {
+    typeContext: TypeContext;
+    objectName: string;
+    fieldName: string;
+  }): GraphQLFieldConfig<any, any, any> => {
     return {
       type: this.type.getGraphQLType(typeContext) as any,
       args: mapValues(this.args, (field) => {
@@ -320,6 +373,7 @@ class OutputField<
       }),
       deprecationReason: this.deprecationReason,
       description: this.description,
+      resolve: typeContext.getResolveFn(params),
       // resolve: TODO: implement
     };
   };
@@ -351,9 +405,13 @@ class OutputObjectSemiType<
     return new GraphQLObjectType({
       name: this.name,
       fields: () =>
-        mapValues(this.fields, (field) => {
+        mapValues(this.fields, (field, fieldName) => {
           const unthunkedField = unthunk(field);
-          return unthunkedField.getGraphQLFieldConfig(typeContext);
+          return unthunkedField.getGraphQLFieldConfig({
+            objectName: this.name,
+            fieldName,
+            typeContext,
+          });
         }),
       description: this.description,
       // interfaces, // TODO: implement
@@ -430,46 +488,16 @@ type F = typeof user['fields']['self'];
 
 type G = ResolveFnOfOutputFieldMapValue<F>;
 
-const fieldResolversOf = <T extends OutputObjectSemiType<any, any>>(
-  t: T,
-  resolvers: Partial<
-    {
-      [K in keyof T['fields']]: ResolveFnOfOutputFieldMapValue<
-        T['fields'][K],
-        T
-      >;
-    }
-  >,
-) => {
-  return resolvers;
-};
-
-const resolverOf = <F extends OutputFieldMapValue<any, any>>(
-  f: F,
-  resolver: ResolveFnOfOutputFieldMapValue<F, undefined>,
-) => {
-  return resolver;
-};
-
-const userResolver = resolverOf(user.fields.self, async (root, args) => {
-  return {
-    firstName: 'yo',
-    lastName: 'yoyo',
-    middleName: 'yoyoyo',
-    get self() {
-      return this;
-    },
-  };
-});
-
-const fieldResolversOfUser = fieldResolversOf(user, {
-  firstName: (root, args) => {
-    return root.firstName;
-  },
-  lastName: (root, args) => {
-    return root.lastName;
-  },
-});
+// const userResolver = resolverOf(user.fields.self, async (root, args) => {
+//   return {
+//     firstName: 'yo',
+//     lastName: 'yoyo',
+//     middleName: 'yoyoyo',
+//     get self() {
+//       return this;
+//     },
+//   };
+// });
 
 // TODO: is there a way to avoid typing all the other fields that can be inferred?
 // TODO: when we infer the field type but not the args, we still lose type inference on the args of the same field
@@ -535,6 +563,15 @@ interface OutputFieldMap {
 type TypeOfOutputFieldMap<T extends OutputFieldMap> = {
   [K in keyof T]: TypeOf<Unthunked<T[K]>['type']>;
 };
+
+typeContext.setFieldResolvers(user, {
+  firstName: (root, args) => {
+    return root.firstName;
+  },
+  lastName: (root, args) => {
+    return root.lastName;
+  },
+});
 
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
