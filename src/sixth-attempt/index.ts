@@ -18,7 +18,11 @@ import { ApolloServer } from 'apollo-server-express';
 import mapValues from 'lodash/mapValues';
 import forEach from 'lodash/forEach';
 import express from 'express';
-import { argsToArgsConfig } from 'graphql/type/definition';
+import {
+  argsToArgsConfig,
+  GraphQLEnumType,
+  GraphQLEnumValueConfig,
+} from 'graphql/type/definition';
 import { zip } from 'lodash';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
@@ -272,6 +276,42 @@ export class ScalarSemiType<N extends string, T> extends SemiType<N, T> {
   };
 }
 
+interface IEnumValueConfig {
+  description?: Maybe<string>;
+  deprecationReason?: Maybe<string>;
+}
+
+export class EnumSemiType<
+  N extends string,
+  D extends { [key: string]: IEnumValueConfig | null }
+> extends SemiType<N, keyof D> {
+  public readonly values: D;
+  public readonly description?: Maybe<string>;
+
+  constructor(params: {
+    name: EnumSemiType<N, D>['name'];
+    description?: EnumSemiType<N, D>['description'];
+    values: EnumSemiType<N, D>['values'];
+  }) {
+    super(params);
+    this.values = params.values;
+  }
+
+  protected getFreshSemiGraphQLType = (): GraphQLEnumType => {
+    return new GraphQLEnumType({
+      name: this.name,
+      values: mapValues(this.values, (value, key) => {
+        return {
+          description: value?.description,
+          deprecationReason: value?.deprecationReason,
+          value: key,
+        };
+      }),
+      description: this.description,
+    });
+  };
+}
+
 const String = new ScalarSemiType<'String', string>({
   name: 'String',
   parseLiteral: GraphQLString.parseLiteral,
@@ -315,6 +355,17 @@ const ID = new ScalarSemiType<'ID', number | string>({
   serialize: GraphQLID.serialize,
   description: GraphQLID.description,
   specifiedByUrl: GraphQLID.specifiedByUrl,
+});
+
+const Membership = new EnumSemiType({
+  name: 'Membership',
+  values: {
+    free: null,
+    enterprise: {
+      deprecationReason: 'deprecated because..',
+    },
+    paid: null,
+  },
 });
 
 class InputField<T extends InputRealizedType> {
@@ -526,6 +577,9 @@ const allOkayUserFields = {
   middleName: new OutputField({
     type: String.nullable,
   }),
+  membership: new OutputField({
+    type: Membership.nullable,
+  }),
 };
 
 type UserType = OutputObjectSemiType<
@@ -669,6 +723,7 @@ typeContextObject.query({
         get self() {
           return this;
         },
+        membership: 'enterprise' as const, // TODO: instead of "AS CONST", try using membership.values.enterprise
       };
     },
   }),
