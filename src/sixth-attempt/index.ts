@@ -18,12 +18,7 @@ import { ApolloServer } from 'apollo-server-express';
 import mapValues from 'lodash/mapValues';
 import forEach from 'lodash/forEach';
 import express from 'express';
-import {
-  argsToArgsConfig,
-  GraphQLEnumType,
-  GraphQLEnumValueConfig,
-} from 'graphql/type/definition';
-import { zip } from 'lodash';
+import { GraphQLEnumType } from 'graphql/type/definition';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -285,22 +280,22 @@ export class EnumSemiType<
   N extends string,
   D extends { [key: string]: IEnumValueConfig | null }
 > extends SemiType<N, keyof D> {
-  public readonly values: D;
+  private readonly valuesConfig: D;
   public readonly description?: Maybe<string>;
 
   constructor(params: {
     name: EnumSemiType<N, D>['name'];
     description?: EnumSemiType<N, D>['description'];
-    values: EnumSemiType<N, D>['values'];
+    values: EnumSemiType<N, D>['valuesConfig'];
   }) {
     super(params);
-    this.values = params.values;
+    this.valuesConfig = params.values;
   }
 
   protected getFreshSemiGraphQLType = (): GraphQLEnumType => {
     return new GraphQLEnumType({
       name: this.name,
-      values: mapValues(this.values, (value, key) => {
+      values: mapValues(this.valuesConfig, (value, key) => {
         return {
           description: value?.description,
           deprecationReason: value?.deprecationReason,
@@ -310,6 +305,10 @@ export class EnumSemiType<
       description: this.description,
     });
   };
+
+  public get values(): { [K in keyof D]: K } {
+    return mapValues(this.valuesConfig, (value, key) => key) as any;
+  }
 }
 
 const String = new ScalarSemiType<'String', string>({
@@ -723,7 +722,7 @@ typeContextObject.query({
         get self() {
           return this;
         },
-        membership: 'enterprise' as const, // TODO: instead of "AS CONST", try using membership.values.enterprise
+        membership: Membership.values.enterprise,
       };
     },
   }),
@@ -736,7 +735,7 @@ typeContextObject.query({
         firstName: 'first name',
         lastName: 'last name',
         middleName: 'middle name',
-        membership: 'enterprise' as const,
+        membership: Membership.values.free,
         get self() {
           return this;
         },
