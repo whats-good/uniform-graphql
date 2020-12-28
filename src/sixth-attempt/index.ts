@@ -697,7 +697,7 @@ const typeContextObject = new TypeContext();
 
 typeContextObject.setFieldResolvers(User, {
   firstName: (root, args) => {
-    return root.firstName + args.x;
+    return root.firstName + '-' + args.x;
   },
   lastName: (root, args) => {
     return root.lastName;
@@ -727,27 +727,30 @@ typeContextObject.query({
       };
     },
   }),
-  // TODO: resolve this one where ths compiler gets confused:
 
-  // currentAnimal: new RootOutputField({
-  //   type: Animal.nonNullable,
-  //   args: {},
-  //   resolve: () => {
-  //     return {
-  //       birthDate: new Date(),
-  //       name: 'Pig',
-  //       get owner(): TypeOf<typeof User> {
-  //         return {
-  //           firstName: 'first name',
-  //           lastName: 'last name',
-  //           middleName: 'middle name',
-  //           self: this.owner,
-  //           pet: this,
-  //         };
-  //       },
-  //     };
-  //   },
-  // }),
+  currentAnimal: new RootOutputField({
+    type: Animal.nonNullable,
+    args: {},
+    resolve: () => {
+      const owner = {
+        firstName: 'first name',
+        lastName: 'last name',
+        middleName: 'middle name',
+        membership: 'enterprise' as const,
+        get self() {
+          return this;
+        },
+        get pet() {
+          return {
+            birthDate: new Date(),
+            name: 'Pig',
+            owner: this,
+          };
+        },
+      };
+      return owner.pet;
+    },
+  }),
 });
 
 typeContextObject.mutation({
