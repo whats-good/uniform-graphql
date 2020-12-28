@@ -158,11 +158,13 @@ type AnyScalarSemiType = ScalarSemiType<any, any>;
 type AnyOutputObjectSemiType = OutputObjectSemiType<any, any>;
 type AnyEnumSemiType = EnumSemiType<any, any>;
 
-type AnyInputSemiType = AnyScalarSemiType | AnyEnumSemiType;
-type AnyOutputSemiType =
-  | AnyScalarSemiType
-  | AnyEnumSemiType
-  | AnyOutputObjectSemiType;
+type InputSemiType<T> = SemiType<any, T> &
+  (AnyScalarSemiType | AnyEnumSemiType);
+type OutputSemiType<T> = SemiType<any, T> &
+  (AnyScalarSemiType | AnyEnumSemiType | AnyOutputObjectSemiType);
+
+type AnyInputSemiType = InputSemiType<any>;
+type AnyOutputSemiType = OutputSemiType<any>;
 
 export type Maybe<T> = T | null | undefined;
 
