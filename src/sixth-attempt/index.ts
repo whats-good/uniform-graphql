@@ -5,7 +5,6 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
-  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLSchema,
@@ -120,12 +119,13 @@ export class TypeContext {
           field.getGraphQLFieldConfig(this),
         ),
       }),
-      mutation: new GraphQLObjectType({
-        name: rootMutationName,
-        fields: mapValues(this.savedRootMutationFields, (field) =>
-          field.getGraphQLFieldConfig(this),
-        ),
-      }),
+      // TODO: uncomment
+      // mutation: new GraphQLObjectType({
+      //   name: rootMutationName,
+      //   fields: mapValues(this.savedRootMutationFields, (field) =>
+      //     field.getGraphQLFieldConfig(this),
+      //   ),
+      // }),
     });
   };
 }
@@ -149,76 +149,20 @@ export abstract class SemiType<N extends string, T> {
   public getSemiGraphQLType = (typeContext: TypeContext): GraphQLType => {
     return typeContext.getSemiGraphQLType(this, this.getFreshSemiGraphQLType);
   };
-
-  get nullable(): RealizedType<N, Maybe<T>> {
-    return new RealizedType({
-      name: this.name,
-      nullable: true,
-      semiType: this,
-    });
-  }
-
-  get nonNullable(): RealizedType<N, T> {
-    return new RealizedType({
-      name: this.name,
-      nullable: false,
-      semiType: this,
-    });
-  }
 }
 
 type AnySemiType = SemiType<any, any>;
-type AnyRealizedType = RealizedType<any, any>;
-type NameOf<T> = T extends AnyRealizedType
-  ? T['name']
-  : T extends AnySemiType
-  ? T['name']
-  : never;
-type TypeOf<T> = T extends AnyRealizedType
-  ? T['__T']
-  : T extends AnySemiType
-  ? T['__T']
-  : never;
+type TypeOf<T extends AnySemiType> = T['__T'];
 
 type AnyScalarSemiType = ScalarSemiType<any, any>;
+type AnyOutputObjectSemiType = OutputObjectSemiType<any, any>;
+type AnyEnumSemiType = EnumSemiType<any, any>;
 
-type AnyInputSemiType = AnyScalarSemiType;
-type AnyOutputSemiType = AnyScalarSemiType;
-
-type RealizedTypeOf<S extends AnySemiType> = RealizedType<
-  NameOf<S>,
-  Maybe<TypeOf<S>>
->;
-
-type InputRealizedType = RealizedTypeOf<AnyInputSemiType>;
-type AnyOutputRealizedType = RealizedTypeOf<AnyOutputSemiType>;
-
-class RealizedType<N extends string, T> {
-  public readonly name: N;
-  public readonly nullable: boolean;
-  public readonly semiType: SemiType<N, any>;
-  public readonly __T!: T;
-  public readonly __REALIZED!: 'REALIZED';
-
-  constructor(params: {
-    name: N;
-    nullable: boolean;
-    semiType: SemiType<N, any>;
-  }) {
-    this.name = params.name;
-    this.nullable = params.nullable;
-    this.semiType = params.semiType;
-  }
-
-  public getGraphQLType = (typeContext: TypeContext): GraphQLType => {
-    const semiGraphQLType = this.semiType.getSemiGraphQLType(typeContext);
-    if (this.nullable) {
-      return semiGraphQLType;
-    } else {
-      return new GraphQLNonNull(semiGraphQLType);
-    }
-  };
-}
+type AnyInputSemiType = AnyScalarSemiType | AnyEnumSemiType;
+type AnyOutputSemiType =
+  | AnyScalarSemiType
+  | AnyEnumSemiType
+  | AnyOutputObjectSemiType;
 
 export type Maybe<T> = T | null | undefined;
 
@@ -367,7 +311,7 @@ const Membership = new EnumSemiType({
   },
 });
 
-class InputField<T extends InputRealizedType> {
+class InputField<T extends AnyInputSemiType> {
   public readonly type: T;
   public readonly defaultValue?: TypeOf<T>; // TODO: make this nonNullable
   public readonly deprecationReason?: Maybe<string>;
@@ -389,7 +333,8 @@ class InputField<T extends InputRealizedType> {
     typeContext: TypeContext,
   ): GraphQLArgumentConfig => {
     return {
-      type: this.type.getGraphQLType(typeContext) as any,
+      // TODO: use field based nullability here.
+      type: this.type.getSemiGraphQLType(typeContext) as any,
       defaultValue: this.defaultValue,
       deprecationReason: this.deprecationReason,
       description: this.description,
@@ -419,7 +364,7 @@ type ResolveFnOfOutputFieldMapValue<
 >;
 
 interface IOutputFieldConstructorArgs<
-  T extends AnyOutputRealizedType,
+  T extends AnyOutputSemiType,
   A extends InputFieldMap
 > {
   type: OutputField<T, A>['type'];
@@ -428,17 +373,14 @@ interface IOutputFieldConstructorArgs<
   description?: OutputField<T, A>['description'];
 }
 
-interface IOutputField<
-  T extends AnyOutputRealizedType,
-  A extends InputFieldMap
-> {
+interface IOutputField<T extends AnyOutputSemiType, A extends InputFieldMap> {
   readonly type: T;
   readonly args: A;
   readonly deprecationReason?: Maybe<string>;
   readonly description?: Maybe<string>;
 }
 
-class OutputField<T extends AnyOutputRealizedType, A extends InputFieldMap>
+class OutputField<T extends AnyOutputSemiType, A extends InputFieldMap>
   implements IOutputField<T, A> {
   public readonly type: T;
   public readonly args: A;
@@ -458,7 +400,8 @@ class OutputField<T extends AnyOutputRealizedType, A extends InputFieldMap>
     fieldName: string;
   }): GraphQLFieldConfig<any, any, any> => {
     return {
-      type: this.type.getGraphQLType(params.typeContext) as any,
+      // TODO: use field based nullability here.
+      type: this.type.getSemiGraphQLType(params.typeContext) as any,
       args: mapValues(this.args, (field) => {
         const unthunkedField = unthunk(field);
         return unthunkedField.getGraphQLArgumentConfig(params.typeContext);
@@ -471,13 +414,13 @@ class OutputField<T extends AnyOutputRealizedType, A extends InputFieldMap>
 }
 
 type IRootOutputFieldConstructorParams<
-  T extends AnyOutputRealizedType,
+  T extends AnyOutputSemiType,
   A extends InputFieldMap
 > = IOutputFieldConstructorArgs<T, A> & {
   resolve: RootOutputField<T, A>['resolve'];
 };
 
-class RootOutputField<T extends AnyOutputRealizedType, A extends InputFieldMap>
+class RootOutputField<T extends AnyOutputSemiType, A extends InputFieldMap>
   implements IOutputField<T, A> {
   public readonly type: T;
   public readonly args: A;
@@ -501,7 +444,8 @@ class RootOutputField<T extends AnyOutputRealizedType, A extends InputFieldMap>
     typeContext: TypeContext,
   ): GraphQLFieldConfig<any, any, any> => {
     return {
-      type: this.type.getGraphQLType(typeContext) as any,
+      // TODO: use the field based nullability here.
+      type: this.type.getSemiGraphQLType(typeContext) as any,
       args: mapValues(this.args, (field) => {
         const unthunkedField = unthunk(field);
         return unthunkedField.getGraphQLArgumentConfig(typeContext);
@@ -557,35 +501,35 @@ class OutputObjectSemiType<
 
 const allOkayUserFields = {
   firstName: new OutputField({
-    type: String.nonNullable,
+    type: String,
     args: {
       x: new InputField({
-        type: String.nullable,
+        type: String,
       }),
       y: new InputField({
-        type: String.nullable,
+        type: String,
       }),
       z: new InputField({
-        type: String.nullable,
+        type: String,
       }),
     },
   }),
   lastName: new OutputField({
-    type: String.nonNullable,
+    type: String,
   }),
   middleName: new OutputField({
-    type: String.nullable,
+    type: String,
   }),
   membership: new OutputField({
-    type: Membership.nullable,
+    type: Membership,
   }),
 };
 
 type UserType = OutputObjectSemiType<
   'User',
   typeof allOkayUserFields & {
-    self: OutputFieldMapValue<UserType['nonNullable']>;
-    pet: OutputFieldMapValue<AnimalType['nullable']>;
+    self: OutputFieldMapValue<UserType>;
+    pet: OutputFieldMapValue<AnimalType>;
   }
 >;
 
@@ -616,16 +560,16 @@ const User: UserType = new OutputObjectSemiType({
       ...allOkayUserFields,
       self: () =>
         new OutputField({
-          type: User.nonNullable,
+          type: User,
           args: {
             x: new InputField({
-              type: String.nullable,
+              type: String,
             }),
           },
         }),
       pet: () =>
         new OutputField({
-          type: Animal.nullable,
+          type: Animal,
         }),
     };
   },
@@ -633,17 +577,17 @@ const User: UserType = new OutputObjectSemiType({
 
 const allOkayAnimalFields = {
   name: new OutputField({
-    type: String.nonNullable,
+    type: String,
   }),
   birthDate: new OutputField({
-    type: Datetime.nonNullable,
+    type: Datetime,
   }),
 };
 
 type AnimalType = OutputObjectSemiType<
   'Animal',
   typeof allOkayAnimalFields & {
-    owner: OutputFieldMapValue<UserType['nonNullable']>;
+    owner: OutputFieldMapValue<UserType>;
   }
 >;
 const Animal: AnimalType = new OutputObjectSemiType({
@@ -652,7 +596,7 @@ const Animal: AnimalType = new OutputObjectSemiType({
     return {
       ...allOkayAnimalFields,
       owner: new OutputField({
-        type: User.nonNullable,
+        type: User,
       }),
     };
   },
@@ -677,7 +621,7 @@ const unthunk = <T extends Thunkable<any>>(t: T): Unthunked<T> => {
 };
 
 type OutputFieldMapValue<
-  T extends AnyOutputRealizedType,
+  T extends AnyOutputSemiType,
   A extends InputFieldMap = InputFieldMap
 > = Thunkable<OutputField<T, A>>;
 interface OutputFieldMap {
@@ -705,7 +649,7 @@ typeContextObject.setFieldResolvers(User, {
 
 typeContextObject.query({
   currentUser: new RootOutputField({
-    type: User.nonNullable,
+    type: User,
     args: {},
     resolve: () => {
       return {
@@ -728,7 +672,7 @@ typeContextObject.query({
   }),
 
   currentAnimal: new RootOutputField({
-    type: Animal.nonNullable,
+    type: Animal,
     args: {},
     resolve: () => {
       const owner = {
@@ -752,15 +696,15 @@ typeContextObject.query({
   }),
 });
 
-typeContextObject.mutation({
-  signup: new RootOutputField({
-    type: User.nullable,
-    args: {},
-    resolve: () => {
-      return null;
-    },
-  }),
-});
+// typeContextObject.mutation({
+//   signup: new RootOutputField({
+//     type: User,
+//     args: {},
+//     resolve: () => {
+//       return null;
+//     },
+//   }),
+// });
 
 const schema = typeContextObject.getSchema();
 
