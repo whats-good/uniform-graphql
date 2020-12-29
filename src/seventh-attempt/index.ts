@@ -20,7 +20,7 @@ import { Maybe } from './utils';
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
 export class TypeContext {
-  private readonly savedSemiGraphQLTypes = new Map<string, GraphQLType>([
+  private readonly internalGraphQLTypes = new Map<string, GraphQLType>([
     // TODO: find a better solution than this. this is done to circumvent the "Schema must contain uniquely names types" error
     ['String', GraphQLString],
     ['Float', GraphQLFloat],
@@ -33,12 +33,12 @@ export class TypeContext {
     type: AnyType,
     fallback: FallbackGraphQLTypeFn,
   ): GraphQLType {
-    const existingType = this.savedSemiGraphQLTypes.get(type.name);
+    const existingType = this.internalGraphQLTypes.get(type.name);
     if (existingType) {
       return existingType;
     } else {
       const newType = fallback(this);
-      this.savedSemiGraphQLTypes.set(type.name, newType);
+      this.internalGraphQLTypes.set(type.name, newType);
       return this.getInternalGraphQLType(type, fallback);
     }
   }
@@ -197,10 +197,26 @@ interface OutputFieldsMap {
   [key: string]: BaseOutputField<any>;
 }
 
+interface OutputTypesMap {
+  [key: string]: OutputType<any>;
+}
+
+type OutputTypeToOutputField<T extends OutputType<any>> = BaseOutputField<
+  TypeOf<T>
+>;
+
+type OutputTypesMapToOutputFieldsMap<F extends OutputTypesMap> = {
+  [K in keyof F]: OutputTypeToOutputField<F[K]>;
+};
+
 type TypeOf<T extends AnyType> = T['__T'];
 
 type TypeOfOutputFieldsMap<T extends OutputFieldsMap> = {
   [K in keyof T]: TypeOf<T[K]['type']>;
+};
+
+type TypeOfOutputTypesMap<T extends OutputTypesMap> = {
+  [K in keyof T]: TypeOf<T[K]>;
 };
 
 class OutputObject<
@@ -228,32 +244,30 @@ class OutputObject<
     return nullable(this) as any;
   }
 
-  public static init<N extends string, F extends OutputFieldsMap>(params: {
+  public static init<N extends string, F extends OutputTypesMap>(params: {
     name: N;
     fields: F;
-  }): OutputObject<N, TypeOfOutputFieldsMap<F>, F> {
+  }): OutputObject<
+    N,
+    TypeOfOutputTypesMap<F>,
+    OutputTypesMapToOutputFieldsMap<F>
+  > {
     return new OutputObject({
       name: params.name,
-      fields: params.fields,
-    });
+      fields: mapValues(params.fields, (field) => {
+        return new BaseOutputField({ type: field });
+      }),
+    }) as any;
   }
 }
 
 const User = OutputObject.init({
   name: 'User',
   fields: {
-    a: new BaseOutputField({
-      type: String,
-    }),
-    b: new BaseOutputField({
-      type: Float,
-    }),
-    c: new BaseOutputField({
-      type: String.nullable,
-    }),
-    d: new BaseOutputField({
-      type: ID,
-    }),
+    a: String.nullable,
+    b: Float,
+    c: String.nullable,
+    d: ID,
   },
 });
 
