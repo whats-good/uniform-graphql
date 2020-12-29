@@ -12,6 +12,7 @@ import {
   GraphQLScalarType,
   GraphQLSchema,
   GraphQLObjectType,
+  GraphQLFieldConfig,
 } from 'graphql';
 import { clone, mapValues } from 'lodash';
 import { Maybe } from './utils';
@@ -43,14 +44,7 @@ export class TypeContext {
   }
 }
 
-interface Type<N extends string, T> {
-  readonly name: N;
-  readonly isNullable: boolean;
-  readonly __T: T;
-  getGraphQLType(typeContext: TypeContext): GraphQLType;
-}
-
-type AnyType = Type<any, any>;
+type AnyType = BaseType<any, any>;
 
 const nullable = <T>(t: BaseType<any, T>): BaseType<any, Maybe<T>> => {
   const cloned: any = clone(t);
@@ -58,7 +52,7 @@ const nullable = <T>(t: BaseType<any, T>): BaseType<any, Maybe<T>> => {
   return cloned;
 };
 
-export abstract class BaseType<N extends string, T> implements Type<N, T> {
+export abstract class BaseType<N extends string, T> {
   public readonly name: N;
   public readonly isNullable = false; // TODO: understand why this isn't getting set to true when looked from within.
   public readonly __T!: T;
@@ -71,21 +65,12 @@ export abstract class BaseType<N extends string, T> implements Type<N, T> {
     typeContext: TypeContext,
   ): GraphQLType;
 
-  private getInternalGraphQLType = (typeContext: TypeContext): GraphQLType => {
+  public getInternalGraphQLType = (typeContext: TypeContext): GraphQLType => {
     const fallback = this.getFreshInternalGraphQLType.bind(this);
     return typeContext.getInternalGraphQLType(this, fallback);
   };
 
-  public getGraphQLType = (typeContext: TypeContext): GraphQLType => {
-    const internalGraphQLType = this.getInternalGraphQLType(typeContext);
-    if (this.isNullable) {
-      return internalGraphQLType;
-    } else {
-      return new GraphQLNonNull(internalGraphQLType);
-    }
-  };
-
-  public abstract get nullable(): Type<N, Maybe<T>>;
+  public abstract get nullable(): BaseType<N, Maybe<T>>;
 }
 
 type ScalarSerializer<TInternal> = (value: TInternal) => Maybe<any>;
@@ -182,113 +167,102 @@ const ID = new ScalarType<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
-type OutputType<T> = Type<any, T> & ScalarType<any, any>;
+type OutputType<T, N extends string = any> = BaseType<N, T> &
+  ScalarType<any, T>;
 
-const typeContextObject = new TypeContext();
-const x = Boolean.nullable;
-const y = x.getGraphQLType(typeContextObject);
-y;
-
-interface IOutputObjectField<T> {
-  type: OutputType<T>;
-}
-
-class BaseOutputObjectField<T> implements IOutputObjectField<T> {
+class BaseOutputField<T> {
   public readonly type: OutputType<T>;
 
-  constructor(params: { type: BaseOutputObjectField<T>['type'] }) {
+  public constructor(params: { type: OutputType<T> }) {
     this.type = params.type;
+  }
+
+  public getGraphQLFieldConfig(
+    typeContext: TypeContext,
+  ): GraphQLFieldConfig<any, any, any> {
+    const internalGraphQLType = this.type.getInternalGraphQLType(typeContext);
+    const externalGraphQLType = this.type.isNullable
+      ? internalGraphQLType
+      : new GraphQLNonNull(internalGraphQLType);
+    return {
+      type: externalGraphQLType as any,
+      // deprecationReason: 123, // TODO: implement
+      // description: 123,
+      // resolve: 123,
+    };
   }
 }
 
-type OutputObjectFieldParams<T> = OutputType<T>; // TODO: expand this
-
-const toOutputObjectField = <T>(
-  type: OutputObjectFieldParams<T>,
-): IOutputObjectField<T> => {
-  // TODO: add type guards to determine if the given input is a Base<any, any> or something else
-  return new BaseOutputObjectField({ type });
-};
-
-interface OutputObjectFieldParamsMap {
-  [key: string]: OutputObjectFieldParams<any>;
+interface OutputFieldsMap {
+  [key: string]: BaseOutputField<any>;
 }
 
-interface OutputObjectFieldsMap {
-  [key: string]: IOutputObjectField<any>;
-}
+type TypeOf<T extends AnyType> = T['__T'];
 
-type TypeOf<T extends BaseType<any, any>> = T['__T'];
-type TypeOfOutputObjectFieldsMap<F extends OutputObjectFieldsMap> = {
-  [K in keyof F]: F[K];
+type TypeOfOutputFieldsMap<T extends OutputFieldsMap> = {
+  [K in keyof T]: TypeOf<T[K]['type']>;
 };
 
-class OutputObjectType<
+class OutputObject<
   N extends string,
   T,
-  F extends OutputObjectFieldsMap
+  F extends OutputFieldsMap
 > extends BaseType<N, T> {
   public readonly fields: F;
-  public readonly description?: string;
 
-  private constructor(params: {
-    name: OutputObjectType<N, T, F>['name'];
-    fields: F;
-  }) {
+  private constructor(params: { name: N; fields: F }) {
     super(params);
     this.fields = params.fields;
   }
 
   protected getFreshInternalGraphQLType(typeContext: TypeContext): GraphQLType {
-    // TODO: implement
     return new GraphQLObjectType({
       name: this.name,
-      description: this.description,
-      // interfaces: this.interfaces,
-      // isTypeOf: this.isTypeOf,
-      // resolveObject: this.resolveObject,
-      fields: mapValues(this.fields, (field) => {
-        return {
-          type: field.type.getGraphQLType(typeContext),
-          // TODO: find a way to get the description, deprecation reason and etc
-        } as any;
-      }),
+      fields: mapValues(this.fields, (field) =>
+        field.getGraphQLFieldConfig(typeContext),
+      ),
     });
   }
 
-  public get nullable(): OutputObjectType<N, Maybe<T>, F> {
+  public get nullable(): OutputObject<N, Maybe<T>, F> {
     return nullable(this) as any;
   }
 
-  public static init<
-    N extends string,
-    T extends TypeOfOutputObjectFieldsMap<F>,
-    F extends OutputObjectFieldsMap
-  >(params: {
-    name: OutputObjectType<N, F, T>['name'];
-    fields: OutputObjectFieldParamsMap;
-  }) {
-    return new OutputObjectType({
+  public static init<N extends string, F extends OutputFieldsMap>(params: {
+    name: N;
+    fields: F;
+  }): OutputObject<N, TypeOfOutputFieldsMap<F>, F> {
+    return new OutputObject({
       name: params.name,
-      fields: mapValues(params.fields, (field) => {
-        return { type: field };
-      }),
+      fields: params.fields,
     });
   }
 }
 
-const User = OutputObjectType.init({
+const User = OutputObject.init({
   name: 'User',
   fields: {
-    a: String,
-    b: Float,
-    c: String,
-    d: ID,
+    a: new BaseOutputField({
+      type: String,
+    }),
+    b: new BaseOutputField({
+      type: Float,
+    }),
+    c: new BaseOutputField({
+      type: String.nullable,
+    }),
+    d: new BaseOutputField({
+      type: ID,
+    }),
   },
 });
 
+type D = TypeOf<typeof User>;
+
 // TODO: current problem: isNullable doesnt get set to true from within, even though it appears to be
 // set to true from outside.
+
+const typeContextObject = new TypeContext();
 
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -302,7 +276,7 @@ const schema = new GraphQLSchema({
       //   type: Boolean.nullable.getGraphQLType(typeContextObject) as any,
       // },
       b: {
-        type: User.nullable.getGraphQLType(typeContextObject) as any,
+        type: User.getInternalGraphQLType(typeContextObject) as any,
       },
     },
   }),
