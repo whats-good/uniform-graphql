@@ -69,10 +69,8 @@ export abstract class BaseType<N extends string, T> implements Type<N, T> {
   ): GraphQLType;
 
   private getInternalGraphQLType = (typeContext: TypeContext): GraphQLType => {
-    return typeContext.getInternalGraphQLType(
-      this,
-      this.getFreshInternalGraphQLType,
-    );
+    const fallback = this.getFreshInternalGraphQLType.bind(this);
+    return typeContext.getInternalGraphQLType(this, fallback);
   };
 
   public getGraphQLType = (typeContext: TypeContext): GraphQLType => {
@@ -123,7 +121,7 @@ export class ScalarType<N extends string, T> extends BaseType<N, T> {
     this.literalParser = params.parseLiteral;
   }
 
-  protected getFreshInternalGraphQLType = (): GraphQLScalarType => {
+  protected getFreshInternalGraphQLType(): GraphQLScalarType {
     return new GraphQLScalarType({
       name: this.name,
       description: this.description,
@@ -132,7 +130,7 @@ export class ScalarType<N extends string, T> extends BaseType<N, T> {
       parseValue: this.valueParser,
       parseLiteral: this.literalParser,
     });
-  };
+  }
 }
 
 const String = new ScalarType<'String', string>({
@@ -180,45 +178,142 @@ const ID = new ScalarType<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
+type OutputType<T> = Type<any, T> & ScalarType<any, any>;
+
 const typeContextObject = new TypeContext();
 const x = Boolean.nullable;
 const y = x.getGraphQLType(typeContextObject);
 y;
 
+interface IOutputObjectField<T> {
+  type: OutputType<T>;
+}
+
+class BaseOutputObjectField<T> implements IOutputObjectField<T> {
+  public readonly type: OutputType<T>;
+
+  constructor(params: { type: BaseOutputObjectField<T>['type'] }) {
+    this.type = params.type;
+  }
+}
+
+type OutputObjectFieldParams<T> = OutputType<T>; // TODO: expand this
+
+const toOutputObjectField = <T>(
+  type: OutputObjectFieldParams<T>,
+): IOutputObjectField<T> => {
+  // TODO: add type guards to determine if the given input is a Base<any, any> or something else
+  return new BaseOutputObjectField({ type });
+};
+
+interface OutputObjectFieldParamsMap {
+  [key: string]: OutputObjectFieldParams<any>;
+}
+
+interface OutputObjectFieldsMap {
+  [key: string]: IOutputObjectField<any>;
+}
+
+type TypeOf<T extends BaseType<any, any>> = T['__T'];
+type TypeOfOutputObjectFieldsMap<F extends OutputObjectFieldsMap> = {
+  [K in keyof F]: F[K];
+};
+
+class OutputObjectType<
+  N extends string,
+  F extends OutputObjectFieldsMap
+> extends BaseType<N, TypeOfOutputObjectFieldsMap<F>> {
+  public readonly fields: OutputObjectFieldsMap;
+  public readonly description?: string;
+
+  private constructor(params: {
+    name: OutputObjectType<N, F>['name'];
+    fields: OutputObjectFieldsMap;
+  }) {
+    super(params);
+    this.fields = params.fields;
+  }
+
+  protected getFreshInternalGraphQLType(typeContext: TypeContext): GraphQLType {
+    // TODO: implement
+    return new GraphQLObjectType({
+      name: this.name,
+      description: this.description,
+      // interfaces: this.interfaces,
+      // isTypeOf: this.isTypeOf,
+      // resolveObject: this.resolveObject,
+      fields: mapValues(this.fields, (field) => {
+        return {
+          type: field.type.getGraphQLType(typeContext),
+          // TODO: find a way to get the description, deprecation reason and etc
+        } as any;
+      }),
+    });
+  }
+
+  public static init<
+    N extends string,
+    F extends OutputObjectFieldsMap
+  >(params: {
+    name: OutputObjectType<N, F>['name'];
+    fields: OutputObjectFieldParamsMap;
+  }) {
+    return new OutputObjectType({
+      name: params.name,
+      fields: mapValues(params.fields, (field) => {
+        return { type: field };
+      }),
+    });
+  }
+}
+
+const User = OutputObjectType.init({
+  name: 'User',
+  fields: {
+    a: String,
+    b: Float,
+    c: String,
+    d: ID,
+  },
+});
+
 // TODO: current problem: isNullable doesnt get set to true from within, even though it appears to be
 // set to true from outside.
 
-// const schema = new GraphQLSchema({
-//   query: new GraphQLObjectType({
-//     name: 'Query',
-//     fields: {
-//       // id: { type: ID.getGraphQLType(typeContextObject) as any },
-//       // string: { type: String.getGraphQLType(typeContextObject) as any },
-//       // float: { type: Float.getGraphQLType(typeContextObject) as any },
-//       // int: { type: Int.getGraphQLType(typeContextObject) as any },
-//       boolean: {
-//         type: Boolean.nullable.getGraphQLType(typeContextObject) as any,
-//       },
-//     },
-//   }),
-// });
+const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'Query',
+    fields: {
+      // id: { type: ID.getGraphQLType(typeContextObject) as any },
+      // string: { type: String.getGraphQLType(typeContextObject) as any },
+      // float: { type: Float.getGraphQLType(typeContextObject) as any },
+      // int: { type: Int.getGraphQLType(typeContextObject) as any },
+      // boolean: {
+      //   type: Boolean.nullable.getGraphQLType(typeContextObject) as any,
+      // },
+      b: {
+        type: User.getGraphQLType(typeContextObject) as any,
+      },
+    },
+  }),
+});
 
-// const apolloServer = new ApolloServer({
-//   schema,
-// });
+const apolloServer = new ApolloServer({
+  schema,
+});
 
-// const PORT = 4001;
+const PORT = 4001;
 
-// const start = () => {
-//   const app = express();
-//   apolloServer.applyMiddleware({ app });
+const start = () => {
+  const app = express();
+  apolloServer.applyMiddleware({ app });
 
-//   // const url = id.getFreshSemiGraphQLType().specifiedByUrl;
-//   app.listen({ port: PORT }, () => {
-//     console.log(
-//       `🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`,
-//     );
-//   });
-// };
+  // const url = id.getFreshSemiGraphQLType().specifiedByUrl;
+  app.listen({ port: PORT }, () => {
+    console.log(
+      `🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`,
+    );
+  });
+};
 
-// start();
+start();
