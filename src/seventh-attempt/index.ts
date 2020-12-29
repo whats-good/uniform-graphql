@@ -13,7 +13,7 @@ import {
   GraphQLSchema,
   GraphQLObjectType,
 } from 'graphql';
-import { mapValues } from 'lodash';
+import { clone, mapValues } from 'lodash';
 import { Maybe } from './utils';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
@@ -52,6 +52,12 @@ interface Type<N extends string, T> {
 
 type AnyType = Type<any, any>;
 
+const nullable = <T>(t: BaseType<any, T>): BaseType<any, Maybe<T>> => {
+  const cloned: any = clone(t);
+  cloned.isNullable = true;
+  return cloned;
+};
+
 export abstract class BaseType<N extends string, T> implements Type<N, T> {
   public readonly name: N;
   public readonly isNullable = false; // TODO: understand why this isn't getting set to true when looked from within.
@@ -79,10 +85,7 @@ export abstract class BaseType<N extends string, T> implements Type<N, T> {
     }
   };
 
-  public get nullable(): Type<N, Maybe<T>> {
-    const x = Object.assign({}, this);
-    return x;
-  }
+  public abstract get nullable(): Type<N, Maybe<T>>;
 }
 
 type ScalarSerializer<TInternal> = (value: TInternal) => Maybe<any>;
@@ -127,6 +130,10 @@ export class ScalarType<N extends string, T> extends BaseType<N, T> {
       parseValue: this.valueParser,
       parseLiteral: this.literalParser,
     });
+  }
+
+  public get nullable(): ScalarType<N, Maybe<T>> {
+    return nullable(this) as any;
   }
 }
 
@@ -218,15 +225,15 @@ type TypeOfOutputObjectFieldsMap<F extends OutputObjectFieldsMap> = {
 
 class OutputObjectType<
   N extends string,
-  F extends OutputObjectFieldsMap,
-  T
+  T,
+  F extends OutputObjectFieldsMap
 > extends BaseType<N, T> {
-  public readonly fields: OutputObjectFieldsMap;
+  public readonly fields: F;
   public readonly description?: string;
 
   private constructor(params: {
-    name: OutputObjectType<N, F, T>['name'];
-    fields: OutputObjectFieldsMap;
+    name: OutputObjectType<N, T, F>['name'];
+    fields: F;
   }) {
     super(params);
     this.fields = params.fields;
@@ -249,10 +256,14 @@ class OutputObjectType<
     });
   }
 
+  public get nullable(): OutputObjectType<N, Maybe<T>, F> {
+    return nullable(this) as any;
+  }
+
   public static init<
     N extends string,
-    F extends OutputObjectFieldsMap,
-    T extends TypeOfOutputObjectFieldsMap<F>
+    T extends TypeOfOutputObjectFieldsMap<F>,
+    F extends OutputObjectFieldsMap
   >(params: {
     name: OutputObjectType<N, F, T>['name'];
     fields: OutputObjectFieldParamsMap;
@@ -291,7 +302,7 @@ const schema = new GraphQLSchema({
       //   type: Boolean.nullable.getGraphQLType(typeContextObject) as any,
       // },
       b: {
-        type: User.getGraphQLType(typeContextObject) as any,
+        type: User.nullable.getGraphQLType(typeContextObject) as any,
       },
     },
   }),
