@@ -13,7 +13,7 @@ import {
   GraphQLSchema,
   GraphQLObjectType,
 } from 'graphql';
-import { forEach, mapValues } from 'lodash';
+import { mapValues } from 'lodash';
 import { Maybe } from './utils';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
@@ -60,9 +60,6 @@ export abstract class BaseType<N extends string, T> implements Type<N, T> {
   public constructor(params: { name: N }) {
     this.name = params.name;
   }
-
-  // public abstract nullable(): Type<N, Maybe<T>, R>;
-  // public abstract nonNullable(): Type<N, T, R>;
 
   protected abstract getFreshInternalGraphQLType(
     typeContext: TypeContext,
@@ -221,13 +218,14 @@ type TypeOfOutputObjectFieldsMap<F extends OutputObjectFieldsMap> = {
 
 class OutputObjectType<
   N extends string,
-  F extends OutputObjectFieldsMap
-> extends BaseType<N, TypeOfOutputObjectFieldsMap<F>> {
+  F extends OutputObjectFieldsMap,
+  T
+> extends BaseType<N, T> {
   public readonly fields: OutputObjectFieldsMap;
   public readonly description?: string;
 
   private constructor(params: {
-    name: OutputObjectType<N, F>['name'];
+    name: OutputObjectType<N, F, T>['name'];
     fields: OutputObjectFieldsMap;
   }) {
     super(params);
@@ -253,9 +251,10 @@ class OutputObjectType<
 
   public static init<
     N extends string,
-    F extends OutputObjectFieldsMap
+    F extends OutputObjectFieldsMap,
+    T extends TypeOfOutputObjectFieldsMap<F>
   >(params: {
-    name: OutputObjectType<N, F>['name'];
+    name: OutputObjectType<N, F, T>['name'];
     fields: OutputObjectFieldParamsMap;
   }) {
     return new OutputObjectType({
