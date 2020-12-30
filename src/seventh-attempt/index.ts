@@ -14,12 +14,39 @@ import {
   GraphQLObjectType,
   GraphQLFieldConfig,
 } from 'graphql';
-import { clone, mapValues } from 'lodash';
-import { Maybe, Thunk, Unthunked, unthunk, Thunkable } from './utils';
+import { clone, forEach, mapValues } from 'lodash';
+import {
+  Maybe,
+  Unthunked,
+  unthunk,
+  Thunkable,
+  RecursivePromisable,
+} from './utils';
 
-type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
+type AnyTypeContext = TypeContext<any>;
+type FallbackGraphQLTypeFn = (typeContext: AnyTypeContext) => GraphQLType;
 
-export class TypeContext {
+// TODO: find a better name than TypeContext, because it's easily confused with GraphQLContext.
+
+type StringKeys<T = unknown> = { [key: string]: T };
+type GraphQLContext = StringKeys;
+type ContextGetter<C extends GraphQLContext> = (args: any) => C;
+
+// TODO: make the args use the Argsmap type once it's ready
+interface RootQueryField<
+  T extends OutputType<any>,
+  A,
+  C extends GraphQLContext
+> {
+  type: T;
+  args: A; // TODO: handle args map
+  resolve: ResolverFn<undefined, A, TypeOf<T>, C>;
+}
+
+export class TypeContext<C extends GraphQLContext> {
+  public readonly __C!: C; // the context
+  public readonly getContext: ContextGetter<C>;
+
   private readonly internalGraphQLTypes = new Map<string, GraphQLType>([
     // TODO: find a better solution than this. this is done to circumvent the "Schema must contain uniquely names types" error
     ['String', GraphQLString],
@@ -28,6 +55,14 @@ export class TypeContext {
     ['ID', GraphQLID],
     ['Boolean', GraphQLBoolean],
   ]);
+
+  private readonly rootQueryFields: StringKeys<
+    RootQueryField<OutputType<any>, any, C>
+  > = {};
+
+  public constructor(params: { getContext: TypeContext<C>['getContext'] }) {
+    this.getContext = params.getContext;
+  }
 
   public getInternalGraphQLType(
     type: AnyType,
@@ -41,6 +76,33 @@ export class TypeContext {
       this.internalGraphQLTypes.set(type.name, newType);
       return this.getInternalGraphQLType(type, fallback);
     }
+  }
+
+  public query<T extends OutputType<any>, A>(
+    params: StringKeys<RootQueryField<T, A, C>>,
+  ): void {
+    forEach(params, (value, key) => {
+      this.rootQueryFields[key] = value;
+    });
+  }
+
+  // TODO: optional name params for the root query
+  public getSchema(): GraphQLSchema {
+    return new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: () =>
+          mapValues(this.rootQueryFields, (field) => {
+            return <GraphQLFieldConfig<any, any>>{
+              type: field.type.getInternalGraphQLType(this) as any,
+              args: field.args,
+              resolve: field.resolve,
+              // deprecationReason // TODO: add / implement
+              // description
+            };
+          }),
+      }),
+    });
   }
 }
 
@@ -63,10 +125,12 @@ export abstract class BaseType<N extends string, T> {
   }
 
   protected abstract getFreshInternalGraphQLType(
-    typeContext: TypeContext,
+    typeContext: AnyTypeContext,
   ): GraphQLType;
 
-  public getInternalGraphQLType = (typeContext: TypeContext): GraphQLType => {
+  public getInternalGraphQLType = (
+    typeContext: AnyTypeContext,
+  ): GraphQLType => {
     const fallback = this.getFreshInternalGraphQLType.bind(this);
     return typeContext.getInternalGraphQLType(this, fallback);
   };
@@ -180,7 +244,7 @@ class BaseOutputField<T> {
   }
 
   public getGraphQLFieldConfig(
-    typeContext: TypeContext,
+    typeContext: AnyTypeContext,
   ): GraphQLFieldConfig<any, any, any> {
     const internalGraphQLType = this.type.getInternalGraphQLType(typeContext);
     const externalGraphQLType = this.type.isNullable
@@ -252,7 +316,9 @@ class ObjectType<N extends string, T> extends BaseType<N, T> {
     this.fields = params.fields;
   }
 
-  protected getFreshInternalGraphQLType(typeContext: TypeContext): GraphQLType {
+  protected getFreshInternalGraphQLType(
+    typeContext: AnyTypeContext,
+  ): GraphQLType {
     return new GraphQLObjectType({
       name: this.name,
       fields: () =>
@@ -286,10 +352,11 @@ type UserType = ObjectType<
   'User',
   {
     a: TypeOf<typeof String>;
-    b: TypeOf<typeof Float>;
+    b: TypeOf<typeof ID>;
     c: TypeOf<typeof String['nullable']>;
     d: TypeOf<typeof ID['nullable']>;
     e: TypeOf<UserType>;
+    f: TypeOf<typeof String>;
   }
 >;
 
@@ -297,46 +364,100 @@ const User: UserType = ObjectType.init({
   name: 'User',
   fields: {
     a: () => String,
-    b: Float,
+    b: ID,
     c: String.nullable,
     d: () => new BaseOutputField({ type: ID.nullable }),
     e: () => User,
+    f: () => String,
   },
 });
 
-// TODO: current problem: isNullable doesnt get set to true from within, even though it appears to be
-// set to true from outside.
+type ResolverReturnValue<T> = Thunkable<RecursivePromisable<T>>;
 
-const typeContextObject = new TypeContext();
+type ResolverFn<R, A, T, C> = (
+  root: R,
+  args: A,
+  context: C,
+) => ResolverReturnValue<T>;
 
-const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
-    name: 'Query',
-    fields: {
-      // id: { type: ID.getGraphQLType(typeContextObject) as any },
-      // string: { type: String.getGraphQLType(typeContextObject) as any },
-      // float: { type: Float.getGraphQLType(typeContextObject) as any },
-      // int: { type: Int.getGraphQLType(typeContextObject) as any },
-      // boolean: {
-      //   type: Boolean.nullable.getGraphQLType(typeContextObject) as any,
-      // },
-      currentUser: {
-        type: User.getInternalGraphQLType(typeContextObject) as any,
-        resolve: (): TypeOf<typeof User> => {
-          return {
-            a: '',
-            b: 1,
-            c: null,
-            d: null,
-            get e() {
-              return this;
-            },
-          };
-        },
-      },
-    },
-  }),
+const typeContextObject = new TypeContext({
+  getContext: () => ({ kerem: 'kazan', kazan: 123 }),
 });
+
+typeContextObject.query({
+  currentUser: {
+    type: User.nullable,
+    // args: { firstName: 'kerem' },
+    args: {}, // TODO: enable empty objects and undefined
+    resolve: (root, args, context) => {
+      // TODO: if the returned value is an output object, allow the devs to further async
+      // thunk the fields.
+      return {
+        a: 'a',
+        b: 'b',
+        c: 'c',
+        d: 'd',
+        get e() {
+          return this;
+        },
+        f: 'f',
+      };
+      // return {
+      //   a: () => 'a',
+      //   b: () => {
+      //     return new Promise((resolve) => {
+      //       resolve('b');
+      //     });
+      //   },
+      //   c: () =>
+      //     new Promise((resolve) => {
+      //       const p1 = new Promise((resolve2) => {
+      //         const p2 = new Promise((resolve3) => {
+      //           resolve3('c4');
+      //         });
+      //         resolve2(p2);
+      //       });
+      //       resolve(p1);
+      //     }),
+      //   d: new Promise((resolve) => {
+      //     resolve('d');
+      //   }),
+      //   get e() {
+      //     return this;
+      //   },
+      //   f: () =>
+      //     new Promise((resolve) => {
+      //       resolve(
+      //         new Promise((resolve2) => {
+      //           resolve2('f2');
+      //         }),
+      //       );
+      //     }),
+      // };
+    },
+  },
+});
+
+// const schema = new GraphQLSchema({
+//   query: new GraphQLObjectType({
+//     name: 'Query',
+//     fields: {
+//       // id: { type: ID.getGraphQLType(typeContextObject) as any },
+//       // string: { type: String.getGraphQLType(typeContextObject) as any },
+//       // float: { type: Float.getGraphQLType(typeContextObject) as any },
+//       // int: { type: Int.getGraphQLType(typeContextObject) as any },
+//       // boolean: {
+//       //   type: Boolean.nullable.getGraphQLType(typeContextObject) as any,
+//       // },
+//       currentUser: {
+//         type: User.getInternalGraphQLType(typeContextObject) as any,
+//         resolve: () => ,
+//       },
+//     },
+//   }),
+// });
+
+const schema = typeContextObject.getSchema();
 
 const apolloServer = new ApolloServer({
   schema,
