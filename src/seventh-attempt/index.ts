@@ -168,7 +168,7 @@ const ID = new ScalarType<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
-type OutputType<T> = ScalarType<any, T>;
+type OutputType<T> = ScalarType<any, T> | OutputObject<any, T>;
 
 class BaseOutputField<T> {
   public readonly __B = 'outputfield';
@@ -216,14 +216,13 @@ interface OutputFieldConstructorArgsMap {
   [key: string]: Thunkable<OutputFieldConstructorArg<any>>;
 }
 
-type OutputFieldOfType<T extends OutputType<any>> = BaseOutputField<TypeOf<T>>;
-
 type OutputFieldOfFieldConstructorArg<
-  T extends OutputFieldConstructorArg<any>
-> = T extends OutputType<any>
-  ? OutputFieldOfType<T>
-  : T extends BaseOutputField<any>
-  ? T
+  C extends OutputFieldConstructorArg<any>
+> = C extends OutputType<any>
+  ? BaseOutputField<C['__T']>
+  : // BaseOutputField<TypeOf<C>> TODO: understand why this one doesnt work but the other one works?
+  C extends BaseOutputField<any>
+  ? C
   : never;
 
 type TypeOfOutputFieldConstructorArgsMap<
