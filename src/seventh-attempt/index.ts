@@ -195,10 +195,6 @@ class BaseOutputField<T> {
   }
 }
 
-interface OutputFieldsMap {
-  [key: string]: BaseOutputField<any>;
-}
-
 type TypeOf<T extends BaseType<any, any>> = T['__T'];
 interface Branded {
   __B: string;
@@ -246,9 +242,12 @@ const toBaseOutputField = <T>(
 };
 
 class ObjectType<N extends string, T> extends BaseType<N, T> {
-  public readonly fields: OutputFieldsMap;
+  public readonly fields: OutputFieldConstructorArgsMap;
 
-  private constructor(params: { name: N; fields: OutputFieldsMap }) {
+  private constructor(params: {
+    name: N;
+    fields: OutputFieldConstructorArgsMap;
+  }) {
     super(params);
     this.fields = params.fields;
   }
@@ -256,9 +255,12 @@ class ObjectType<N extends string, T> extends BaseType<N, T> {
   protected getFreshInternalGraphQLType(typeContext: TypeContext): GraphQLType {
     return new GraphQLObjectType({
       name: this.name,
-      fields: mapValues(this.fields, (field) =>
-        field.getGraphQLFieldConfig(typeContext),
-      ),
+      fields: () =>
+        mapValues(this.fields, (field) => {
+          const unthunkedField = unthunk(field);
+          const baseOutputField = toBaseOutputField(unthunkedField);
+          return baseOutputField.getGraphQLFieldConfig(typeContext);
+        }),
     });
   }
 
@@ -275,25 +277,32 @@ class ObjectType<N extends string, T> extends BaseType<N, T> {
   }): ObjectType<N, TypeOfOutputFieldConstructorArgsMap<F>> {
     return new ObjectType({
       name: params.name,
-      fields: mapValues(params.fields, (thunkedFieldConstructor) => {
-        const unthunkedFieldConstructor = unthunk(thunkedFieldConstructor);
-        return toBaseOutputField(unthunkedFieldConstructor);
-      }),
-    }) as any;
+      fields: params.fields,
+    });
   }
 }
 
-const User = ObjectType.init({
+type UserType = ObjectType<
+  'User',
+  {
+    a: TypeOf<typeof String>;
+    b: TypeOf<typeof Float>;
+    c: TypeOf<typeof String['nullable']>;
+    d: TypeOf<typeof ID['nullable']>;
+    e: TypeOf<UserType>;
+  }
+>;
+
+const User: UserType = ObjectType.init({
   name: 'User',
   fields: {
-    a: () => String.nullable,
+    a: () => String,
     b: Float,
     c: String.nullable,
     d: () => new BaseOutputField({ type: ID.nullable }),
+    e: () => User,
   },
 });
-
-type D = TypeOf<typeof User>;
 
 // TODO: current problem: isNullable doesnt get set to true from within, even though it appears to be
 // set to true from outside.
@@ -311,8 +320,19 @@ const schema = new GraphQLSchema({
       // boolean: {
       //   type: Boolean.nullable.getGraphQLType(typeContextObject) as any,
       // },
-      b: {
+      currentUser: {
         type: User.getInternalGraphQLType(typeContextObject) as any,
+        resolve: (): TypeOf<typeof User> => {
+          return {
+            a: '',
+            b: 1,
+            c: null,
+            d: null,
+            get e() {
+              return this;
+            },
+          };
+        },
       },
     },
   }),
