@@ -15,7 +15,7 @@ import {
   GraphQLFieldConfig,
 } from 'graphql';
 import { clone, mapValues } from 'lodash';
-import { Maybe } from './utils';
+import { Maybe, Thunk, Unthunked, unthunk, Thunkable } from './utils';
 
 type FallbackGraphQLTypeFn = (typeContext: TypeContext) => GraphQLType;
 
@@ -214,7 +214,7 @@ const brandOf = <T extends Branded>(t: T): BrandOf<T> => {
 type OutputFieldConstructorArg<T> = OutputType<T> | BaseOutputField<T>;
 
 interface OutputFieldConstructorArgsMap {
-  [key: string]: OutputFieldConstructorArg<any>;
+  [key: string]: Thunkable<OutputFieldConstructorArg<any>>;
 }
 
 type OutputFieldOfType<T extends OutputType<any>> = BaseOutputField<TypeOf<T>>;
@@ -230,13 +230,15 @@ type OutputFieldOfFieldConstructorArg<
 type OutputFieldConstructorArgsMapToOutputFieldsMap<
   F extends OutputFieldConstructorArgsMap
 > = {
-  [K in keyof F]: OutputFieldOfFieldConstructorArg<F[K]>;
+  [K in keyof F]: OutputFieldOfFieldConstructorArg<Unthunked<F[K]>>;
 };
 
 type TypeOfOutputFieldConstructorArgsMap<
   F extends OutputFieldConstructorArgsMap
 > = {
-  [K in keyof F]: TypeOf<OutputFieldOfFieldConstructorArg<F[K]>['type']>;
+  [K in keyof F]: TypeOf<
+    OutputFieldOfFieldConstructorArg<Unthunked<F[K]>>['type']
+  >;
 };
 
 const toBaseOutputField = <T>(
@@ -289,8 +291,9 @@ class OutputObject<
   > {
     return new OutputObject({
       name: params.name,
-      fields: mapValues(params.fields, (fieldConstructor) => {
-        return toBaseOutputField(fieldConstructor);
+      fields: mapValues(params.fields, (thunkedFieldConstructor) => {
+        const unthunkedFieldConstructor = unthunk(thunkedFieldConstructor);
+        return toBaseOutputField(unthunkedFieldConstructor);
       }),
     }) as any;
   }
@@ -299,10 +302,10 @@ class OutputObject<
 const User = OutputObject.init({
   name: 'User',
   fields: {
-    a: String.nullable,
+    a: () => String.nullable,
     b: Float,
     c: String.nullable,
-    d: new BaseOutputField({ type: ID.nullable }),
+    d: () => new BaseOutputField({ type: ID.nullable }),
   },
 });
 
