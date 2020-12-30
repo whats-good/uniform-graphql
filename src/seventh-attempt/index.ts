@@ -56,6 +56,7 @@ export abstract class BaseType<N extends string, T> {
   public readonly name: N;
   public readonly isNullable = false; // TODO: understand why this isn't getting set to true when looked from within.
   public readonly __T!: T;
+  public readonly __B = 'basetype';
 
   public constructor(params: { name: N }) {
     this.name = params.name;
@@ -171,6 +172,8 @@ type OutputType<T, N extends string = any> = BaseType<N, T> &
   ScalarType<any, T>;
 
 class BaseOutputField<T> {
+  public readonly __B = 'outputfield';
+
   public readonly type: OutputType<T>;
 
   public constructor(params: { type: OutputType<T> }) {
@@ -197,26 +200,55 @@ interface OutputFieldsMap {
   [key: string]: BaseOutputField<any>;
 }
 
-interface OutputTypesMap {
-  [key: string]: OutputType<any>;
+type TypeOf<T extends BaseType<any, any>> = T['__T'];
+interface Branded {
+  __B: string;
 }
 
-type OutputTypeToOutputField<T extends OutputType<any>> = BaseOutputField<
-  TypeOf<T>
->;
+type BrandOf<T extends Branded> = T['__B'];
 
-type OutputTypesMapToOutputFieldsMap<F extends OutputTypesMap> = {
-  [K in keyof F]: OutputTypeToOutputField<F[K]>;
+const brandOf = <T extends Branded>(t: T): BrandOf<T> => {
+  return t.__B;
 };
 
-type TypeOf<T extends AnyType> = T['__T'];
+type OutputFieldConstructorArg<T> = OutputType<T> | BaseOutputField<T>;
 
-type TypeOfOutputFieldsMap<T extends OutputFieldsMap> = {
-  [K in keyof T]: TypeOf<T[K]['type']>;
+interface OutputFieldConstructorArgsMap {
+  [key: string]: OutputFieldConstructorArg<any>;
+}
+
+type OutputFieldOfType<T extends OutputType<any>> = BaseOutputField<TypeOf<T>>;
+
+type OutputFieldOfFieldConstructorArg<
+  T extends OutputFieldConstructorArg<T>
+> = T extends OutputType<any>
+  ? OutputFieldOfType<T>
+  : T extends BaseOutputField<any>
+  ? T
+  : never;
+
+type OutputFieldConstructorArgsMapToOutputFieldsMap<
+  F extends OutputFieldConstructorArgsMap
+> = {
+  [K in keyof F]: OutputFieldOfFieldConstructorArg<F[K]>;
 };
 
-type TypeOfOutputTypesMap<T extends OutputTypesMap> = {
-  [K in keyof T]: TypeOf<T[K]>;
+type TypeOfOutputFieldConstructorArgsMap<
+  F extends OutputFieldConstructorArgsMap
+> = {
+  [K in keyof F]: TypeOf<OutputFieldOfFieldConstructorArg<F[K]>['type']>;
+};
+
+const toBaseOutputField = <T>(
+  a: OutputFieldConstructorArg<T>,
+): BaseOutputField<T> => {
+  if (brandOf(a) == 'basetype') {
+    return new BaseOutputField({ type: a as any });
+  } else if (brandOf(a) == 'outputfield') {
+    return a as any;
+  } else {
+    throw new Error(`Unrecognized brand: ${brandOf(a)}`);
+  }
 };
 
 class OutputObject<
@@ -244,18 +276,21 @@ class OutputObject<
     return nullable(this) as any;
   }
 
-  public static init<N extends string, F extends OutputTypesMap>(params: {
+  public static init<
+    N extends string,
+    F extends OutputFieldConstructorArgsMap
+  >(params: {
     name: N;
     fields: F;
   }): OutputObject<
     N,
-    TypeOfOutputTypesMap<F>,
-    OutputTypesMapToOutputFieldsMap<F>
+    TypeOfOutputFieldConstructorArgsMap<F>,
+    OutputFieldConstructorArgsMapToOutputFieldsMap<F>
   > {
     return new OutputObject({
       name: params.name,
-      fields: mapValues(params.fields, (field) => {
-        return new BaseOutputField({ type: field });
+      fields: mapValues(params.fields, (fieldConstructor) => {
+        return toBaseOutputField(fieldConstructor);
       }),
     }) as any;
   }
@@ -267,7 +302,7 @@ const User = OutputObject.init({
     a: String.nullable,
     b: Float,
     c: String.nullable,
-    d: ID,
+    d: new BaseOutputField({ type: ID.nullable }),
   },
 });
 
