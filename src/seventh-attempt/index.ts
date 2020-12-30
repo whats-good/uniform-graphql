@@ -168,8 +168,7 @@ const ID = new ScalarType<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
-type OutputType<T, N extends string = any> = BaseType<N, T> &
-  ScalarType<any, T>;
+type OutputType<T> = ScalarType<any, T>;
 
 class BaseOutputField<T> {
   public readonly __B = 'outputfield';
@@ -220,18 +219,12 @@ interface OutputFieldConstructorArgsMap {
 type OutputFieldOfType<T extends OutputType<any>> = BaseOutputField<TypeOf<T>>;
 
 type OutputFieldOfFieldConstructorArg<
-  T extends OutputFieldConstructorArg<T>
+  T extends OutputFieldConstructorArg<any>
 > = T extends OutputType<any>
   ? OutputFieldOfType<T>
   : T extends BaseOutputField<any>
   ? T
   : never;
-
-type OutputFieldConstructorArgsMapToOutputFieldsMap<
-  F extends OutputFieldConstructorArgsMap
-> = {
-  [K in keyof F]: OutputFieldOfFieldConstructorArg<Unthunked<F[K]>>;
-};
 
 type TypeOfOutputFieldConstructorArgsMap<
   F extends OutputFieldConstructorArgsMap
@@ -253,14 +246,10 @@ const toBaseOutputField = <T>(
   }
 };
 
-class OutputObject<
-  N extends string,
-  T,
-  F extends OutputFieldsMap
-> extends BaseType<N, T> {
-  public readonly fields: F;
+class OutputObject<N extends string, T> extends BaseType<N, T> {
+  public readonly fields: OutputFieldsMap;
 
-  private constructor(params: { name: N; fields: F }) {
+  private constructor(params: { name: N; fields: OutputFieldsMap }) {
     super(params);
     this.fields = params.fields;
   }
@@ -274,7 +263,7 @@ class OutputObject<
     });
   }
 
-  public get nullable(): OutputObject<N, Maybe<T>, F> {
+  public get nullable(): OutputObject<N, Maybe<T>> {
     return nullable(this) as any;
   }
 
@@ -284,11 +273,7 @@ class OutputObject<
   >(params: {
     name: N;
     fields: F;
-  }): OutputObject<
-    N,
-    TypeOfOutputFieldConstructorArgsMap<F>,
-    OutputFieldConstructorArgsMapToOutputFieldsMap<F>
-  > {
+  }): OutputObject<N, TypeOfOutputFieldConstructorArgsMap<F>> {
     return new OutputObject({
       name: params.name,
       fields: mapValues(params.fields, (thunkedFieldConstructor) => {
