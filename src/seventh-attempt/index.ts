@@ -168,7 +168,7 @@ const ID = new ScalarType<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
-type OutputType<T> = ScalarType<any, T> | OutputObject<any, T>;
+type OutputType<T> = ScalarType<any, T> | ObjectType<any, T>;
 
 class BaseOutputField<T> {
   public readonly __B = 'outputfield';
@@ -245,7 +245,7 @@ const toBaseOutputField = <T>(
   }
 };
 
-class OutputObject<N extends string, T> extends BaseType<N, T> {
+class ObjectType<N extends string, T> extends BaseType<N, T> {
   public readonly fields: OutputFieldsMap;
 
   private constructor(params: { name: N; fields: OutputFieldsMap }) {
@@ -262,7 +262,7 @@ class OutputObject<N extends string, T> extends BaseType<N, T> {
     });
   }
 
-  public get nullable(): OutputObject<N, Maybe<T>> {
+  public get nullable(): ObjectType<N, Maybe<T>> {
     return nullable(this) as any;
   }
 
@@ -272,8 +272,8 @@ class OutputObject<N extends string, T> extends BaseType<N, T> {
   >(params: {
     name: N;
     fields: F;
-  }): OutputObject<N, TypeOfOutputFieldConstructorArgsMap<F>> {
-    return new OutputObject({
+  }): ObjectType<N, TypeOfOutputFieldConstructorArgsMap<F>> {
+    return new ObjectType({
       name: params.name,
       fields: mapValues(params.fields, (thunkedFieldConstructor) => {
         const unthunkedFieldConstructor = unthunk(thunkedFieldConstructor);
@@ -283,7 +283,7 @@ class OutputObject<N extends string, T> extends BaseType<N, T> {
   }
 }
 
-const User = OutputObject.init({
+const User = ObjectType.init({
   name: 'User',
   fields: {
     a: () => String.nullable,
