@@ -44,3 +44,5 @@ export type RecursivePromisable<T> =
   | T
   | Promise<T>
   | Promise<RecursivePromisable<T>>;
+
+export type Promisable<T> = T | Promise<T>;

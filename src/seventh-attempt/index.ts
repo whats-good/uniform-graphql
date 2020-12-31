@@ -21,6 +21,7 @@ import {
   unthunk,
   Thunkable,
   RecursivePromisable,
+  Promisable,
 } from './utils';
 
 type AnyTypeContext = TypeContext<any>;
@@ -40,7 +41,8 @@ interface RootQueryField<
 > {
   type: T;
   args: A; // TODO: handle args map
-  resolve: ResolverFn<undefined, A, RealizedTypeOf<T>, C>;
+  // resolve: ResolverFn<undefined, A, RealizedTypeOf<T>, C>;
+  resolve: ResolverFnOf<T, undefined, A, C>;
 }
 
 export class TypeContext<C extends GraphQLContext> {
@@ -78,6 +80,7 @@ export class TypeContext<C extends GraphQLContext> {
     }
   }
 
+  // TODO: fix this signature: it doesnt allow for different queries.
   public query<T extends OutputType<any>, A>(
     params: StringKeys<RootQueryField<T, A, C>>,
   ): void {
@@ -364,9 +367,9 @@ type UserType = ObjectType<
     a: RealizedTypeOf<typeof String>;
     b: RealizedTypeOf<typeof ID>;
     c: RealizedTypeOf<typeof String['nullable']>;
-    d: RealizedTypeOf<typeof ID['nullable']>;
-    e: RealizedTypeOf<UserType>;
-    f: RealizedTypeOf<typeof String>;
+    // d: RealizedTypeOf<typeof ID['nullable']>;
+    // e: RealizedTypeOf<UserType>;
+    // f: RealizedTypeOf<typeof String>;
   }
 >;
 
@@ -382,16 +385,46 @@ const User: UserType = ObjectType.init({
   },
 });
 
-type ResolverReturnValue<T> = Thunkable<RecursivePromisable<T>>;
+type FieldResolverReturnValue<T> = Thunkable<RecursivePromisable<T>>;
 
-type ResolverFn<R, A, T, C> = (
-  root: R,
+// TODO: maybe i should preserve more field type information on the objecttype.
+// This would be useful while enabling the user to recursively describe output object
+// fields that have fields of output objects
+
+type ResolverReturnValueOf<T extends OutputType<any>> = T extends ObjectType<
+  any,
+  any,
+  any
+>
+  ? T['__R'] extends StringKeys
+    ? Promisable<
+        { [K in keyof T['__R']]: FieldResolverReturnValue<T['__R'][K]> }
+      >
+    : T['__R'] extends Maybe<StringKeys>
+    ? Promisable<
+        { [K in keyof T['__I']]: Maybe<FieldResolverReturnValue<T['__I'][K]>> }
+      >
+    : RecursivePromisable<T['__R']>
+  : RecursivePromisable<T['__R']>;
+
+type ResolverFnOf<T extends OutputType<any>, S, A, C> = (
+  root: S,
   args: A,
   context: C,
-) => ResolverReturnValue<T>;
+) => ResolverReturnValueOf<T>;
 
 const typeContextObject = new TypeContext({
   getContext: () => ({ kerem: 'kazan', kazan: 123 }),
+});
+
+typeContextObject.query({
+  someString: {
+    type: String.nullable,
+    args: {},
+    resolve: async (root, args, context) => {
+      return '1234';
+    },
+  },
 });
 
 typeContextObject.query({
@@ -399,73 +432,20 @@ typeContextObject.query({
     type: User.nullable,
     // args: { firstName: 'kerem' },
     args: {}, // TODO: enable empty objects and undefined
-    resolve: (root, args, context) => {
-      // TODO: if the returned value is an output object, allow the devs to further async
-      // thunk the fields.
+    resolve: async (root, args, context) => {
       return {
         a: 'a',
-        b: 'b',
-        c: 'c',
-        d: 'd',
-        get e() {
-          return this;
-        },
-        f: 'f',
+        b: 1,
+        c: async () => 'c',
+        // d: 'd',
+        // get e() {
+        //   return this;
+        // },
+        // f: 'f',
       };
-      // return {
-      //   a: () => 'a',
-      //   b: () => {
-      //     return new Promise((resolve) => {
-      //       resolve('b');
-      //     });
-      //   },
-      //   c: () =>
-      //     new Promise((resolve) => {
-      //       const p1 = new Promise((resolve2) => {
-      //         const p2 = new Promise((resolve3) => {
-      //           resolve3('c4');
-      //         });
-      //         resolve2(p2);
-      //       });
-      //       resolve(p1);
-      //     }),
-      //   d: new Promise((resolve) => {
-      //     resolve('d');
-      //   }),
-      //   get e() {
-      //     return this;
-      //   },
-      //   f: () =>
-      //     new Promise((resolve) => {
-      //       resolve(
-      //         new Promise((resolve2) => {
-      //           resolve2('f2');
-      //         }),
-      //       );
-      //     }),
-      // };
     },
   },
 });
-
-// const schema = new GraphQLSchema({
-//   query: new GraphQLObjectType({
-//     name: 'Query',
-//     fields: {
-//       // id: { type: ID.getGraphQLType(typeContextObject) as any },
-//       // string: { type: String.getGraphQLType(typeContextObject) as any },
-//       // float: { type: Float.getGraphQLType(typeContextObject) as any },
-//       // int: { type: Int.getGraphQLType(typeContextObject) as any },
-//       // boolean: {
-//       //   type: Boolean.nullable.getGraphQLType(typeContextObject) as any,
-//       // },
-//       currentUser: {
-//         type: User.getInternalGraphQLType(typeContextObject) as any,
-//         resolve: () => ,
-//       },
-//     },
-//   }),
-// });
 
 const schema = typeContextObject.getSchema();
 
