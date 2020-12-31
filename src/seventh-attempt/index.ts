@@ -114,10 +114,10 @@ const nullable = <T>(t: BaseType<any, T, any>): BaseType<any, T, Maybe<T>> => {
   return cloned;
 };
 
-export abstract class BaseType<N extends string, T, R = T> {
+export abstract class BaseType<N extends string, I, R = I> {
   public readonly name: N;
   public readonly isNullable = false; // TODO: understand why this isn't getting set to true when looked from within.
-  public readonly __T!: T;
+  public readonly __I!: I;
   public readonly __R!: R;
   public readonly __B = 'basetype';
 
@@ -136,7 +136,7 @@ export abstract class BaseType<N extends string, T, R = T> {
     return typeContext.getInternalGraphQLType(this, fallback);
   };
 
-  public abstract get nullable(): BaseType<N, T, Maybe<T>>;
+  public abstract get nullable(): BaseType<N, I, Maybe<I>>;
 }
 
 type ScalarSerializer<TInternal> = (value: TInternal) => Maybe<any>;
@@ -155,15 +155,15 @@ interface IScalarSemiTypeConstructor<N extends string, T, R = T> {
   parseLiteral: ScalarType<N, T, R>['literalParser'];
 }
 
-export class ScalarType<N extends string, T, R = T> extends BaseType<N, T, R> {
+export class ScalarType<N extends string, I, R = I> extends BaseType<N, I, R> {
   public readonly description?: Maybe<string>;
   public readonly specifiedByUrl?: Maybe<string>;
 
-  private readonly serializer: ScalarSerializer<T>;
-  private readonly valueParser: ScalarValueParser<T>;
-  private readonly literalParser: ScalarLiteralParser<T>;
+  private readonly serializer: ScalarSerializer<I>;
+  private readonly valueParser: ScalarValueParser<I>;
+  private readonly literalParser: ScalarLiteralParser<I>;
 
-  constructor(params: IScalarSemiTypeConstructor<N, T, R>) {
+  constructor(params: IScalarSemiTypeConstructor<N, I, R>) {
     super(params);
     this.description = params.description;
     this.specifiedByUrl = params.specifiedByUrl;
@@ -183,7 +183,7 @@ export class ScalarType<N extends string, T, R = T> extends BaseType<N, T, R> {
     });
   }
 
-  public get nullable(): ScalarType<N, T, Maybe<T>> {
+  public get nullable(): ScalarType<N, I, Maybe<I>> {
     return nullable(this) as any;
   }
 }
@@ -235,12 +235,12 @@ const ID = new ScalarType<'ID', number | string>({
 
 type OutputType<R> = ScalarType<any, any, R> | ObjectType<any, any, R>;
 
-class BaseOutputField<T> {
+class BaseOutputField<R> {
   public readonly __B = 'outputfield';
 
-  public readonly type: OutputType<T>;
+  public readonly type: OutputType<R>;
 
-  public constructor(params: { type: OutputType<T> }) {
+  public constructor(params: { type: OutputType<R> }) {
     this.type = params.type;
   }
 
@@ -260,6 +260,7 @@ class BaseOutputField<T> {
   }
 }
 
+type InternalTypeOf<T extends BaseType<any, any, any>> = T['__I'];
 type RealizedTypeOf<T extends BaseType<any, any, any>> = T['__R'];
 interface Branded {
   __B: string;
@@ -294,9 +295,9 @@ type TypeOfOutputFieldConstructorArgsMap<
   >;
 };
 
-const toBaseOutputField = <T>(
-  a: OutputFieldConstructorArg<T>,
-): BaseOutputField<T> => {
+const toBaseOutputField = <R>(
+  a: OutputFieldConstructorArg<R>,
+): BaseOutputField<R> => {
   if (brandOf(a) == 'basetype') {
     return new BaseOutputField({ type: a as any });
   } else if (brandOf(a) == 'outputfield') {
@@ -308,9 +309,9 @@ const toBaseOutputField = <T>(
 
 class ObjectType<
   N extends string,
-  T extends StringKeys,
-  R = T
-> extends BaseType<N, T, R> {
+  I extends StringKeys,
+  R = I
+> extends BaseType<N, I, R> {
   public readonly fields: OutputFieldConstructorArgsMap;
 
   private constructor(params: {
@@ -335,7 +336,7 @@ class ObjectType<
     });
   }
 
-  public get nullable(): ObjectType<N, T, Maybe<T>> {
+  public get nullable(): ObjectType<N, I, Maybe<I>> {
     return nullable(this) as any;
   }
 
