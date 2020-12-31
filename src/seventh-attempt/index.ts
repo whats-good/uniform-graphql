@@ -40,7 +40,7 @@ interface RootQueryField<
 > {
   type: T;
   args: A; // TODO: handle args map
-  resolve: ResolverFn<undefined, A, TypeOf<T>, C>;
+  resolve: ResolverFn<undefined, A, RealizedTypeOf<T>, C>;
 }
 
 export class TypeContext<C extends GraphQLContext> {
@@ -106,18 +106,19 @@ export class TypeContext<C extends GraphQLContext> {
   }
 }
 
-type AnyType = BaseType<any, any>;
+type AnyType = BaseType<any, any, any>;
 
-const nullable = <T>(t: BaseType<any, T>): BaseType<any, Maybe<T>> => {
+const nullable = <T>(t: BaseType<any, T, any>): BaseType<any, T, Maybe<T>> => {
   const cloned: any = clone(t);
   cloned.isNullable = true;
   return cloned;
 };
 
-export abstract class BaseType<N extends string, T> {
+export abstract class BaseType<N extends string, T, R = T> {
   public readonly name: N;
   public readonly isNullable = false; // TODO: understand why this isn't getting set to true when looked from within.
   public readonly __T!: T;
+  public readonly __R!: R;
   public readonly __B = 'basetype';
 
   public constructor(params: { name: N }) {
@@ -135,7 +136,7 @@ export abstract class BaseType<N extends string, T> {
     return typeContext.getInternalGraphQLType(this, fallback);
   };
 
-  public abstract get nullable(): BaseType<N, Maybe<T>>;
+  public abstract get nullable(): BaseType<N, T, Maybe<T>>;
 }
 
 type ScalarSerializer<TInternal> = (value: TInternal) => Maybe<any>;
@@ -145,16 +146,16 @@ type ScalarLiteralParser<TInternal> = (
   variables: Maybe<{ [key: string]: any }>, // TODO: try a better type for serializers
 ) => Maybe<TInternal>;
 
-interface IScalarSemiTypeConstructor<N extends string, T> {
+interface IScalarSemiTypeConstructor<N extends string, T, R = T> {
   name: N;
   description?: Maybe<string>;
   specifiedByUrl?: Maybe<string>;
-  serialize: ScalarType<N, T>['serializer'];
-  parseValue: ScalarType<N, T>['valueParser'];
-  parseLiteral: ScalarType<N, T>['literalParser'];
+  serialize: ScalarType<N, T, R>['serializer'];
+  parseValue: ScalarType<N, T, R>['valueParser'];
+  parseLiteral: ScalarType<N, T, R>['literalParser'];
 }
 
-export class ScalarType<N extends string, T> extends BaseType<N, T> {
+export class ScalarType<N extends string, T, R = T> extends BaseType<N, T, R> {
   public readonly description?: Maybe<string>;
   public readonly specifiedByUrl?: Maybe<string>;
 
@@ -162,7 +163,7 @@ export class ScalarType<N extends string, T> extends BaseType<N, T> {
   private readonly valueParser: ScalarValueParser<T>;
   private readonly literalParser: ScalarLiteralParser<T>;
 
-  constructor(params: IScalarSemiTypeConstructor<N, T>) {
+  constructor(params: IScalarSemiTypeConstructor<N, T, R>) {
     super(params);
     this.description = params.description;
     this.specifiedByUrl = params.specifiedByUrl;
@@ -182,7 +183,7 @@ export class ScalarType<N extends string, T> extends BaseType<N, T> {
     });
   }
 
-  public get nullable(): ScalarType<N, Maybe<T>> {
+  public get nullable(): ScalarType<N, T, Maybe<T>> {
     return nullable(this) as any;
   }
 }
@@ -232,7 +233,7 @@ const ID = new ScalarType<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
-type OutputType<T> = ScalarType<any, T> | ObjectType<any, T>;
+type OutputType<R> = ScalarType<any, any, R> | ObjectType<any, any, R>;
 
 class BaseOutputField<T> {
   public readonly __B = 'outputfield';
@@ -259,7 +260,7 @@ class BaseOutputField<T> {
   }
 }
 
-type TypeOf<T extends BaseType<any, any>> = T['__T'];
+type RealizedTypeOf<T extends BaseType<any, any, any>> = T['__R'];
 interface Branded {
   __B: string;
 }
@@ -279,7 +280,7 @@ interface OutputFieldConstructorArgsMap {
 type OutputFieldOfFieldConstructorArg<
   C extends OutputFieldConstructorArg<any>
 > = C extends OutputType<any>
-  ? BaseOutputField<C['__T']>
+  ? BaseOutputField<C['__R']>
   : // BaseOutputField<TypeOf<C>> TODO: understand why this one doesnt work but the other one works?
   C extends BaseOutputField<any>
   ? C
@@ -288,7 +289,7 @@ type OutputFieldOfFieldConstructorArg<
 type TypeOfOutputFieldConstructorArgsMap<
   F extends OutputFieldConstructorArgsMap
 > = {
-  [K in keyof F]: TypeOf<
+  [K in keyof F]: RealizedTypeOf<
     OutputFieldOfFieldConstructorArg<Unthunked<F[K]>>['type']
   >;
 };
@@ -305,7 +306,11 @@ const toBaseOutputField = <T>(
   }
 };
 
-class ObjectType<N extends string, T> extends BaseType<N, T> {
+class ObjectType<
+  N extends string,
+  T extends StringKeys,
+  R = T
+> extends BaseType<N, T, R> {
   public readonly fields: OutputFieldConstructorArgsMap;
 
   private constructor(params: {
@@ -330,7 +335,7 @@ class ObjectType<N extends string, T> extends BaseType<N, T> {
     });
   }
 
-  public get nullable(): ObjectType<N, Maybe<T>> {
+  public get nullable(): ObjectType<N, T, Maybe<T>> {
     return nullable(this) as any;
   }
 
@@ -340,7 +345,11 @@ class ObjectType<N extends string, T> extends BaseType<N, T> {
   >(params: {
     name: N;
     fields: F;
-  }): ObjectType<N, TypeOfOutputFieldConstructorArgsMap<F>> {
+  }): ObjectType<
+    N,
+    TypeOfOutputFieldConstructorArgsMap<F>,
+    TypeOfOutputFieldConstructorArgsMap<F>
+  > {
     return new ObjectType({
       name: params.name,
       fields: params.fields,
@@ -351,12 +360,12 @@ class ObjectType<N extends string, T> extends BaseType<N, T> {
 type UserType = ObjectType<
   'User',
   {
-    a: TypeOf<typeof String>;
-    b: TypeOf<typeof ID>;
-    c: TypeOf<typeof String['nullable']>;
-    d: TypeOf<typeof ID['nullable']>;
-    e: TypeOf<UserType>;
-    f: TypeOf<typeof String>;
+    a: RealizedTypeOf<typeof String>;
+    b: RealizedTypeOf<typeof ID>;
+    c: RealizedTypeOf<typeof String['nullable']>;
+    d: RealizedTypeOf<typeof ID['nullable']>;
+    e: RealizedTypeOf<UserType>;
+    f: RealizedTypeOf<typeof String>;
   }
 >;
 
