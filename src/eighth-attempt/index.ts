@@ -233,3 +233,22 @@ export type ResolveFnReturnTypeOf<
 > = Promisable<ResolverReturnTypeOf<R>>;
 
 type E = ResolveFnReturnTypeOf<typeof String>;
+
+class ObjectField<R extends OutputRealizedType<any>> {
+  public readonly type: R;
+
+  constructor(params: { type: R }) {
+    this.type = params.type;
+  }
+
+  public getGraphQLFieldConfig(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLFieldConfig<any, any, any> {
+    return {
+      type: this.type.getGraphQLType(typeContainer) as any,
+      // deprecationReason: 123, // TODO: implement
+      // description: 123,
+      // resolve: 123,
+    };
+  }
+}
