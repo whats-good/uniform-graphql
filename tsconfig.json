@@ -21,5 +21,4 @@
     "preserveConstEnums": true,
     "skipLibCheck": true,
   },
-  "exclude": ["example.ts"]
 }
