@@ -49,7 +49,8 @@ class TypeContainer<C extends GraphQLContext> {
 
 abstract class BaseType<N extends string, I> {
   public readonly name: N;
-  public readonly __I!: I;
+  public readonly __INTERNAL_TYPE__!: I;
+  public abstract readonly __INTERNAL_RESOLVER_RETURN_TYPE__: any;
 
   constructor(params: { name: N }) {
     this.name = params.name;
@@ -101,6 +102,8 @@ interface IScalarTypeConstructor<N extends string, I> {
 }
 
 class ScalarType<N extends string, I> extends BaseType<N, I> {
+  public readonly __INTERNAL_RESOLVER_RETURN_TYPE__!: I;
+
   public readonly description?: Maybe<string>;
   public readonly specifiedByUrl?: Maybe<string>;
 
@@ -186,11 +189,28 @@ const ID = scalar<'ID', number | string>({
 
 type AnyRealizedType = RealizedType<any, any>;
 
-type InternalTypeOf<T extends AnyRealizedType> = T['internalType']['__I'];
+type InternalTypeOf<
+  T extends AnyRealizedType
+> = T['internalType']['__INTERNAL_TYPE__'];
+
+type InternalResolverReturnTypeOf<
+  T extends AnyRealizedType
+> = T['internalType']['__INTERNAL_RESOLVER_RETURN_TYPE__'];
+
 type FieldTypeOf<T extends AnyRealizedType> = T['isNullable'] extends true
   ? Maybe<InternalTypeOf<T>>
   : InternalTypeOf<T>;
 
+type ResolverReturnTypeOf<
+  T extends AnyRealizedType
+> = T['isNullable'] extends true
+  ? Maybe<InternalResolverReturnTypeOf<T>>
+  : InternalResolverReturnTypeOf<T>;
+
 type D = InternalTypeOf<typeof ID>;
 type E = FieldTypeOf<typeof ID>;
 type F = FieldTypeOf<typeof ID['nullable']>;
+
+type G = InternalResolverReturnTypeOf<typeof ID>;
+type H = ResolverReturnTypeOf<typeof ID>;
+type I = ResolverReturnTypeOf<typeof ID['nullable']>;
