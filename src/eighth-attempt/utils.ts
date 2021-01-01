@@ -46,3 +46,13 @@ export type RecursivePromisable<T> =
   | Promise<RecursivePromisable<T>>;
 
 export type Promisable<T> = T | Promise<T>;
+
+interface Branded {
+  __BRAND__: string;
+}
+
+type BrandOf<T extends Branded> = T['__BRAND__'];
+
+export const brandOf = <T extends Branded>(t: T): BrandOf<T> => {
+  return t.__BRAND__;
+};

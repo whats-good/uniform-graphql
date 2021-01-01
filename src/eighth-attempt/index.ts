@@ -1,14 +1,18 @@
 import {
   GraphQLBoolean,
+  GraphQLFieldConfig,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLNonNull,
+  GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
   GraphQLType,
   ValueNode,
 } from 'graphql';
-import { Maybe } from './utils';
+import { Maybe, Thunkable, unthunk } from './utils';
+import { clone, forEach, mapValues } from 'lodash';
 
 interface StringKeys<T> {
   [key: string]: T;
@@ -22,7 +26,7 @@ type AnyType = BaseType<any, any>;
 
 type AnyTypeContainer = TypeContainer<any>;
 
-type FallbackGraphQLTypeFn = (typeContext: AnyTypeContainer) => GraphQLType;
+type FallbackGraphQLTypeFn = (typeContainer: AnyTypeContainer) => GraphQLType;
 
 class TypeContainer<C extends GraphQLContext> {
   private readonly contextGetter: ContextGetter<C>;
@@ -57,18 +61,18 @@ abstract class BaseType<N extends string, I> {
   }
 
   protected abstract getFreshInternalGraphQLType(
-    typeContext: AnyTypeContainer,
+    typeContainer: AnyTypeContainer,
   ): GraphQLType;
 
   public getInternalGraphQLType = (
-    typeContext: AnyTypeContainer,
+    typeContainer: AnyTypeContainer,
   ): GraphQLType => {
     const fallback = this.getFreshInternalGraphQLType.bind(this);
-    return typeContext.getInternalGraphQLType(this, fallback);
+    return typeContainer.getInternalGraphQLType(this, fallback);
   };
 }
 
-class RealizedType<T extends BaseType<any, any>, N extends boolean = false> {
+class RealizedType<T extends AnyType, N extends boolean = false> {
   public readonly internalType: T;
   public readonly isNullable: N;
 
@@ -83,6 +87,17 @@ class RealizedType<T extends BaseType<any, any>, N extends boolean = false> {
       isNullable: true,
     });
   }
+
+  public getGraphQLType(typeContainer: AnyTypeContainer): GraphQLType {
+    const internalGraphQLType = this.internalType.getInternalGraphQLType(
+      typeContainer,
+    );
+    const externalGraphQLType = this.isNullable
+      ? internalGraphQLType
+      : new GraphQLNonNull(internalGraphQLType);
+
+    return externalGraphQLType;
+  }
 }
 
 type ScalarSerializer<TInternal> = (value: TInternal) => Maybe<any>;
@@ -92,7 +107,7 @@ type ScalarLiteralParser<TInternal> = (
   variables: Maybe<{ [key: string]: any }>, // TODO: try a better type for serializers
 ) => Maybe<TInternal>;
 
-interface IScalarTypeConstructor<N extends string, I> {
+interface IScalarTypeConstructorParams<N extends string, I> {
   name: N;
   description?: Maybe<string>;
   specifiedByUrl?: Maybe<string>;
@@ -111,7 +126,7 @@ class ScalarType<N extends string, I> extends BaseType<N, I> {
   private readonly valueParser: ScalarValueParser<I>;
   private readonly literalParser: ScalarLiteralParser<I>;
 
-  constructor(params: IScalarTypeConstructor<N, I>) {
+  constructor(params: IScalarTypeConstructorParams<N, I>) {
     super(params);
     this.description = params.description;
     this.specifiedByUrl = params.specifiedByUrl;
@@ -133,7 +148,7 @@ class ScalarType<N extends string, I> extends BaseType<N, I> {
 }
 
 const scalar = <N extends string, I>(
-  params: IScalarTypeConstructor<N, I>,
+  params: IScalarTypeConstructorParams<N, I>,
 ): RealizedType<ScalarType<N, I>> => {
   const scalarType = new ScalarType(params);
   return new RealizedType({
@@ -187,30 +202,25 @@ const ID = scalar<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
-type AnyRealizedType = RealizedType<any, any>;
+export type AnyRealizedType = RealizedType<any, any>;
 
-type InternalTypeOf<
-  T extends AnyRealizedType
-> = T['internalType']['__INTERNAL_TYPE__'];
+type TypeOfInternalType<T extends AnyType> = T['__INTERNAL_TYPE__'];
+
+export type InternalTypeOf<R extends AnyRealizedType> = TypeOfInternalType<
+  R['nullable']['internalType']
+>;
 
 type InternalResolverReturnTypeOf<
-  T extends AnyRealizedType
-> = T['internalType']['__INTERNAL_RESOLVER_RETURN_TYPE__'];
+  R extends AnyRealizedType
+> = R['internalType']['__INTERNAL_RESOLVER_RETURN_TYPE__'];
 
-type FieldTypeOf<T extends AnyRealizedType> = T['isNullable'] extends true
-  ? Maybe<InternalTypeOf<T>>
-  : InternalTypeOf<T>;
+export type ResolverReturnTypeOf<
+  R extends AnyRealizedType
+> = R['isNullable'] extends true
+  ? Maybe<InternalResolverReturnTypeOf<R>>
+  : InternalResolverReturnTypeOf<R>;
 
-type ResolverReturnTypeOf<
-  T extends AnyRealizedType
-> = T['isNullable'] extends true
-  ? Maybe<InternalResolverReturnTypeOf<T>>
-  : InternalResolverReturnTypeOf<T>;
+// TODO: current problem: why does the type autocompleter get confused when accessing
+// internalType of realized type?
 
-type D = InternalTypeOf<typeof ID>;
-type E = FieldTypeOf<typeof ID>;
-type F = FieldTypeOf<typeof ID['nullable']>;
-
-type G = InternalResolverReturnTypeOf<typeof ID>;
-type H = ResolverReturnTypeOf<typeof ID>;
-type I = ResolverReturnTypeOf<typeof ID['nullable']>;
+type D = ResolverReturnTypeOf<typeof String['nullable']>;
