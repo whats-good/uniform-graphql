@@ -11,7 +11,7 @@ import {
   GraphQLType,
   ValueNode,
 } from 'graphql';
-import { Maybe, Thunkable, unthunk } from './utils';
+import { Maybe, Promisable, Thunkable, unthunk } from './utils';
 import { clone, forEach, mapValues } from 'lodash';
 
 interface StringKeys<T> {
@@ -224,3 +224,12 @@ export type ResolverReturnTypeOf<
 // internalType of realized type?
 
 type D = ResolverReturnTypeOf<typeof String['nullable']>;
+
+type OutputType<T> = ScalarType<any, T>;
+type OutputRealizedType<T> = RealizedType<OutputType<T>>;
+
+export type ResolveFnReturnTypeOf<
+  R extends OutputRealizedType<any>
+> = Promisable<ResolverReturnTypeOf<R>>;
+
+type E = ResolveFnReturnTypeOf<typeof String>;
