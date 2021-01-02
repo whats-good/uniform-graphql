@@ -409,11 +409,11 @@ type ResolverReturnTypeOf<
 
 type UserFields = {
   id: typeof ID;
-  // firstName: typeof String;
+  firstName: typeof String;
   // TODO: find a way to make sure nonNullables arent assignable for nullables. Treat them as completely different things.
-  // lastName: typeof String['nullable'];
+  lastName: typeof String['nullable'];
   bestFriend: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>;
-  // pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
+  pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
 };
 
 type UserType = RealizedType<ObjectType<'User', UserFields>, false>;
@@ -470,29 +470,18 @@ typeContainer.query({
     resolve: (root, args, context) => {
       return {
         id: 1,
-        bestFriend: () => {
-          return {
-            id: '2',
-            bestFriend: async () => {
-              return {
-                id: '3',
-                bestFriend: null,
-              };
-            },
-          };
+        get bestFriend() {
+          return this;
         },
-        // firstName: 'firstname',
-        // lastName: 'lastname',
-        // get bestFriend() {
-        //   return this;
-        // },
-        // get pet() {
-        //   return {
-        //     id: 'some id',
-        //     name: 'pet name',
-        //     owner: this,
-        //   };
-        // },
+        firstName: 'kerem',
+        lastName: 'kazan',
+        get pet() {
+          return async () => ({
+            id: () => 'petid',
+            name: 'petname',
+            owner: null,
+          });
+        },
       };
     },
   }),
