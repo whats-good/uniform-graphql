@@ -233,6 +233,10 @@ class ObjectField<R extends OutputRealizedType> {
 
 type OutputFieldConstructorArg = OutputRealizedType | ObjectField<any>;
 
+type OutputFieldConstructorArgsMapValueOf<
+  R extends OutputRealizedType
+> = Thunkable<R | ObjectField<R>>;
+
 interface OutputFieldConstructorArgsMap {
   [key: string]: Thunkable<OutputFieldConstructorArg>;
 }
@@ -361,30 +365,53 @@ type E1 = ResolverReturnTypeOf<typeof String>;
 type E2 = ResolverReturnTypeOf<typeof String['nullable']>;
 type E3 = ResolverReturnTypeOf<typeof InnerType>;
 
-type UserType = RealizedObjectType<
-  'User',
-  {
-    id: typeof ID;
-    firstName: typeof String;
-    // TODO: find a way to make sure nonNullables arent assignable for nullables. Treat them as completely different things.
-    lastName: typeof String['nullable'];
-    bestFriend: UserType;
-  }
->;
+type UserFields = {
+  id: typeof ID;
+  firstName: typeof String;
+  // TODO: find a way to make sure nonNullables arent assignable for nullables. Treat them as completely different things.
+  lastName: typeof String['nullable'];
+  bestFriend: OutputFieldConstructorArgsMapValueOf<UserType>;
+  pet: OutputFieldConstructorArgsMapValueOf<AnimalType>;
+};
+
+type UserType = RealizedObjectType<'User', UserFields>;
 
 type E4 = ResolverReturnTypeOf<UserType>;
 type E44 = ThenArgRecursive<
   Unthunked<ThenArgRecursive<Unthunked<E4['bestFriend']>>['bestFriend']>
 >['bestFriend'];
 
-// const userType: UserType = objectType({
-//   name: 'User',
-//   get fields() {
-//     return {
-//       id: ID,
-//       firstName: String,
-//       lastName: String['nullable'],
-//       bestFriend: () => this,
-//     };
-//   },
-// });
+const userType: UserType = objectType({
+  name: 'User',
+  fields: {
+    id: ID,
+    firstName: String,
+    lastName: String['nullable'],
+    bestFriend: () => userType,
+    pet: () => animalType,
+  },
+});
+
+type F = ExternalTypeOf<typeof userType>;
+type G = F['bestFriend']['bestFriend']['bestFriend'];
+
+type AnimalType = RealizedObjectType<
+  'Animal',
+  {
+    id: typeof String;
+    name: typeof String;
+    owner: OutputFieldConstructorArgsMapValueOf<UserType>; // TODO: make these generics simpler.
+  }
+>;
+
+const animalType: AnimalType = objectType({
+  name: 'Animal',
+  fields: {
+    id: String,
+    name: String,
+    owner: () => userType,
+  },
+});
+
+type H = ExternalTypeOf<typeof animalType>;
+type HH = H['owner']['bestFriend']['pet']['owner']['bestFriend'];
