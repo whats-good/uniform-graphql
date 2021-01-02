@@ -20,7 +20,7 @@ import {
   unthunk,
   Unthunked,
 } from './utils';
-import { clone, forEach, mapValues } from 'lodash';
+import { forEach, mapValues } from 'lodash';
 
 interface StringKeys<T> {
   [key: string]: T;
@@ -28,7 +28,7 @@ interface StringKeys<T> {
 
 type GraphQLContext = StringKeys<unknown>;
 
-type ContextGetter<C extends GraphQLContext> = (args: any) => C;
+type ContextGetter<C extends GraphQLContext> = Thunkable<C>;
 
 type AnyType = BaseType<any, any>;
 
@@ -36,9 +36,26 @@ type AnyTypeContainer = TypeContainer<any>;
 
 type FallbackGraphQLTypeFn = (typeContainer: AnyTypeContainer) => GraphQLType;
 
-class TypeContainer<C extends GraphQLContext> {
+type ResolverFnOf<R extends OutputRealizedType, S, A, C> = (
+  source: S,
+  args: A,
+  context: C,
+) => Promisable<ResolverReturnTypeOf<R>>;
+
+type RootQueryField<
+  R extends OutputRealizedType,
+  A extends StringKeys<unknown>,
+  C extends GraphQLContext
+> = {
+  type: OutputRealizedType;
+  args: A; // TODO: fix
+  resolve: ResolverFnOf<R, undefined, A, C>;
+};
+
+export class TypeContainer<C extends GraphQLContext> {
   private readonly contextGetter: ContextGetter<C>;
   private readonly internalGraphQLTypes: StringKeys<GraphQLType> = {};
+  private readonly rootQueries: StringKeys<RootQueryField<any, any, C>> = {};
 
   constructor(params: { contextGetter: ContextGetter<C> }) {
     this.contextGetter = params.contextGetter;
@@ -56,6 +73,12 @@ class TypeContainer<C extends GraphQLContext> {
       this.internalGraphQLTypes[type.name] = newType;
       return this.getInternalGraphQLType(type, fallback);
     }
+  }
+
+  public query(fields: StringKeys<RootQueryField<any, any, C>>): void {
+    forEach(fields, (field, key) => {
+      this.rootQueries[key] = field;
+    });
   }
 }
 
