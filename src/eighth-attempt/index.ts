@@ -1,5 +1,6 @@
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   GraphQLFieldConfig,
   GraphQLFloat,
   GraphQLID,
@@ -16,7 +17,6 @@ import {
   brandOf,
   Maybe,
   Promisable,
-  ThenArgRecursive,
   Thunkable,
   unthunk,
   Unthunked,
@@ -273,7 +273,77 @@ const ID = scalar<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
-type OutputType = ScalarType<any, any> | ObjectType<any, any>;
+interface IEnumValue {
+  deprecationReason?: string;
+  description?: string;
+}
+
+type EnumValuesMap = StringKeys<IEnumValue | null>;
+
+interface IEnumTypeConstructorParams<
+  N extends string,
+  D extends EnumValuesMap
+> {
+  name: N;
+  description?: string;
+  values: D;
+}
+
+class EnumType<N extends string, D extends EnumValuesMap> extends BaseType<
+  N,
+  keyof D
+> {
+  public readonly description?: string;
+  public readonly valuesConfig: D;
+
+  public constructor(params: IEnumTypeConstructorParams<N, D>) {
+    super(params);
+    this.description = params.description;
+    this.valuesConfig = params.values;
+  }
+
+  public get values(): { [K in keyof D]: K } {
+    return mapValues(this.valuesConfig, (value, key) => key) as any;
+  }
+
+  protected getFreshInternalGraphQLType(): GraphQLEnumType {
+    return new GraphQLEnumType({
+      name: this.name,
+      description: this.description,
+      values: mapValues(this.valuesConfig, (value, key) => {
+        return {
+          value: key,
+          description: value?.description,
+          deprecationReason: value?.deprecationReason,
+        };
+      }),
+    });
+  }
+}
+
+export const enu = <N extends string, D extends EnumValuesMap>(
+  params: IEnumTypeConstructorParams<N, D>,
+): RealizedType<EnumType<N, D>, false> => {
+  const internalType = new EnumType(params);
+  return new RealizedType({
+    internalType,
+    isNullable: false,
+  });
+};
+
+const Membership = enu({
+  name: 'Membership',
+  values: {
+    enterprise: null,
+    free: null,
+    paid: null,
+  },
+});
+
+type OutputType =
+  | ScalarType<any, any>
+  | ObjectType<any, any>
+  | EnumType<any, any>;
 type OutputRealizedType = RealizedType<OutputType, boolean>;
 
 class ObjectField<R extends OutputRealizedType> {
@@ -407,6 +477,8 @@ type ResolverReturnTypeOf<
     : InternalResolverReturnTypeOf<R>
   : ExternalTypeOf<R>;
 
+// const Membership = new E
+
 type UserFields = {
   id: typeof ID;
   firstName: typeof String;
@@ -414,6 +486,7 @@ type UserFields = {
   lastName: typeof String['nullable'];
   bestFriend: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>;
   pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
+  membership: typeof Membership['nullable'];
 };
 
 type UserType = RealizedType<ObjectType<'User', UserFields>, false>;
@@ -426,6 +499,7 @@ const User: UserType = objectType({
     lastName: String.nullable,
     bestFriend: () => User.nullable,
     pet: () => Animal['nullable'],
+    membership: Membership.nullable,
   },
 });
 
@@ -482,6 +556,7 @@ typeContainer.query({
             owner: null,
           });
         },
+        membership: Membership.internalType.values.enterprise,
       };
     },
   }),
