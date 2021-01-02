@@ -207,7 +207,7 @@ const ID = scalar<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
-type OutputType = ScalarType<any, any>;
+type OutputType = ScalarType<any, any> | ObjectType<any, any>;
 type OutputRealizedType = RealizedType<OutputType, boolean>;
 
 class ObjectField<R extends OutputRealizedType> {
@@ -268,10 +268,16 @@ const toObjectField = <A extends OutputFieldConstructorArg>(
   }
 };
 
+type ExternalTypeOf<
+  R extends RealizedType<any, any>
+> = R['isNullable'] extends true
+  ? Maybe<R['internalType']['__INTERNAL_TYPE__']>
+  : R['internalType']['__INTERNAL_TYPE__'];
+
 class ObjectType<
   N extends string,
   F extends OutputFieldConstructorArgsMap
-> extends BaseType<N, any> {
+> extends BaseType<N, TypeOfTypeStruct<TypeStructOf<F>>> {
   public readonly fields: F;
 
   constructor(params: IObjectTypeConstructorParams<N, F>) {
@@ -294,19 +300,33 @@ class ObjectType<
   }
 }
 
-const fields = {
-  // id: ID,
-  // idNullable: String.nullable,
-  // idField: toObjectField(ID),
-  // idNullableField: toObjectField(ID.nullable),
-  idThunk: () => ID,
-  // idThunkNullable: () => String.nullable,
-  // idThunkField: () => toObjectField(ID),
-  idThunkNullableField: () => toObjectField(ID.nullable),
-};
+type TypeStruct = StringKeys<OutputRealizedType>;
 
-type D<F extends OutputFieldConstructorArgsMap> = {
+type TypeStructOf<F extends OutputFieldConstructorArgsMap> = {
   [K in keyof F]: TypeInOutputFieldConstructorArg<Unthunked<F[K]>>;
 };
 
-type E = D<typeof fields>;
+type TypeOfTypeStruct<S extends TypeStruct> = {
+  [K in keyof S]: ExternalTypeOf<S[K]>;
+};
+
+const innerType = new ObjectType({
+  name: 'InnerType',
+  fields: {
+    // id: ID,
+    // idNullable: String.nullable,
+    // idField: toObjectField(ID),
+    // idNullableField: toObjectField(ID.nullable),
+    idThunk: () => ID,
+    // idThunkNullable: () => String.nullable,
+    // idThunkField: () => toObjectField(ID),
+    idThunkNullableField: () => toObjectField(ID.nullable),
+  },
+});
+
+const InnerType = new RealizedType({
+  internalType: innerType,
+  isNullable: false,
+});
+
+type D = ExternalTypeOf<typeof InnerType>;
