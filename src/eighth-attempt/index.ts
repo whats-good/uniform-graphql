@@ -11,7 +11,14 @@ import {
   GraphQLType,
   ValueNode,
 } from 'graphql';
-import { Maybe, Promisable, Thunkable, unthunk } from './utils';
+import {
+  brandOf,
+  Maybe,
+  Promisable,
+  Thunkable,
+  unthunk,
+  Unthunked,
+} from './utils';
 import { clone, forEach, mapValues } from 'lodash';
 
 interface StringKeys<T> {
@@ -54,7 +61,6 @@ class TypeContainer<C extends GraphQLContext> {
 abstract class BaseType<N extends string, I> {
   public readonly name: N;
   public readonly __INTERNAL_TYPE__!: I;
-  public abstract readonly __INTERNAL_RESOLVER_RETURN_TYPE__: any;
 
   constructor(params: { name: N }) {
     this.name = params.name;
@@ -75,6 +81,7 @@ abstract class BaseType<N extends string, I> {
 class RealizedType<T extends AnyType, N extends boolean = false> {
   public readonly internalType: T;
   public readonly isNullable: N;
+  public __BRAND__!: 'realizedtype';
 
   public constructor(params: { internalType: T; isNullable: N }) {
     this.internalType = params.internalType;
@@ -117,8 +124,6 @@ interface IScalarTypeConstructorParams<N extends string, I> {
 }
 
 class ScalarType<N extends string, I> extends BaseType<N, I> {
-  public readonly __INTERNAL_RESOLVER_RETURN_TYPE__!: I;
-
   public readonly description?: Maybe<string>;
   public readonly specifiedByUrl?: Maybe<string>;
 
@@ -202,40 +207,12 @@ const ID = scalar<'ID', number | string>({
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
 
-export type AnyRealizedType = RealizedType<any, any>;
+type OutputType = ScalarType<any, any>;
+type OutputRealizedType = RealizedType<OutputType, boolean>;
 
-type TypeOfInternalType<T extends AnyType> = T['__INTERNAL_TYPE__'];
-
-export type InternalTypeOf<R extends AnyRealizedType> = TypeOfInternalType<
-  R['nullable']['internalType']
->;
-
-type InternalResolverReturnTypeOf<
-  R extends AnyRealizedType
-> = R['internalType']['__INTERNAL_RESOLVER_RETURN_TYPE__'];
-
-export type ResolverReturnTypeOf<
-  R extends AnyRealizedType
-> = R['isNullable'] extends true
-  ? Maybe<InternalResolverReturnTypeOf<R>>
-  : InternalResolverReturnTypeOf<R>;
-
-// TODO: current problem: why does the type autocompleter get confused when accessing
-// internalType of realized type?
-
-type D = ResolverReturnTypeOf<typeof String['nullable']>;
-
-type OutputType<T> = ScalarType<any, T>;
-type OutputRealizedType<T> = RealizedType<OutputType<T>>;
-
-export type ResolveFnReturnTypeOf<
-  R extends OutputRealizedType<any>
-> = Promisable<ResolverReturnTypeOf<R>>;
-
-type E = ResolveFnReturnTypeOf<typeof String>;
-
-class ObjectField<R extends OutputRealizedType<any>> {
+class ObjectField<R extends OutputRealizedType> {
   public readonly type: R;
+  public readonly __BRAND__!: 'objectfield';
 
   constructor(params: { type: R }) {
     this.type = params.type;
@@ -252,3 +229,84 @@ class ObjectField<R extends OutputRealizedType<any>> {
     };
   }
 }
+
+type OutputFieldConstructorArg = OutputRealizedType | ObjectField<any>;
+
+interface OutputFieldConstructorArgsMap {
+  [key: string]: Thunkable<OutputFieldConstructorArg>;
+}
+
+interface IObjectTypeConstructorParams<
+  N extends string,
+  F extends OutputFieldConstructorArgsMap
+> {
+  name: N;
+  fields: F;
+}
+
+type TypeInOutputFieldConstructorArg<
+  A extends OutputFieldConstructorArg
+> = A extends OutputRealizedType
+  ? A
+  : A extends ObjectField<any>
+  ? A['type']
+  : never;
+
+type ObjectFieldInOutputFieldConstructorArg<
+  A extends OutputFieldConstructorArg
+> = ObjectField<TypeInOutputFieldConstructorArg<A>>;
+
+const toObjectField = <A extends OutputFieldConstructorArg>(
+  a: A,
+): ObjectFieldInOutputFieldConstructorArg<A> => {
+  if (brandOf(a) == 'realizedtype') {
+    return new ObjectField({ type: a as any });
+  } else if (brandOf(a) == 'objectfield') {
+    return a as any;
+  } else {
+    throw new Error(`Unrecognized brand: ${brandOf(a)}`);
+  }
+};
+
+class ObjectType<
+  N extends string,
+  F extends OutputFieldConstructorArgsMap
+> extends BaseType<N, any> {
+  public readonly fields: F;
+
+  constructor(params: IObjectTypeConstructorParams<N, F>) {
+    super(params);
+    this.fields = params.fields;
+  }
+
+  protected getFreshInternalGraphQLType(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLType {
+    return new GraphQLObjectType({
+      name: this.name,
+      fields: () =>
+        mapValues(this.fields, (field) => {
+          const unthunkedField = unthunk(field);
+          const baseOutputField = toObjectField(unthunkedField);
+          return baseOutputField.getGraphQLFieldConfig(typeContainer);
+        }),
+    });
+  }
+}
+
+const fields = {
+  // id: ID,
+  // idNullable: String.nullable,
+  // idField: toObjectField(ID),
+  // idNullableField: toObjectField(ID.nullable),
+  idThunk: () => ID,
+  // idThunkNullable: () => String.nullable,
+  // idThunkField: () => toObjectField(ID),
+  idThunkNullableField: () => toObjectField(ID.nullable),
+};
+
+type D<F extends OutputFieldConstructorArgsMap> = {
+  [K in keyof F]: TypeInOutputFieldConstructorArg<Unthunked<F[K]>>;
+};
+
+type E = D<typeof fields>;
