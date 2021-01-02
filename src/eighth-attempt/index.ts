@@ -144,7 +144,7 @@ abstract class BaseType<N extends string, I> {
   };
 }
 
-class RealizedType<T extends AnyType, N extends boolean = false> {
+class RealizedType<T extends AnyType, N extends boolean> {
   public readonly internalType: T;
   public readonly isNullable: N;
   public __BRAND__ = 'realizedtype';
@@ -220,7 +220,7 @@ class ScalarType<N extends string, I> extends BaseType<N, I> {
 
 const scalar = <N extends string, I>(
   params: IScalarTypeConstructorParams<N, I>,
-): RealizedType<ScalarType<N, I>> => {
+): RealizedType<ScalarType<N, I>, false> => {
   const scalarType = new ScalarType(params);
   return new RealizedType({
     internalType: scalarType,
@@ -370,14 +370,9 @@ class ObjectType<
   }
 }
 
-type RealizedObjectType<
-  N extends string,
-  F extends OutputFieldConstructorArgsMap
-> = RealizedType<ObjectType<N, F>>;
-
 const objectType = <N extends string, F extends OutputFieldConstructorArgsMap>(
   params: IObjectTypeConstructorParams<N, F>,
-): RealizedObjectType<N, F> => {
+): RealizedType<ObjectType<N, F>, false> => {
   const internalType = new ObjectType(params);
   return new RealizedType({
     internalType,
@@ -395,51 +390,26 @@ type TypeOfTypeStruct<S extends TypeStruct> = {
   [K in keyof S]: ExternalTypeOf<S[K]>;
 };
 
-const innerType = new ObjectType({
-  name: 'InnerType',
-  fields: {
-    // id: ID,
-    // idNullable: String.nullable,
-    // idField: toObjectField(ID),
-    // idNullableField: toObjectField(ID.nullable),
-    idThunk: () => ID,
-    // idThunkNullable: () => String.nullable,
-    // idThunkField: () => toObjectField(ID),
-    idThunkNullableField: () => toObjectField(ID.nullable),
-  },
-});
-
-const InnerType = new RealizedType({
-  internalType: innerType,
-  isNullable: false,
-});
-
-type D = ExternalTypeOf<typeof InnerType>;
-
 type ResolverReturnTypeOfTypeStruct<S extends TypeStruct> = {
   [K in keyof S]: Thunkable<Promisable<ResolverReturnTypeOf<S[K]>>>;
 };
 
 type ResolverReturnTypeOf<
   R extends OutputRealizedType
-> = R extends RealizedType<ObjectType<any, any>>
+> = R extends RealizedType<ObjectType<any, any>, any>
   ? ResolverReturnTypeOfTypeStruct<TypeStructOf<R['internalType']['fields']>>
   : ExternalTypeOf<R>;
 
-type E1 = ResolverReturnTypeOf<typeof String>;
-type E2 = ResolverReturnTypeOf<typeof String['nullable']>;
-type E3 = ResolverReturnTypeOf<typeof InnerType>;
-
 type UserFields = {
   id: typeof ID;
-  firstName: typeof String;
+  // firstName: typeof String;
   // TODO: find a way to make sure nonNullables arent assignable for nullables. Treat them as completely different things.
-  lastName: typeof String['nullable'];
+  // lastName: typeof String['nullable'];
   bestFriend: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>;
-  pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
+  // pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
 };
 
-type UserType = RealizedObjectType<'User', UserFields>;
+type UserType = RealizedType<ObjectType<'User', UserFields>, false>;
 
 const User: UserType = objectType({
   name: 'User',
@@ -458,13 +428,16 @@ const User: UserType = objectType({
 
 type F = ExternalTypeOf<typeof User>;
 
-type AnimalType = RealizedObjectType<
-  'Animal',
-  {
-    id: typeof String;
-    name: typeof String;
-    owner: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>; // TODO: make these generics simpler.
-  }
+type AnimalType = RealizedType<
+  ObjectType<
+    'Animal',
+    {
+      id: typeof String;
+      name: typeof String;
+      owner: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>; // TODO: make these generics simpler.
+    }
+  >,
+  false
 >;
 
 const Animal: AnimalType = objectType({
@@ -475,9 +448,6 @@ const Animal: AnimalType = objectType({
     owner: () => User.nullable,
   },
 });
-
-type H = ExternalTypeOf<typeof Animal>;
-// type HH = H['owner']['bestFriend']['pet']['owner']['bestFriend'];
 
 const typeContainer = new TypeContainer({
   contextGetter: () => ({
@@ -513,18 +483,19 @@ typeContainer.query({
     resolve: (root, args, context) => {
       return {
         id: 1,
-        firstName: 'firstname',
-        lastName: 'lastname',
-        get bestFriend() {
-          return this;
-        },
-        get pet() {
-          return {
-            id: 'some id',
-            name: 'pet name',
-            owner: this,
-          };
-        },
+        bestFriend: null,
+        // firstName: 'firstname',
+        // lastName: 'lastname',
+        // get bestFriend() {
+        //   return this;
+        // },
+        // get pet() {
+        //   return {
+        //     id: 'some id',
+        //     name: 'pet name',
+        //     owner: this,
+        //   };
+        // },
       };
     },
   }),
