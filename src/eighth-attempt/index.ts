@@ -390,14 +390,21 @@ type TypeOfTypeStruct<S extends TypeStruct> = {
   [K in keyof S]: ExternalTypeOf<S[K]>;
 };
 
+// Thunkable<Promisable<ResolverReturnTypeOfTypeStruct<TypeStructOf<UserFields>>>>
+
 type ResolverReturnTypeOfTypeStruct<S extends TypeStruct> = {
   [K in keyof S]: Thunkable<Promisable<ResolverReturnTypeOf<S[K]>>>;
 };
 
+type InternalResolverReturnTypeOf<
+  R extends RealizedType<ObjectType<any, any>, any>
+> = ResolverReturnTypeOfTypeStruct<TypeStructOf<R['internalType']['fields']>>;
 type ResolverReturnTypeOf<
   R extends OutputRealizedType
 > = R extends RealizedType<ObjectType<any, any>, any>
-  ? ResolverReturnTypeOfTypeStruct<TypeStructOf<R['internalType']['fields']>>
+  ? R['isNullable'] extends true
+    ? Maybe<InternalResolverReturnTypeOf<R>>
+    : InternalResolverReturnTypeOf<R>
   : ExternalTypeOf<R>;
 
 type UserFields = {
@@ -455,26 +462,6 @@ const typeContainer = new TypeContainer({
   }),
 });
 
-// typeContainer.query({
-//   currentUser: {
-//     type: User.nullable,
-//     // args: { firstName: 'kerem' },
-//     args: {}, // TODO: enable empty objects and undefined
-//     resolve: async (root, args, context) => {
-//       return {
-//         a: 'a',
-//         b: 1,
-//         c: async () => 'c',
-//         // d: 'd',
-//         // get e() {
-//         //   return this;
-//         // },
-//         // f: 'f',
-//       };
-//     },
-//   },
-// });
-
 typeContainer.query({
   currentUser: new RootQueryField({
     // TODO: find a way to do this without having to use the constructor
@@ -483,7 +470,17 @@ typeContainer.query({
     resolve: (root, args, context) => {
       return {
         id: 1,
-        bestFriend: null,
+        bestFriend: () => {
+          return {
+            id: '2',
+            bestFriend: async () => {
+              return {
+                id: '3',
+                bestFriend: null,
+              };
+            },
+          };
+        },
         // firstName: 'firstname',
         // lastName: 'lastname',
         // get bestFriend() {
