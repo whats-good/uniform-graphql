@@ -7,6 +7,7 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
+  GraphQLSchema,
   GraphQLString,
   GraphQLType,
   ValueNode,
@@ -21,6 +22,8 @@ import {
   Unthunked,
 } from './utils';
 import { forEach, mapValues } from 'lodash';
+import { ApolloServer } from 'apollo-server-express';
+import express from 'express';
 
 interface StringKeys<T> {
   [key: string]: T;
@@ -28,7 +31,7 @@ interface StringKeys<T> {
 
 type GraphQLContext = StringKeys<unknown>;
 
-type ContextGetter<C extends GraphQLContext> = Thunkable<C>;
+type ContextGetter<C extends GraphQLContext> = () => C;
 
 type AnyType = BaseType<any, any>;
 
@@ -42,20 +45,48 @@ type ResolverFnOf<R extends OutputRealizedType, S, A, C> = (
   context: C,
 ) => Promisable<ResolverReturnTypeOf<R>>;
 
-type RootQueryField<
+class RootQueryField<
   R extends OutputRealizedType,
   A extends StringKeys<unknown>,
   C extends GraphQLContext
-> = {
-  type: OutputRealizedType;
-  args: A; // TODO: fix
-  resolve: ResolverFnOf<R, undefined, A, C>;
-};
+> {
+  public readonly type: R;
+  public readonly args: A; // TODO: fix
+  public readonly resolve: ResolverFnOf<R, undefined, A, C>;
+
+  constructor(params: {
+    type: RootQueryField<R, A, C>['type'];
+    args: RootQueryField<R, A, C>['args'];
+    resolve: RootQueryField<R, A, C>['resolve'];
+  }) {
+    this.type = params.type;
+    this.args = params.args;
+    this.resolve = params.resolve;
+  }
+
+  public getGraphQLFieldConfig(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLFieldConfig<any, any, any> {
+    return {
+      type: this.type.getGraphQLType(typeContainer) as any,
+      // args: this.args, // TODO: fix
+      resolve: this.resolve,
+    };
+  }
+}
 
 export class TypeContainer<C extends GraphQLContext> {
   private readonly contextGetter: ContextGetter<C>;
-  private readonly internalGraphQLTypes: StringKeys<GraphQLType> = {};
-  private readonly rootQueries: StringKeys<RootQueryField<any, any, C>> = {};
+  private readonly internalGraphQLTypes: StringKeys<GraphQLType> = {
+    String: GraphQLString,
+    Float: GraphQLFloat,
+    Int: GraphQLInt,
+    Boolean: GraphQLBoolean,
+    ID: GraphQLID,
+  };
+  private readonly rootQueries: StringKeys<
+    RootQueryField<OutputRealizedType, any, C>
+  > = {};
 
   constructor(params: { contextGetter: ContextGetter<C> }) {
     this.contextGetter = params.contextGetter;
@@ -78,6 +109,17 @@ export class TypeContainer<C extends GraphQLContext> {
   public query(fields: StringKeys<RootQueryField<any, any, C>>): void {
     forEach(fields, (field, key) => {
       this.rootQueries[key] = field;
+    });
+  }
+
+  public getSchema(): GraphQLSchema {
+    return new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: mapValues(this.rootQueries, (rootQuery) =>
+          rootQuery.getGraphQLFieldConfig(this),
+        ),
+      }),
     });
   }
 }
@@ -105,7 +147,7 @@ abstract class BaseType<N extends string, I> {
 class RealizedType<T extends AnyType, N extends boolean = false> {
   public readonly internalType: T;
   public readonly isNullable: N;
-  public __BRAND__!: 'realizedtype';
+  public __BRAND__ = 'realizedtype';
 
   public constructor(params: { internalType: T; isNullable: N }) {
     this.internalType = params.internalType;
@@ -236,7 +278,7 @@ type OutputRealizedType = RealizedType<OutputType, boolean>;
 
 class ObjectField<R extends OutputRealizedType> {
   public readonly type: R;
-  public readonly __BRAND__!: 'objectfield';
+  public readonly __BRAND__ = 'objectfield';
 
   constructor(params: { type: R }) {
     this.type = params.type;
@@ -393,48 +435,119 @@ type UserFields = {
   firstName: typeof String;
   // TODO: find a way to make sure nonNullables arent assignable for nullables. Treat them as completely different things.
   lastName: typeof String['nullable'];
-  bestFriend: OutputFieldConstructorArgsMapValueOf<UserType>;
-  pet: OutputFieldConstructorArgsMapValueOf<AnimalType>;
+  bestFriend: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>;
+  pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
 };
 
 type UserType = RealizedObjectType<'User', UserFields>;
 
-type E4 = ResolverReturnTypeOf<UserType>;
-type E44 = ThenArgRecursive<
-  Unthunked<ThenArgRecursive<Unthunked<E4['bestFriend']>>['bestFriend']>
->['bestFriend'];
-
-const userType: UserType = objectType({
+const User: UserType = objectType({
   name: 'User',
   fields: {
     id: ID,
     firstName: String,
-    lastName: String['nullable'],
-    bestFriend: () => userType,
-    pet: () => animalType,
+    lastName: String.nullable,
+    bestFriend: () => User.nullable,
+    pet: () => Animal['nullable'],
   },
 });
 
-type F = ExternalTypeOf<typeof userType>;
-type G = F['bestFriend']['bestFriend']['bestFriend'];
+// TODO: if the objectType implements the given type, but also adds a few
+// extra fields, the frontend will falsely assume that these fields are implemented,
+// even though they arent.
+
+type F = ExternalTypeOf<typeof User>;
 
 type AnimalType = RealizedObjectType<
   'Animal',
   {
     id: typeof String;
     name: typeof String;
-    owner: OutputFieldConstructorArgsMapValueOf<UserType>; // TODO: make these generics simpler.
+    owner: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>; // TODO: make these generics simpler.
   }
 >;
 
-const animalType: AnimalType = objectType({
+const Animal: AnimalType = objectType({
   name: 'Animal',
   fields: {
     id: String,
     name: String,
-    owner: () => userType,
+    owner: () => User.nullable,
   },
 });
 
-type H = ExternalTypeOf<typeof animalType>;
-type HH = H['owner']['bestFriend']['pet']['owner']['bestFriend'];
+type H = ExternalTypeOf<typeof Animal>;
+// type HH = H['owner']['bestFriend']['pet']['owner']['bestFriend'];
+
+const typeContainer = new TypeContainer({
+  contextGetter: () => ({
+    kerem: 'kazan',
+  }),
+});
+
+// typeContainer.query({
+//   currentUser: {
+//     type: User.nullable,
+//     // args: { firstName: 'kerem' },
+//     args: {}, // TODO: enable empty objects and undefined
+//     resolve: async (root, args, context) => {
+//       return {
+//         a: 'a',
+//         b: 1,
+//         c: async () => 'c',
+//         // d: 'd',
+//         // get e() {
+//         //   return this;
+//         // },
+//         // f: 'f',
+//       };
+//     },
+//   },
+// });
+
+typeContainer.query({
+  currentUser: new RootQueryField({
+    // TODO: find a way to do this without having to use the constructor
+    type: User,
+    args: {},
+    resolve: (root, args, context) => {
+      return {
+        id: 1,
+        firstName: 'firstname',
+        lastName: 'lastname',
+        get bestFriend() {
+          return this;
+        },
+        get pet() {
+          return {
+            id: 'some id',
+            name: 'pet name',
+            owner: this,
+          };
+        },
+      };
+    },
+  }),
+});
+
+const schema = typeContainer.getSchema();
+
+const apolloServer = new ApolloServer({
+  schema,
+});
+
+const PORT = 4001;
+
+const start = () => {
+  const app = express();
+  apolloServer.applyMiddleware({ app });
+
+  // const url = id.getFreshSemiGraphQLType().specifiedByUrl;
+  app.listen({ port: PORT }, () => {
+    console.log(
+      `🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`,
+    );
+  });
+};
+
+start();
