@@ -15,6 +15,7 @@ import {
   brandOf,
   Maybe,
   Promisable,
+  ThenArgRecursive,
   Thunkable,
   unthunk,
   Unthunked,
@@ -300,6 +301,21 @@ class ObjectType<
   }
 }
 
+type RealizedObjectType<
+  N extends string,
+  F extends OutputFieldConstructorArgsMap
+> = RealizedType<ObjectType<N, F>>;
+
+const objectType = <N extends string, F extends OutputFieldConstructorArgsMap>(
+  params: IObjectTypeConstructorParams<N, F>,
+): RealizedObjectType<N, F> => {
+  const internalType = new ObjectType(params);
+  return new RealizedType({
+    internalType,
+    isNullable: false,
+  });
+};
+
 type TypeStruct = StringKeys<OutputRealizedType>;
 
 type TypeStructOf<F extends OutputFieldConstructorArgsMap> = {
@@ -330,3 +346,45 @@ const InnerType = new RealizedType({
 });
 
 type D = ExternalTypeOf<typeof InnerType>;
+
+type ResolverReturnTypeOfTypeStruct<S extends TypeStruct> = {
+  [K in keyof S]: Thunkable<Promisable<ResolverReturnTypeOf<S[K]>>>;
+};
+
+type ResolverReturnTypeOf<
+  R extends OutputRealizedType
+> = R extends RealizedType<ObjectType<any, any>>
+  ? ResolverReturnTypeOfTypeStruct<TypeStructOf<R['internalType']['fields']>>
+  : ExternalTypeOf<R>;
+
+type E1 = ResolverReturnTypeOf<typeof String>;
+type E2 = ResolverReturnTypeOf<typeof String['nullable']>;
+type E3 = ResolverReturnTypeOf<typeof InnerType>;
+
+type UserType = RealizedObjectType<
+  'User',
+  {
+    id: typeof ID;
+    firstName: typeof String;
+    // TODO: find a way to make sure nonNullables arent assignable for nullables. Treat them as completely different things.
+    lastName: typeof String['nullable'];
+    bestFriend: UserType;
+  }
+>;
+
+type E4 = ResolverReturnTypeOf<UserType>;
+type E44 = ThenArgRecursive<
+  Unthunked<ThenArgRecursive<Unthunked<E4['bestFriend']>>['bestFriend']>
+>['bestFriend'];
+
+// const userType: UserType = objectType({
+//   name: 'User',
+//   get fields() {
+//     return {
+//       id: ID,
+//       firstName: String,
+//       lastName: String['nullable'],
+//       bestFriend: () => this,
+//     };
+//   },
+// });

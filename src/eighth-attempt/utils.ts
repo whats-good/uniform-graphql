@@ -45,6 +45,10 @@ export type RecursivePromisable<T> =
   | Promise<T>
   | Promise<RecursivePromisable<T>>;
 
+export type ThenArgRecursive<T> = T extends PromiseLike<infer U>
+  ? { 0: ThenArgRecursive<U>; 1: U }[U extends PromiseLike<any> ? 0 : 1]
+  : T;
+
 export type Promisable<T> = T | Promise<T>;
 
 interface Branded {
