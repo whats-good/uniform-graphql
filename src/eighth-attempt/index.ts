@@ -5,6 +5,7 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
@@ -412,7 +413,9 @@ type OutputType =
   | ScalarType<any, any>
   | ObjectType<any, any>
   | UnionType<any, any>
-  | EnumType<any, any>;
+  | EnumType<any, any>
+  | ListType<OutputRealizedType>;
+
 type OutputRealizedType = RealizedType<OutputType, boolean>;
 
 class ObjectField<R extends OutputRealizedType> {
@@ -521,6 +524,35 @@ const objectType = <N extends string, F extends OutputFieldConstructorArgsMap>(
   });
 };
 
+class ListType<
+  T extends RealizedType<BaseType<any, any>, any>
+> extends BaseType<string, T> {
+  public readonly type: T;
+
+  constructor(params: { type: T }) {
+    super({ name: `List<${params.type.name}>` });
+    this.type = params.type;
+  }
+
+  protected getFreshInternalGraphQLType(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLList<any> {
+    return new GraphQLList(this.type.getGraphQLType(typeContainer));
+  }
+}
+
+export const list = <T extends OutputRealizedType>(
+  type: T,
+): RealizedType<ListType<T>, false> => {
+  const internalType = new ListType({
+    type,
+  });
+  return new RealizedType({
+    internalType,
+    isNullable: false,
+  });
+};
+
 type TypeStruct = StringKeys<OutputRealizedType>;
 
 type TypeStructOf<F extends OutputFieldConstructorArgsMap> = {
@@ -548,12 +580,19 @@ type InternalResolverReturnTypeOfUnionType<
 > = InternalResolverReturnTypeOfObjectType<
   Unthunked<R['internalType']['types']>[number]
 >;
+
+type InternalResolverReturnTypeOfListType<
+  R extends RealizedType<ListType<OutputRealizedType>, any>
+> = Array<Promisable<ResolverReturnTypeOf<R['internalType']['type']>>>;
+
 // TODO: For union types, the typename isnt required for now. Get back to this later and
 // make sure that either resolveType of `typename` is provided.
 
 type ResolverReturnTypeOf<
   R extends OutputRealizedType
-> = R extends RealizedType<ObjectType<any, any>, any>
+> = R extends RealizedType<ListType<any>, any>
+  ? TypeRealization<R, InternalResolverReturnTypeOfListType<R>>
+  : R extends RealizedType<ObjectType<any, any>, any>
   ? TypeRealization<R, InternalResolverReturnTypeOfObjectType<R>>
   : R extends RealizedType<UnionType<any, any>, any>
   ? TypeRealization<R, InternalResolverReturnTypeOfUnionType<R>>
@@ -578,6 +617,12 @@ type UserFields = {
   pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
   membership: typeof Membership['nullable'];
   bestFriend: typeof BestFriend['nullable'];
+  bestFriends: OutputFieldConstructorArgsMapValueOf<
+    RealizedType<ListType<typeof BestFriend['nullable']>, false>
+  >; // TODO: make these easier.
+  friends: OutputFieldConstructorArgsMapValueOf<
+    RealizedType<ListType<UserType['nullable']>, false>
+  >; // TODO: make these easier.
 };
 
 type UserType = RealizedType<ObjectType<'User', UserFields>, false>;
@@ -592,6 +637,8 @@ const User: UserType = objectType({
     pet: () => Animal['nullable'],
     membership: Membership.nullable,
     bestFriend: BestFriend['nullable'],
+    bestFriends: () => list(BestFriend.nullable),
+    friends: () => list(User.nullable),
   },
 });
 
@@ -632,6 +679,19 @@ const typeContainer = new TypeContainer({
 });
 
 typeContainer.query({
+  listOfThings: new RootQueryField({
+    type: list(String),
+    args: {},
+    resolve: (root, args, context) => {
+      // important: you cant return a list of thunks for a listType resolver.
+      // however, you can return a list of promises.
+      return [
+        new Promise<string>((resolve) => {
+          resolve('yo');
+        }),
+      ];
+    },
+  }),
   currentUser: new RootQueryField({
     // TODO: find a way to do this without having to use the constructor
     type: User,
@@ -651,7 +711,13 @@ typeContainer.query({
             owner: null,
           });
         },
+        get bestFriends() {
+          return () => [unthunk(this.pet), unthunk(this.bestFriend)];
+        },
         membership: Membership.internalType.values.enterprise,
+        get friends() {
+          return [this, this, this, null, this, null];
+        },
         bestFriend: () => ({
           // TODO: find a way to separate the typenames from each other (i.e Person shouldnt be applicable here.)
           __typename: 'Animal',
