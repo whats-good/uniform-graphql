@@ -45,17 +45,19 @@ type FallbackGraphQLTypeFn = (typeContainer: AnyTypeContainer) => GraphQLType;
 
 type ResolverFnOf<R extends OutputRealizedType, S, A, C> = (
   source: S,
-  args: A,
+  args: TypeOfTypeStruct<TypeStructOfInputFieldConstructorArgsMap<A>>,
   context: C,
 ) => Promisable<ResolverReturnTypeOf<R>>;
 
+type ArgsMap = StringKeys<InputFieldConstructorArg>;
+
 class RootQueryField<
   R extends OutputRealizedType,
-  A extends StringKeys<unknown>,
+  A extends ArgsMap,
   C extends GraphQLContext
 > {
   public readonly type: R;
-  public readonly args: A; // TODO: fix
+  public readonly args: A;
   public readonly resolve: ResolverFnOf<R, undefined, A, C>;
 
   constructor(params: {
@@ -73,7 +75,11 @@ class RootQueryField<
   ): GraphQLFieldConfig<any, any, any> {
     return {
       type: this.type.getGraphQLType(typeContainer) as any,
-      args: {}, // TODO: fix
+      args: mapValues(this.args, (arg, key) => {
+        const field = toInputField(arg);
+        const type = field.getGraphQLInputFieldConfig(typeContainer);
+        return type;
+      }),
       resolve: this.resolve,
     };
   }
@@ -117,36 +123,12 @@ export class TypeContainer<C extends GraphQLContext> {
   }
 
   public getSchema(): GraphQLSchema {
-    // const argsObject: any = new GraphQLInputObjectType({
-    //   name: 'SomeObject',
-    //   fields: () =>
-    //     ({
-    //       id: {
-    //         type: GraphQLID,
-    //       },
-    //       get self() {
-    //         return {
-    //           type: argsObject,
-    //         };
-    //       },
-    //     } as any),
-    // });
     return new GraphQLSchema({
       query: new GraphQLObjectType({
         name: 'Query',
         fields: mapValues(this.rootQueries, (rootQuery) =>
           rootQuery.getGraphQLFieldConfig(this),
         ),
-        // fields: {
-        //   x: {
-        //     type: GraphQLString,
-        //     args: {
-        //       y: {
-        //         type: argsObject,
-        //       },
-        //     },
-        //   },
-        // },
       }),
     });
   }
@@ -619,14 +601,15 @@ type InputFieldInInputFieldConstructorArg<
 const toInputField = <A extends InputFieldConstructorArg>(
   x: InputFieldConstructorArg,
 ): InputFieldInInputFieldConstructorArg<A> => {
-  if (brandOf(x) === 'inputfield') {
+  const brand = brandOf(x);
+  if (brand === 'inputfield') {
     return x as any;
-  } else if (brandOf(x) === 'realizedtype') {
+  } else if (brand === 'realizedtype') {
     return new InputField({
       type: x as any,
     }) as any;
   }
-  throw new Error(`Unrecogized brand: ${brandOf(x)}`);
+  throw new Error(`Unrecogized brand: ${brand}`);
 };
 
 class InputField<R extends InputRealizedType> {
@@ -636,6 +619,7 @@ class InputField<R extends InputRealizedType> {
 
   public readonly __BRAND__ = 'inputfield';
 
+  // TODO: required arguments cant be deprecated.
   constructor(params: {
     type: R;
     deprecationReason?: string;
@@ -697,16 +681,29 @@ class InputObject<
     return new GraphQLInputObjectType({
       name: this.name,
       description: this.description,
-      fields: mapValues(this.fields, (field) => {
-        const unthunkedField = unthunk(field);
-        const inputField = toInputField(unthunkedField);
-        return {
-          type: inputField.getGraphQLInputFieldConfig(typeContainer) as any,
-        };
-      }),
+      fields: () => {
+        return mapValues(this.fields, (field) => {
+          const unthunkedField = unthunk(field);
+          const inputField = toInputField(unthunkedField);
+          return inputField.getGraphQLInputFieldConfig(typeContainer);
+        });
+      },
     });
   }
 }
+
+export const inputObject = <
+  N extends string,
+  M extends InputFieldConstructorArgsMap
+>(
+  params: IInputObjectConstructorArgs<N, M>,
+): RealizedType<InputObject<N, M>, false> => {
+  const internalType = new InputObject(params);
+  return new RealizedType({
+    internalType,
+    isNullable: false,
+  });
+};
 
 type TypeStruct = StringKeys<RealizedType<any, any>>;
 
@@ -839,6 +836,14 @@ const typeContainer = new TypeContainer({
   }),
 });
 
+const firstInputObject = inputObject({
+  name: 'MyInputObject1',
+  fields: {
+    a: String,
+  },
+  description: 'some description here',
+});
+
 typeContainer.query({
   listOfThings: new RootQueryField({
     type: list(String),
@@ -856,7 +861,14 @@ typeContainer.query({
   currentUser: new RootQueryField({
     // TODO: find a way to do this without having to use the constructor
     type: User,
-    args: {},
+    args: {
+      x: String,
+      y: new InputField({
+        type: String.nullable,
+        description: 'some desc',
+      }),
+      z: firstInputObject,
+    },
     resolve: (root, args, context) => {
       return {
         id: 1,
