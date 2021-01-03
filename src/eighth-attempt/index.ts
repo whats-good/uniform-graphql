@@ -155,6 +155,10 @@ class RealizedType<T extends AnyType, N extends boolean> {
     this.isNullable = params.isNullable;
   }
 
+  public get name() {
+    return this.internalType.name;
+  }
+
   public get nullable(): RealizedType<T, true> {
     return new RealizedType({
       internalType: this.internalType,
@@ -526,25 +530,26 @@ type ResolverReturnTypeOfTypeStruct<S extends TypeStruct> = {
   [K in keyof S]: Thunkable<Promisable<ResolverReturnTypeOf<S[K]>>>;
 };
 
-type InternalResolverReturnTypeOf<
+type InternalResolverReturnTypeOfObjectType<
   R extends RealizedType<ObjectType<any, any>, any>
-> = ResolverReturnTypeOfTypeStruct<TypeStructOf<R['internalType']['fields']>>;
+> = ResolverReturnTypeOfTypeStruct<
+  TypeStructOf<R['internalType']['fields']>
+> & { __typename?: R['internalType']['name'] };
+
 type ResolverReturnTypeOf<
   R extends OutputRealizedType
 > = R extends RealizedType<ObjectType<any, any>, any>
   ? R['isNullable'] extends true
-    ? Maybe<InternalResolverReturnTypeOf<R>>
-    : InternalResolverReturnTypeOf<R>
+    ? Maybe<InternalResolverReturnTypeOfObjectType<R>>
+    : InternalResolverReturnTypeOfObjectType<R>
   : ExternalTypeOf<R>;
-
-// const Membership = new E
 
 type UserFields = {
   id: typeof ID;
   firstName: typeof String;
   // TODO: find a way to make sure nonNullables arent assignable for nullables. Treat them as completely different things.
   lastName: typeof String['nullable'];
-  bestFriend: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>;
+  self: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>;
   pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
   membership: typeof Membership['nullable'];
 };
@@ -557,7 +562,7 @@ const User: UserType = objectType({
     id: ID,
     firstName: String,
     lastName: String.nullable,
-    bestFriend: () => User.nullable,
+    self: () => User.nullable,
     pet: () => Animal['nullable'],
     membership: Membership.nullable,
   },
@@ -604,7 +609,7 @@ typeContainer.query({
     resolve: (root, args, context) => {
       return {
         id: 1,
-        get bestFriend() {
+        get self() {
           return this;
         },
         firstName: 'kerem',
