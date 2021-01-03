@@ -535,20 +535,35 @@ type InternalResolverReturnTypeOfObjectType<
   TypeStructOf<R['internalType']['fields']>
 > & { __typename?: R['internalType']['name'] };
 
+type InternalResolverReturnTypeOfUnionType<
+  R extends RealizedType<UnionType<any, any>, any>
+> = {
+  __typename: string;
+} & InternalResolverReturnTypeOfObjectType<
+  Unthunked<R['internalType']['types']>[number]
+>;
 type ResolverReturnTypeOf<
   R extends OutputRealizedType
 > = R extends RealizedType<ObjectType<any, any>, any>
   ? TypeRealization<R, InternalResolverReturnTypeOfObjectType<R>>
+  : R extends RealizedType<UnionType<any, any>, any>
+  ? TypeRealization<R, InternalResolverReturnTypeOfUnionType<R>>
   : ExternalTypeOf<R>;
+
+const BestFriend = union({
+  name: 'BestFriend',
+  types: () => [Animal, User],
+  // resolveType: () => 'x',
+});
 
 type UserFields = {
   id: typeof ID;
   firstName: typeof String;
-  // TODO: find a way to make sure nonNullables arent assignable for nullables. Treat them as completely different things.
   lastName: typeof String['nullable'];
   self: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>;
   pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
   membership: typeof Membership['nullable'];
+  bestFriend: typeof BestFriend['nullable'];
 };
 
 type UserType = RealizedType<ObjectType<'User', UserFields>, false>;
@@ -562,6 +577,7 @@ const User: UserType = objectType({
     self: () => User.nullable,
     pet: () => Animal['nullable'],
     membership: Membership.nullable,
+    bestFriend: BestFriend['nullable'],
   },
 });
 
@@ -622,6 +638,13 @@ typeContainer.query({
           });
         },
         membership: Membership.internalType.values.enterprise,
+        bestFriend: () => ({
+          // TODO: find a way to separate the typenames from each other (i.e Person shouldnt be applicable here.)
+          __typename: 'Animal',
+          name: () => 'some name',
+          id: async () => 'some id',
+          owner: null,
+        }),
       };
     },
   }),
