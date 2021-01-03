@@ -4,6 +4,8 @@ import {
   GraphQLFieldConfig,
   GraphQLFloat,
   GraphQLID,
+  GraphQLInputFieldConfig,
+  GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -71,7 +73,7 @@ class RootQueryField<
   ): GraphQLFieldConfig<any, any, any> {
     return {
       type: this.type.getGraphQLType(typeContainer) as any,
-      // args: this.args, // TODO: fix
+      args: {}, // TODO: fix
       resolve: this.resolve,
     };
   }
@@ -115,12 +117,36 @@ export class TypeContainer<C extends GraphQLContext> {
   }
 
   public getSchema(): GraphQLSchema {
+    // const argsObject: any = new GraphQLInputObjectType({
+    //   name: 'SomeObject',
+    //   fields: () =>
+    //     ({
+    //       id: {
+    //         type: GraphQLID,
+    //       },
+    //       get self() {
+    //         return {
+    //           type: argsObject,
+    //         };
+    //       },
+    //     } as any),
+    // });
     return new GraphQLSchema({
       query: new GraphQLObjectType({
         name: 'Query',
         fields: mapValues(this.rootQueries, (rootQuery) =>
           rootQuery.getGraphQLFieldConfig(this),
         ),
+        // fields: {
+        //   x: {
+        //     type: GraphQLString,
+        //     args: {
+        //       y: {
+        //         type: argsObject,
+        //       },
+        //     },
+        //   },
+        // },
       }),
     });
   }
@@ -420,6 +446,7 @@ type InputType =
   | ScalarType<any, any>
   | UnionType<any, any>
   | EnumType<any, any>
+  | InputObject<any, any>
   | ListType<InputRealizedType>;
 
 type OutputRealizedType = RealizedType<OutputType, any>;
@@ -495,7 +522,10 @@ type ExternalTypeOf<R extends RealizedType<any, any>> = TypeRealization<
 class ObjectType<
   N extends string,
   F extends OutputFieldConstructorArgsMap
-> extends BaseType<N, TypeOfTypeStruct<TypeStructOf<F>>> {
+> extends BaseType<
+  N,
+  TypeOfTypeStruct<TypeStructOfOutputFieldConstructorArgsMap<F>>
+> {
   public readonly fields: F;
 
   constructor(params: IObjectTypeConstructorParams<N, F>) {
@@ -570,17 +600,131 @@ export const inputlist = <T extends InputRealizedType>(
   return __list(type);
 };
 
-type TypeStruct = StringKeys<OutputRealizedType>;
+type InputFieldConstructorArg =
+  | InputRealizedType
+  | InputField<InputRealizedType>;
 
-type TypeStructOf<F extends OutputFieldConstructorArgsMap> = {
+type TypeInInputFieldConstructorArg<
+  A extends InputFieldConstructorArg
+> = A extends InputRealizedType
+  ? A
+  : A extends InputField<any>
+  ? A['type']
+  : never;
+
+type InputFieldInInputFieldConstructorArg<
+  A extends InputFieldConstructorArg
+> = InputField<TypeInInputFieldConstructorArg<A>>;
+
+const toInputField = <A extends InputFieldConstructorArg>(
+  x: InputFieldConstructorArg,
+): InputFieldInInputFieldConstructorArg<A> => {
+  if (brandOf(x) === 'inputfield') {
+    return x as any;
+  } else if (brandOf(x) === 'realizedtype') {
+    return new InputField({
+      type: x as any,
+    }) as any;
+  }
+  throw new Error(`Unrecogized brand: ${brandOf(x)}`);
+};
+
+class InputField<R extends InputRealizedType> {
+  public readonly type: R;
+  public deprecationReason?: string;
+  public description?: string;
+
+  public readonly __BRAND__ = 'inputfield';
+
+  constructor(params: {
+    type: R;
+    deprecationReason?: string;
+    description?: string;
+  }) {
+    this.type = params.type;
+    this.deprecationReason = params.deprecationReason;
+    this.description = params.description;
+  }
+
+  public getGraphQLInputFieldConfig(
+    typeContainer: TypeContainer<any>,
+  ): GraphQLInputFieldConfig {
+    return {
+      type: this.type.getGraphQLType(typeContainer) as any,
+      deprecationReason: this.deprecationReason,
+      description: this.description,
+      // defaultValue TODO: implement
+    };
+  }
+}
+
+type InputFieldConstructorArgsMapValueOf<
+  R extends InputRealizedType
+> = Thunkable<R | InputField<R>>;
+
+type InputFieldConstructorArgsMap = StringKeys<
+  InputFieldConstructorArgsMapValueOf<any>
+>;
+
+interface IInputObjectConstructorArgs<
+  N extends string,
+  M extends InputFieldConstructorArgsMap
+> {
+  name: N;
+  fields: M;
+  description?: string;
+}
+
+class InputObject<
+  N extends string,
+  M extends InputFieldConstructorArgsMap
+> extends BaseType<
+  N,
+  TypeOfTypeStruct<TypeStructOfInputFieldConstructorArgsMap<M>>
+> {
+  public readonly fields: M;
+  public readonly description?: string;
+
+  constructor(params: IInputObjectConstructorArgs<N, M>) {
+    super(params);
+    this.fields = params.fields;
+    this.description = params.description;
+  }
+
+  protected getFreshInternalGraphQLType(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLInputObjectType {
+    return new GraphQLInputObjectType({
+      name: this.name,
+      description: this.description,
+      fields: mapValues(this.fields, (field) => {
+        const unthunkedField = unthunk(field);
+        const inputField = toInputField(unthunkedField);
+        return {
+          type: inputField.getGraphQLInputFieldConfig(typeContainer) as any,
+        };
+      }),
+    });
+  }
+}
+
+type TypeStruct = StringKeys<RealizedType<any, any>>;
+
+type TypeStructOfOutputFieldConstructorArgsMap<
+  F extends OutputFieldConstructorArgsMap
+> = {
   [K in keyof F]: TypeInOutputFieldConstructorArg<Unthunked<F[K]>>;
+};
+
+type TypeStructOfInputFieldConstructorArgsMap<
+  M extends InputFieldConstructorArgsMap
+> = {
+  [K in keyof M]: TypeInInputFieldConstructorArg<Unthunked<M[K]>>;
 };
 
 type TypeOfTypeStruct<S extends TypeStruct> = {
   [K in keyof S]: ExternalTypeOf<S[K]>;
 };
-
-// Thunkable<Promisable<ResolverReturnTypeOfTypeStruct<TypeStructOf<UserFields>>>>
 
 type ResolverReturnTypeOfTypeStruct<S extends TypeStruct> = {
   [K in keyof S]: Thunkable<Promisable<ResolverReturnTypeOf<S[K]>>>;
@@ -589,7 +733,7 @@ type ResolverReturnTypeOfTypeStruct<S extends TypeStruct> = {
 type InternalResolverReturnTypeOfObjectType<
   R extends RealizedType<ObjectType<any, any>, any>
 > = ResolverReturnTypeOfTypeStruct<
-  TypeStructOf<R['internalType']['fields']>
+  TypeStructOfOutputFieldConstructorArgsMap<R['internalType']['fields']>
 > & { __typename?: R['internalType']['name'] };
 
 type InternalResolverReturnTypeOfUnionType<
