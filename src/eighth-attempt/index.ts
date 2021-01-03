@@ -348,12 +348,18 @@ const Membership = enu({
 type Unionable = ObjectType<any, any> | RealizedType<ObjectType<any, any>, any>;
 
 type Unionables = Thunkable<[Unionable, Unionable, ...Array<Unionable>]>;
-
 interface IUnionTypeConstructorParams<N extends string, U extends Unionables> {
-  name: N;
-  types: U;
-  description?: string;
+  name: UnionType<N, U>['name'];
+  types: UnionType<N, U>['types'];
+  description?: UnionType<N, U>['description'];
+  resolveType?: UnionType<N, U>['resolveType'];
 }
+
+type ResolveTypeFnOf<U extends Unionables> = (
+  resolved: InternalResolverReturnTypeOfUnionType<
+    RealizedType<UnionType<any, U>, any>
+  >,
+) => Required<typeof resolved['__typename']>;
 
 class UnionType<N extends string, U extends Unionables> extends BaseType<
   N,
@@ -361,10 +367,12 @@ class UnionType<N extends string, U extends Unionables> extends BaseType<
 > {
   public readonly types: U;
   public readonly description?: string;
+  public readonly resolveType?: ResolveTypeFnOf<U>;
 
   constructor(params: IUnionTypeConstructorParams<N, U>) {
     super(params);
     this.types = params.types;
+    this.resolveType = params.resolveType;
   }
 
   protected getFreshInternalGraphQLType(
@@ -379,10 +387,10 @@ class UnionType<N extends string, U extends Unionables> extends BaseType<
       }
     });
     return new GraphQLUnionType({
-      // resolveType TODO: implement
       name: this.name,
       description: this.description,
       types: types as any,
+      resolveType: this.resolveType as any,
     });
   }
 }
@@ -537,11 +545,12 @@ type InternalResolverReturnTypeOfObjectType<
 
 type InternalResolverReturnTypeOfUnionType<
   R extends RealizedType<UnionType<any, any>, any>
-> = {
-  __typename: string;
-} & InternalResolverReturnTypeOfObjectType<
+> = InternalResolverReturnTypeOfObjectType<
   Unthunked<R['internalType']['types']>[number]
 >;
+// TODO: For union types, the typename isnt required for now. Get back to this later and
+// make sure that either resolveType of `typename` is provided.
+
 type ResolverReturnTypeOf<
   R extends OutputRealizedType
 > = R extends RealizedType<ObjectType<any, any>, any>
@@ -553,7 +562,12 @@ type ResolverReturnTypeOf<
 const BestFriend = union({
   name: 'BestFriend',
   types: () => [Animal, User],
-  // resolveType: () => 'x',
+  resolveType: (x) => {
+    if (x.__typename) {
+      return x.__typename;
+    }
+    return 'Animal';
+  },
 });
 
 type UserFields = {
