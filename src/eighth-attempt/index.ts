@@ -11,6 +11,7 @@ import {
   GraphQLSchema,
   GraphQLString,
   GraphQLType,
+  GraphQLUnionType,
   ValueNode,
 } from 'graphql';
 import {
@@ -340,9 +341,65 @@ const Membership = enu({
   },
 });
 
+type Unionable = ObjectType<any, any> | RealizedType<ObjectType<any, any>, any>;
+
+type Unionables = Thunkable<[Unionable, Unionable, ...Array<Unionable>]>;
+
+interface IUnionTypeConstructorParams<N extends string, U extends Unionables> {
+  name: N;
+  types: U;
+  description?: string;
+}
+
+class UnionType<N extends string, U extends Unionables> extends BaseType<
+  N,
+  Unthunked<U>[number]
+> {
+  public readonly types: U;
+  public readonly description?: string;
+
+  constructor(params: IUnionTypeConstructorParams<N, U>) {
+    super(params);
+    this.types = params.types;
+  }
+
+  protected getFreshInternalGraphQLType(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLUnionType {
+    const unthunkedTypes = unthunk(this.types);
+    const types = unthunkedTypes.map((type) => {
+      if (type instanceof RealizedType) {
+        return type.internalType.getInternalGraphQLType(typeContainer);
+      } else {
+        return type.getInternalGraphQLType(typeContainer);
+      }
+    });
+    return new GraphQLUnionType({
+      // resolveType TODO: implement
+      name: this.name,
+      description: this.description,
+      types: types as any,
+    });
+  }
+}
+
+// TODO: find a way to make sure no 2 conflicting types can be unioned. For example,
+// an object with .id: ID and another with .id: String.
+
+const union = <N extends string, U extends Unionables>(
+  params: IUnionTypeConstructorParams<N, U>,
+): RealizedType<UnionType<N, U>, false> => {
+  const internalType = new UnionType(params);
+  return new RealizedType({
+    internalType,
+    isNullable: false,
+  });
+};
+
 type OutputType =
   | ScalarType<any, any>
   | ObjectType<any, any>
+  | UnionType<any, any>
   | EnumType<any, any>;
 type OutputRealizedType = RealizedType<OutputType, boolean>;
 
@@ -430,6 +487,9 @@ class ObjectType<
   ): GraphQLType {
     return new GraphQLObjectType({
       name: this.name,
+      // interfaces TODO: implement
+      // resolveObject: TODO: implement
+      // isTypeOf: TODO: implement
       fields: () =>
         mapValues(this.fields, (field) => {
           const unthunkedField = unthunk(field);
