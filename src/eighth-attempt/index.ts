@@ -28,6 +28,7 @@ import {
 import { forEach, mapValues } from 'lodash';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
+import { arg } from '../types/struct-types';
 
 interface StringKeys<T> {
   [key: string]: T;
@@ -821,6 +822,27 @@ type AnimalType = RealizedType<
   false
 >;
 
+type RecursiveInputType = RealizedType<
+  InputObject<
+    'RecursiveInputType',
+    {
+      a: InputFieldConstructorArgsMapValueOf<typeof ID>;
+      b: InputFieldConstructorArgsMapValueOf<RecursiveInputType['nullable']>;
+    }
+  >,
+  false
+>;
+
+const recursiveInputType: RecursiveInputType = inputObject({
+  name: 'RecursiveInputType',
+  get fields() {
+    return {
+      a: () => ID,
+      b: () => recursiveInputType.nullable,
+    };
+  },
+});
+
 const Animal: AnimalType = objectType({
   name: 'Animal',
   fields: {
@@ -847,13 +869,16 @@ const firstInputObject = inputObject({
 typeContainer.query({
   listOfThings: new RootQueryField({
     type: list(String),
-    args: {},
+    args: {
+      f: recursiveInputType,
+    },
     resolve: (root, args, context) => {
       // important: you cant return a list of thunks for a listType resolver.
       // however, you can return a list of promises.
+      const y = args.f.b?.b?.b?.a;
       return [
         new Promise<string>((resolve) => {
-          resolve('yo');
+          resolve('yo' + y);
         }),
       ];
     },
