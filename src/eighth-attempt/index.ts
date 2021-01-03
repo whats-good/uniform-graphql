@@ -469,11 +469,10 @@ const toObjectField = <A extends OutputFieldConstructorArg>(
   }
 };
 
-type ExternalTypeOf<
-  R extends RealizedType<any, any>
-> = R['isNullable'] extends true
-  ? Maybe<R['internalType']['__INTERNAL_TYPE__']>
-  : R['internalType']['__INTERNAL_TYPE__'];
+type ExternalTypeOf<R extends RealizedType<any, any>> = TypeRealization<
+  R,
+  R['internalType']['__INTERNAL_TYPE__']
+>;
 
 class ObjectType<
   N extends string,
@@ -539,9 +538,7 @@ type InternalResolverReturnTypeOfObjectType<
 type ResolverReturnTypeOf<
   R extends OutputRealizedType
 > = R extends RealizedType<ObjectType<any, any>, any>
-  ? R['isNullable'] extends true
-    ? Maybe<InternalResolverReturnTypeOfObjectType<R>>
-    : InternalResolverReturnTypeOfObjectType<R>
+  ? TypeRealization<R, InternalResolverReturnTypeOfObjectType<R>>
   : ExternalTypeOf<R>;
 
 type UserFields = {
@@ -572,7 +569,10 @@ const User: UserType = objectType({
 // extra fields, the frontend will falsely assume that these fields are implemented,
 // even though they arent.
 
-type F = ExternalTypeOf<typeof User>;
+type TypeRealization<
+  R extends OutputRealizedType,
+  T
+> = R['isNullable'] extends true ? Maybe<T> : T;
 
 type AnimalType = RealizedType<
   ObjectType<
