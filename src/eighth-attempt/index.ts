@@ -416,7 +416,14 @@ type OutputType =
   | EnumType<any, any>
   | ListType<OutputRealizedType>;
 
-type OutputRealizedType = RealizedType<OutputType, boolean>;
+type InputType =
+  | ScalarType<any, any>
+  | UnionType<any, any>
+  | EnumType<any, any>
+  | ListType<InputRealizedType>;
+
+type OutputRealizedType = RealizedType<OutputType, any>;
+type InputRealizedType = RealizedType<InputType, any>;
 
 class ObjectField<R extends OutputRealizedType> {
   public readonly type: R;
@@ -541,9 +548,7 @@ class ListType<
   }
 }
 
-export const list = <T extends OutputRealizedType>(
-  type: T,
-): RealizedType<ListType<T>, false> => {
+const __list = <T extends RealizedType<any, any>>(type: T) => {
   const internalType = new ListType({
     type,
   });
@@ -551,6 +556,18 @@ export const list = <T extends OutputRealizedType>(
     internalType,
     isNullable: false,
   });
+};
+
+export const list = <T extends OutputRealizedType>(
+  type: T,
+): RealizedType<ListType<T>, false> => {
+  return __list(type);
+};
+
+export const inputlist = <T extends InputRealizedType>(
+  type: T,
+): RealizedType<ListType<T>, false> => {
+  return __list(type);
 };
 
 type TypeStruct = StringKeys<OutputRealizedType>;
