@@ -451,9 +451,9 @@ type InputInternalType =
 type OutputRealizedType = RealizedType<OutputInternalType, any>;
 type InputRealizedType = RealizedType<InputInternalType, any>;
 
-class ObjectField<R extends OutputRealizedType> {
+class OutputField<R extends OutputRealizedType> {
   public readonly type: R;
-  public readonly __BRAND__ = 'objectfield';
+  public readonly __BRAND__ = 'outputField';
 
   constructor(params: { type: R }) {
     this.type = params.type;
@@ -471,11 +471,11 @@ class ObjectField<R extends OutputRealizedType> {
   }
 }
 
-type OutputFieldConstructorArg = OutputRealizedType | ObjectField<any>;
+type OutputFieldConstructorArg = OutputRealizedType | OutputField<any>;
 
 type OutputFieldConstructorArgsMapValueOf<
   R extends OutputRealizedType
-> = Thunkable<R | ObjectField<R>>;
+> = Thunkable<R | OutputField<R>>;
 
 interface OutputFieldConstructorArgsMap {
   [key: string]: Thunkable<OutputFieldConstructorArg>;
@@ -493,20 +493,20 @@ type TypeInOutputFieldConstructorArg<
   A extends OutputFieldConstructorArg
 > = A extends OutputRealizedType
   ? A
-  : A extends ObjectField<any>
+  : A extends OutputField<any>
   ? A['type']
   : never;
 
-type ObjectFieldInOutputFieldConstructorArg<
+type OutputFieldInOutputFieldConstructorArg<
   A extends OutputFieldConstructorArg
-> = ObjectField<TypeInOutputFieldConstructorArg<A>>;
+> = OutputField<TypeInOutputFieldConstructorArg<A>>;
 
 const toOutputField = <A extends OutputFieldConstructorArg>(
   a: A,
-): ObjectFieldInOutputFieldConstructorArg<A> => {
+): OutputFieldInOutputFieldConstructorArg<A> => {
   if (brandOf(a) == 'realizedtype') {
-    return new ObjectField({ type: a as any });
-  } else if (brandOf(a) == 'objectfield') {
+    return new OutputField({ type: a as any });
+  } else if (brandOf(a) == 'outputField') {
     return a as any;
   } else {
     throw new Error(`Unrecognized brand: ${brandOf(a)}`);
@@ -555,7 +555,7 @@ type ObjectType<
   F extends OutputFieldConstructorArgsMap
 > = RealizedType<ObjectInternalType<N, F>, false>;
 
-const objectType = <N extends string, F extends OutputFieldConstructorArgsMap>(
+const object = <N extends string, F extends OutputFieldConstructorArgsMap>(
   params: IObjectTypeConstructorParams<N, F>,
 ): ObjectType<N, F> => {
   const internalType = new ObjectInternalType(params);
@@ -722,7 +722,7 @@ class InputObjectInternalType<
   }
 }
 
-export type InputObject<
+export type InputObjectType<
   N extends string,
   M extends InputFieldConstructorArgsMap
 > = RealizedType<InputObjectInternalType<N, M>, false>;
@@ -732,7 +732,7 @@ export const inputObject = <
   M extends InputFieldConstructorArgsMap
 >(
   params: IInputObjectConstructorArgs<N, M>,
-): InputObject<N, M> => {
+): InputObjectType<N, M> => {
   const internalType = new InputObjectInternalType(params);
   return new RealizedType({
     internalType,
@@ -802,28 +802,31 @@ const BestFriend = union({
   },
 });
 
-type UserFields = {
+type OutputFields<M extends OutputFieldConstructorArgsMap> = {
+  [K in keyof M]: Thunkable<
+    | OutputFieldInOutputFieldConstructorArg<Unthunked<M[K]>>
+    | TypeInOutputFieldConstructorArg<Unthunked<M[K]>>
+  >;
+};
+
+type UserFields = OutputFields<{
   id: typeof ID;
   firstName: typeof String;
   lastName: typeof String['nullable'];
-  self: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>;
-  pet: OutputFieldConstructorArgsMapValueOf<AnimalType['nullable']>;
+  self: UserType['nullable'];
+  pet: AnimalType['nullable'];
   membership: typeof Membership['nullable'];
   bestFriend: typeof BestFriend['nullable'];
-  bestFriends: OutputFieldConstructorArgsMapValueOf<
-    RealizedType<ListInternalType<typeof BestFriend['nullable']>, false>
-  >; // TODO: make these easier.
-  friends: OutputFieldConstructorArgsMapValueOf<
-    RealizedType<ListInternalType<UserType['nullable']>, false>
-  >; // TODO: make these easier.
-};
+  bestFriends: ListType<typeof BestFriend['nullable']>;
+  friends: ListType<UserType['nullable']>;
+}>;
 
 type UserType = RealizedType<ObjectInternalType<'User', UserFields>, false>;
 
-const User: UserType = objectType({
+const User: UserType = object({
   name: 'User',
   fields: {
-    id: ID,
+    id: () => ID,
     firstName: String,
     lastName: String.nullable,
     self: () => User.nullable,
@@ -844,27 +847,21 @@ type TypeRealization<
   T
 > = R['isNullable'] extends true ? Maybe<T> : T;
 
-type AnimalType = RealizedType<
-  ObjectInternalType<
-    'Animal',
-    {
-      id: typeof String;
-      name: typeof String;
-      owner: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>; // TODO: make these generics simpler.
-    }
-  >,
-  false
+type AnimalType = ObjectType<
+  'Animal',
+  {
+    id: typeof String;
+    name: typeof String;
+    owner: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>; // TODO: make these generics simpler.
+  }
 >;
 
-type RecursiveInputType = RealizedType<
-  InputObjectInternalType<
-    'RecursiveInputType',
-    {
-      a: InputFieldConstructorArgsMapValueOf<typeof ID>;
-      b: InputFieldConstructorArgsMapValueOf<RecursiveInputType['nullable']>;
-    }
-  >,
-  false
+type RecursiveInputType = InputObjectType<
+  'RecursiveInputType',
+  {
+    a: InputFieldConstructorArgsMapValueOf<typeof ID>;
+    b: InputFieldConstructorArgsMapValueOf<RecursiveInputType['nullable']>;
+  }
 >;
 
 const recursiveInputType: RecursiveInputType = inputObject({
@@ -877,7 +874,7 @@ const recursiveInputType: RecursiveInputType = inputObject({
   },
 });
 
-const Animal: AnimalType = objectType({
+const Animal: AnimalType = object({
   name: 'Animal',
   fields: {
     id: String,
@@ -983,5 +980,3 @@ const start = () => {
 };
 
 start();
-
-// TODO: assign better shortcuts to the realized types
