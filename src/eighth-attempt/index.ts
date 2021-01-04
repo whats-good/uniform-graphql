@@ -28,7 +28,6 @@ import {
 import { forEach, mapValues } from 'lodash';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import { arg } from '../types/struct-types';
 
 interface StringKeys<T> {
   [key: string]: T;
@@ -38,7 +37,7 @@ type GraphQLContext = StringKeys<unknown>;
 
 type ContextGetter<C extends GraphQLContext> = () => C;
 
-type AnyType = BaseType<any, any>;
+type AnyType = InternalType<any, any>;
 
 type AnyTypeContainer = TypeContainer<any>;
 
@@ -135,7 +134,7 @@ export class TypeContainer<C extends GraphQLContext> {
   }
 }
 
-abstract class BaseType<N extends string, I> {
+abstract class InternalType<N extends string, I> {
   public readonly name: N;
   public readonly __INTERNAL_TYPE__!: I;
 
@@ -199,12 +198,12 @@ interface IScalarTypeConstructorParams<N extends string, I> {
   name: N;
   description?: Maybe<string>;
   specifiedByUrl?: Maybe<string>;
-  serialize: ScalarType<N, I>['serializer'];
-  parseValue: ScalarType<N, I>['valueParser'];
-  parseLiteral: ScalarType<N, I>['literalParser'];
+  serialize: ScalarInternalType<N, I>['serializer'];
+  parseValue: ScalarInternalType<N, I>['valueParser'];
+  parseLiteral: ScalarInternalType<N, I>['literalParser'];
 }
 
-class ScalarType<N extends string, I> extends BaseType<N, I> {
+class ScalarInternalType<N extends string, I> extends InternalType<N, I> {
   public readonly description?: Maybe<string>;
   public readonly specifiedByUrl?: Maybe<string>;
 
@@ -235,8 +234,8 @@ class ScalarType<N extends string, I> extends BaseType<N, I> {
 
 const scalar = <N extends string, I>(
   params: IScalarTypeConstructorParams<N, I>,
-): RealizedType<ScalarType<N, I>, false> => {
-  const scalarType = new ScalarType(params);
+): RealizedType<ScalarInternalType<N, I>, false> => {
+  const scalarType = new ScalarInternalType(params);
   return new RealizedType({
     internalType: scalarType,
     isNullable: false,
@@ -304,10 +303,10 @@ interface IEnumTypeConstructorParams<
   values: D;
 }
 
-class EnumType<N extends string, D extends EnumValuesMap> extends BaseType<
-  N,
-  keyof D
-> {
+class EnumInternalType<
+  N extends string,
+  D extends EnumValuesMap
+> extends InternalType<N, keyof D> {
   public readonly description?: string;
   public readonly valuesConfig: D;
 
@@ -338,8 +337,8 @@ class EnumType<N extends string, D extends EnumValuesMap> extends BaseType<
 
 export const enu = <N extends string, D extends EnumValuesMap>(
   params: IEnumTypeConstructorParams<N, D>,
-): RealizedType<EnumType<N, D>, false> => {
-  const internalType = new EnumType(params);
+): RealizedType<EnumInternalType<N, D>, false> => {
+  const internalType = new EnumInternalType(params);
   return new RealizedType({
     internalType,
     isNullable: false,
@@ -355,26 +354,28 @@ const Membership = enu({
   },
 });
 
-type Unionable = ObjectType<any, any> | RealizedType<ObjectType<any, any>, any>;
+type Unionable =
+  | ObjectInternalType<any, any>
+  | RealizedType<ObjectInternalType<any, any>, any>;
 
 type Unionables = Thunkable<[Unionable, Unionable, ...Array<Unionable>]>;
 interface IUnionTypeConstructorParams<N extends string, U extends Unionables> {
-  name: UnionType<N, U>['name'];
-  types: UnionType<N, U>['types'];
-  description?: UnionType<N, U>['description'];
-  resolveType?: UnionType<N, U>['resolveType'];
+  name: UnionInternalType<N, U>['name'];
+  types: UnionInternalType<N, U>['types'];
+  description?: UnionInternalType<N, U>['description'];
+  resolveType?: UnionInternalType<N, U>['resolveType'];
 }
 
 type ResolveTypeFnOf<U extends Unionables> = (
   resolved: InternalResolverReturnTypeOfUnionType<
-    RealizedType<UnionType<any, U>, any>
+    RealizedType<UnionInternalType<any, U>, any>
   >,
 ) => Required<typeof resolved['__typename']>;
 
-class UnionType<N extends string, U extends Unionables> extends BaseType<
-  N,
-  Unthunked<U>[number]
-> {
+class UnionInternalType<
+  N extends string,
+  U extends Unionables
+> extends InternalType<N, Unthunked<U>[number]> {
   public readonly types: U;
   public readonly description?: string;
   public readonly resolveType?: ResolveTypeFnOf<U>;
@@ -410,8 +411,8 @@ class UnionType<N extends string, U extends Unionables> extends BaseType<
 
 const union = <N extends string, U extends Unionables>(
   params: IUnionTypeConstructorParams<N, U>,
-): RealizedType<UnionType<N, U>, false> => {
-  const internalType = new UnionType(params);
+): RealizedType<UnionInternalType<N, U>, false> => {
+  const internalType = new UnionInternalType(params);
   return new RealizedType({
     internalType,
     isNullable: false,
@@ -419,18 +420,18 @@ const union = <N extends string, U extends Unionables>(
 };
 
 type OutputType =
-  | ScalarType<any, any>
-  | ObjectType<any, any>
-  | UnionType<any, any>
-  | EnumType<any, any>
-  | ListType<OutputRealizedType>;
+  | ScalarInternalType<any, any>
+  | ObjectInternalType<any, any>
+  | UnionInternalType<any, any>
+  | EnumInternalType<any, any>
+  | ListInternalType<OutputRealizedType>;
 
 type InputType =
-  | ScalarType<any, any>
-  | UnionType<any, any>
-  | EnumType<any, any>
-  | InputObject<any, any>
-  | ListType<InputRealizedType>;
+  | ScalarInternalType<any, any>
+  | UnionInternalType<any, any>
+  | EnumInternalType<any, any>
+  | InputObjectInternalType<any, any>
+  | ListInternalType<InputRealizedType>;
 
 type OutputRealizedType = RealizedType<OutputType, any>;
 type InputRealizedType = RealizedType<InputType, any>;
@@ -485,7 +486,7 @@ type ObjectFieldInOutputFieldConstructorArg<
   A extends OutputFieldConstructorArg
 > = ObjectField<TypeInOutputFieldConstructorArg<A>>;
 
-const toObjectField = <A extends OutputFieldConstructorArg>(
+const toOutputField = <A extends OutputFieldConstructorArg>(
   a: A,
 ): ObjectFieldInOutputFieldConstructorArg<A> => {
   if (brandOf(a) == 'realizedtype') {
@@ -502,10 +503,10 @@ type ExternalTypeOf<R extends RealizedType<any, any>> = TypeRealization<
   R['internalType']['__INTERNAL_TYPE__']
 >;
 
-class ObjectType<
+class ObjectInternalType<
   N extends string,
   F extends OutputFieldConstructorArgsMap
-> extends BaseType<
+> extends InternalType<
   N,
   TypeOfTypeStruct<TypeStructOfOutputFieldConstructorArgsMap<F>>
 > {
@@ -527,7 +528,7 @@ class ObjectType<
       fields: () =>
         mapValues(this.fields, (field) => {
           const unthunkedField = unthunk(field);
-          const baseOutputField = toObjectField(unthunkedField);
+          const baseOutputField = toOutputField(unthunkedField);
           return baseOutputField.getGraphQLFieldConfig(typeContainer);
         }),
     });
@@ -536,17 +537,17 @@ class ObjectType<
 
 const objectType = <N extends string, F extends OutputFieldConstructorArgsMap>(
   params: IObjectTypeConstructorParams<N, F>,
-): RealizedType<ObjectType<N, F>, false> => {
-  const internalType = new ObjectType(params);
+): RealizedType<ObjectInternalType<N, F>, false> => {
+  const internalType = new ObjectInternalType(params);
   return new RealizedType({
     internalType,
     isNullable: false,
   });
 };
 
-class ListType<
-  T extends RealizedType<BaseType<any, any>, any>
-> extends BaseType<string, T> {
+class ListInternalType<
+  T extends RealizedType<InternalType<any, any>, any>
+> extends InternalType<string, T> {
   public readonly type: T;
 
   constructor(params: { type: T }) {
@@ -562,7 +563,7 @@ class ListType<
 }
 
 const __list = <T extends RealizedType<any, any>>(type: T) => {
-  const internalType = new ListType({
+  const internalType = new ListInternalType({
     type,
   });
   return new RealizedType({
@@ -573,13 +574,13 @@ const __list = <T extends RealizedType<any, any>>(type: T) => {
 
 export const list = <T extends OutputRealizedType>(
   type: T,
-): RealizedType<ListType<T>, false> => {
+): RealizedType<ListInternalType<T>, false> => {
   return __list(type);
 };
 
 export const inputlist = <T extends InputRealizedType>(
   type: T,
-): RealizedType<ListType<T>, false> => {
+): RealizedType<ListInternalType<T>, false> => {
   return __list(type);
 };
 
@@ -660,10 +661,10 @@ interface IInputObjectConstructorArgs<
   description?: string;
 }
 
-class InputObject<
+class InputObjectInternalType<
   N extends string,
   M extends InputFieldConstructorArgsMap
-> extends BaseType<
+> extends InternalType<
   N,
   TypeOfTypeStruct<TypeStructOfInputFieldConstructorArgsMap<M>>
 > {
@@ -698,8 +699,8 @@ export const inputObject = <
   M extends InputFieldConstructorArgsMap
 >(
   params: IInputObjectConstructorArgs<N, M>,
-): RealizedType<InputObject<N, M>, false> => {
-  const internalType = new InputObject(params);
+): RealizedType<InputObjectInternalType<N, M>, false> => {
+  const internalType = new InputObjectInternalType(params);
   return new RealizedType({
     internalType,
     isNullable: false,
@@ -729,19 +730,19 @@ type ResolverReturnTypeOfTypeStruct<S extends TypeStruct> = {
 };
 
 type InternalResolverReturnTypeOfObjectType<
-  R extends RealizedType<ObjectType<any, any>, any>
+  R extends RealizedType<ObjectInternalType<any, any>, any>
 > = ResolverReturnTypeOfTypeStruct<
   TypeStructOfOutputFieldConstructorArgsMap<R['internalType']['fields']>
 > & { __typename?: R['internalType']['name'] };
 
 type InternalResolverReturnTypeOfUnionType<
-  R extends RealizedType<UnionType<any, any>, any>
+  R extends RealizedType<UnionInternalType<any, any>, any>
 > = InternalResolverReturnTypeOfObjectType<
   Unthunked<R['internalType']['types']>[number]
 >;
 
 type InternalResolverReturnTypeOfListType<
-  R extends RealizedType<ListType<OutputRealizedType>, any>
+  R extends RealizedType<ListInternalType<OutputRealizedType>, any>
 > = Array<Promisable<ResolverReturnTypeOf<R['internalType']['type']>>>;
 
 // TODO: For union types, the typename isnt required for now. Get back to this later and
@@ -749,11 +750,11 @@ type InternalResolverReturnTypeOfListType<
 
 type ResolverReturnTypeOf<
   R extends OutputRealizedType
-> = R extends RealizedType<ListType<any>, any>
+> = R extends RealizedType<ListInternalType<any>, any>
   ? TypeRealization<R, InternalResolverReturnTypeOfListType<R>>
-  : R extends RealizedType<ObjectType<any, any>, any>
+  : R extends RealizedType<ObjectInternalType<any, any>, any>
   ? TypeRealization<R, InternalResolverReturnTypeOfObjectType<R>>
-  : R extends RealizedType<UnionType<any, any>, any>
+  : R extends RealizedType<UnionInternalType<any, any>, any>
   ? TypeRealization<R, InternalResolverReturnTypeOfUnionType<R>>
   : ExternalTypeOf<R>;
 
@@ -777,14 +778,14 @@ type UserFields = {
   membership: typeof Membership['nullable'];
   bestFriend: typeof BestFriend['nullable'];
   bestFriends: OutputFieldConstructorArgsMapValueOf<
-    RealizedType<ListType<typeof BestFriend['nullable']>, false>
+    RealizedType<ListInternalType<typeof BestFriend['nullable']>, false>
   >; // TODO: make these easier.
   friends: OutputFieldConstructorArgsMapValueOf<
-    RealizedType<ListType<UserType['nullable']>, false>
+    RealizedType<ListInternalType<UserType['nullable']>, false>
   >; // TODO: make these easier.
 };
 
-type UserType = RealizedType<ObjectType<'User', UserFields>, false>;
+type UserType = RealizedType<ObjectInternalType<'User', UserFields>, false>;
 
 const User: UserType = objectType({
   name: 'User',
@@ -811,7 +812,7 @@ type TypeRealization<
 > = R['isNullable'] extends true ? Maybe<T> : T;
 
 type AnimalType = RealizedType<
-  ObjectType<
+  ObjectInternalType<
     'Animal',
     {
       id: typeof String;
@@ -823,7 +824,7 @@ type AnimalType = RealizedType<
 >;
 
 type RecursiveInputType = RealizedType<
-  InputObject<
+  InputObjectInternalType<
     'RecursiveInputType',
     {
       a: InputFieldConstructorArgsMapValueOf<typeof ID>;
@@ -949,3 +950,5 @@ const start = () => {
 };
 
 start();
+
+// TODO: assign better shortcuts to the realized types
