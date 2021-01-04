@@ -520,7 +520,7 @@ type ExternalTypeOf<R extends RealizedType<any, any>> = TypeRealization<
 
 class ObjectInternalType<
   N extends string,
-  F extends OutputFieldConstructorArgsMap
+  F extends OutputFields<OutputFieldConstructorArgsMap>
 > extends InternalType<
   N,
   TypeOfTypeStruct<TypeStructOfOutputFieldConstructorArgsMap<F>>
@@ -553,7 +553,7 @@ class ObjectInternalType<
 type ObjectType<
   N extends string,
   F extends OutputFieldConstructorArgsMap
-> = RealizedType<ObjectInternalType<N, F>, false>;
+> = RealizedType<ObjectInternalType<N, OutputFields<F>>, false>;
 
 const object = <N extends string, F extends OutputFieldConstructorArgsMap>(
   params: IObjectTypeConstructorParams<N, F>,
@@ -562,7 +562,7 @@ const object = <N extends string, F extends OutputFieldConstructorArgsMap>(
   return new RealizedType({
     internalType,
     isNullable: false,
-  });
+  }) as any;
 };
 
 class ListInternalType<
@@ -809,19 +809,20 @@ type OutputFields<M extends OutputFieldConstructorArgsMap> = {
   >;
 };
 
-type UserFields = OutputFields<{
-  id: typeof ID;
-  firstName: typeof String;
-  lastName: typeof String['nullable'];
-  self: UserType['nullable'];
-  pet: AnimalType['nullable'];
-  membership: typeof Membership['nullable'];
-  bestFriend: typeof BestFriend['nullable'];
-  bestFriends: ListType<typeof BestFriend['nullable']>;
-  friends: ListType<UserType['nullable']>;
-}>;
-
-type UserType = RealizedType<ObjectInternalType<'User', UserFields>, false>;
+type UserType = ObjectType<
+  'User',
+  {
+    id: typeof ID;
+    firstName: typeof String;
+    lastName: typeof String['nullable'];
+    self: UserType['nullable'];
+    pet: AnimalType['nullable'];
+    membership: typeof Membership['nullable'];
+    bestFriend: typeof BestFriend['nullable'];
+    bestFriends: ListType<typeof BestFriend['nullable']>;
+    friends: ListType<UserType['nullable']>;
+  }
+>;
 
 const User: UserType = object({
   name: 'User',
@@ -838,6 +839,7 @@ const User: UserType = object({
   },
 });
 
+const x = toOutputField(unthunk(User.internalType.fields.id)).type.isNullable;
 // TODO: if the objectType implements the given type, but also adds a few
 // extra fields, the frontend will falsely assume that these fields are implemented,
 // even though they arent.
