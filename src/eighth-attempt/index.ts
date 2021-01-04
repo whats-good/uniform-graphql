@@ -232,9 +232,14 @@ class ScalarInternalType<N extends string, I> extends InternalType<N, I> {
   }
 }
 
+type ScalarType<N extends string, I> = RealizedType<
+  ScalarInternalType<N, I>,
+  false
+>;
+
 const scalar = <N extends string, I>(
   params: IScalarTypeConstructorParams<N, I>,
-): RealizedType<ScalarInternalType<N, I>, false> => {
+): ScalarType<N, I> => {
   const scalarType = new ScalarInternalType(params);
   return new RealizedType({
     internalType: scalarType,
@@ -335,9 +340,14 @@ class EnumInternalType<
   }
 }
 
+export type EnumType<N extends string, D extends EnumValuesMap> = RealizedType<
+  EnumInternalType<N, D>,
+  false
+>;
+
 export const enu = <N extends string, D extends EnumValuesMap>(
   params: IEnumTypeConstructorParams<N, D>,
-): RealizedType<EnumInternalType<N, D>, false> => {
+): EnumType<N, D> => {
   const internalType = new EnumInternalType(params);
   return new RealizedType({
     internalType,
@@ -409,9 +419,14 @@ class UnionInternalType<
 // TODO: find a way to make sure no 2 conflicting types can be unioned. For example,
 // an object with .id: ID and another with .id: String.
 
+type UnionType<N extends string, U extends Unionables> = RealizedType<
+  UnionInternalType<N, U>,
+  false
+>;
+
 const union = <N extends string, U extends Unionables>(
   params: IUnionTypeConstructorParams<N, U>,
-): RealizedType<UnionInternalType<N, U>, false> => {
+): UnionType<N, U> => {
   const internalType = new UnionInternalType(params);
   return new RealizedType({
     internalType,
@@ -419,22 +434,22 @@ const union = <N extends string, U extends Unionables>(
   });
 };
 
-type OutputType =
+type OutputInternalType =
   | ScalarInternalType<any, any>
   | ObjectInternalType<any, any>
   | UnionInternalType<any, any>
   | EnumInternalType<any, any>
   | ListInternalType<OutputRealizedType>;
 
-type InputType =
+type InputInternalType =
   | ScalarInternalType<any, any>
   | UnionInternalType<any, any>
   | EnumInternalType<any, any>
   | InputObjectInternalType<any, any>
   | ListInternalType<InputRealizedType>;
 
-type OutputRealizedType = RealizedType<OutputType, any>;
-type InputRealizedType = RealizedType<InputType, any>;
+type OutputRealizedType = RealizedType<OutputInternalType, any>;
+type InputRealizedType = RealizedType<InputInternalType, any>;
 
 class ObjectField<R extends OutputRealizedType> {
   public readonly type: R;
@@ -535,9 +550,14 @@ class ObjectInternalType<
   }
 }
 
+type ObjectType<
+  N extends string,
+  F extends OutputFieldConstructorArgsMap
+> = RealizedType<ObjectInternalType<N, F>, false>;
+
 const objectType = <N extends string, F extends OutputFieldConstructorArgsMap>(
   params: IObjectTypeConstructorParams<N, F>,
-): RealizedType<ObjectInternalType<N, F>, false> => {
+): ObjectType<N, F> => {
   const internalType = new ObjectInternalType(params);
   return new RealizedType({
     internalType,
@@ -572,15 +592,23 @@ const __list = <T extends RealizedType<any, any>>(type: T) => {
   });
 };
 
-export const list = <T extends OutputRealizedType>(
-  type: T,
-): RealizedType<ListInternalType<T>, false> => {
+type ListType<T extends OutputRealizedType> = RealizedType<
+  ListInternalType<T>,
+  false
+>;
+
+type InputListType<T extends InputRealizedType> = RealizedType<
+  ListInternalType<T>,
+  false
+>;
+
+export const list = <T extends OutputRealizedType>(type: T): ListType<T> => {
   return __list(type);
 };
 
 export const inputlist = <T extends InputRealizedType>(
   type: T,
-): RealizedType<ListInternalType<T>, false> => {
+): InputListType<T> => {
   return __list(type);
 };
 
@@ -694,12 +722,17 @@ class InputObjectInternalType<
   }
 }
 
+export type InputObject<
+  N extends string,
+  M extends InputFieldConstructorArgsMap
+> = RealizedType<InputObjectInternalType<N, M>, false>;
+
 export const inputObject = <
   N extends string,
   M extends InputFieldConstructorArgsMap
 >(
   params: IInputObjectConstructorArgs<N, M>,
-): RealizedType<InputObjectInternalType<N, M>, false> => {
+): InputObject<N, M> => {
   const internalType = new InputObjectInternalType(params);
   return new RealizedType({
     internalType,
