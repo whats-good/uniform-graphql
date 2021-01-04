@@ -477,10 +477,9 @@ type OutputFieldConstructorArgsMapValueOf<
   R extends OutputRealizedType
 > = Thunkable<R | OutputField<R>>;
 
-interface OutputFieldConstructorArgsMap {
-  [key: string]: Thunkable<OutputFieldConstructorArg>;
-}
-
+type OutputFieldConstructorArgsMap = StringKeys<
+  OutputFieldConstructorArgsMapValueOf<any>
+>;
 interface IObjectTypeConstructorParams<
   N extends string,
   F extends OutputFieldConstructorArgsMap
