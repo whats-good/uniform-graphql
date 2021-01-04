@@ -680,6 +680,13 @@ type InputFieldConstructorArgsMap = StringKeys<
   InputFieldConstructorArgsMapValueOf<any>
 >;
 
+type InputFields<M extends InputFieldConstructorArgsMap> = {
+  [K in keyof M]: Thunkable<
+    | InputFieldInInputFieldConstructorArg<Unthunked<M[K]>>
+    | TypeInInputFieldConstructorArg<Unthunked<M[K]>>
+  >;
+};
+
 interface IInputObjectConstructorArgs<
   N extends string,
   M extends InputFieldConstructorArgsMap
@@ -725,7 +732,7 @@ class InputObjectInternalType<
 export type InputObjectType<
   N extends string,
   M extends InputFieldConstructorArgsMap
-> = RealizedType<InputObjectInternalType<N, M>, false>;
+> = RealizedType<InputObjectInternalType<N, InputFields<M>>, false>;
 
 export const inputObject = <
   N extends string,
@@ -839,7 +846,6 @@ const User: UserType = object({
   },
 });
 
-const x = toOutputField(unthunk(User.internalType.fields.id)).type.isNullable;
 // TODO: if the objectType implements the given type, but also adds a few
 // extra fields, the frontend will falsely assume that these fields are implemented,
 // even though they arent.
@@ -854,15 +860,15 @@ type AnimalType = ObjectType<
   {
     id: typeof String;
     name: typeof String;
-    owner: OutputFieldConstructorArgsMapValueOf<UserType['nullable']>; // TODO: make these generics simpler.
+    owner: UserType['nullable'];
   }
 >;
 
 type RecursiveInputType = InputObjectType<
   'RecursiveInputType',
   {
-    a: InputFieldConstructorArgsMapValueOf<typeof ID>;
-    b: InputFieldConstructorArgsMapValueOf<RecursiveInputType['nullable']>;
+    a: typeof ID;
+    b: RecursiveInputType['nullable'];
   }
 >;
 
