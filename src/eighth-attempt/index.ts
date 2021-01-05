@@ -43,11 +43,40 @@ type AnyTypeContainer = TypeContainer<any>;
 
 type FallbackGraphQLTypeFn = (typeContainer: AnyTypeContainer) => GraphQLType;
 
-type ResolverFnOf<R extends OutputRealizedType, S, A, C> = (
+type ResolverFnOf<
+  R extends OutputRealizedType,
+  S,
+  A extends ArgsMap,
+  C extends GraphQLContext
+> = (
   source: S,
   args: TypeOfTypeStruct<TypeStructOfInputFieldConstructorArgsMap<A>>,
   context: C,
 ) => Promisable<ResolverReturnTypeOf<R>>;
+
+class ObjectFieldQuery<
+  R extends ObjectType<any, any, any>,
+  K extends keyof R['internalType']['fields'],
+  A extends ArgsMap,
+  C extends GraphQLContext
+> {
+  // type: TypeInOutputFieldConstructorArg<R['internalType']['fields'][K]>;
+  public readonly args: A;
+  public readonly resolve: ResolverFnOf<
+    TypeInOutputFieldConstructorArg<R['internalType']['fields'][K]>,
+    InternalResolverReturnTypeOfObjectType<R>,
+    A,
+    C
+  >;
+
+  constructor(params: {
+    args: ObjectFieldQuery<R, K, A, C>['args'];
+    resolve: ObjectFieldQuery<R, K, A, C>['resolve'];
+  }) {
+    this.args = params.args;
+    this.resolve = params.resolve;
+  }
+}
 
 type ArgsMap = StringKeys<InputFieldConstructorArg>;
 
@@ -120,6 +149,24 @@ export class TypeContainer<C extends GraphQLContext> {
     forEach(fields, (field, key) => {
       this.rootQueries[key] = field;
     });
+  }
+
+  public fieldQueries<R extends ObjectType<any, any, any>>(
+    type: R,
+    fields: Partial<
+      {
+        [K in keyof R['internalType']['fields']]: ObjectFieldQuery<
+          R,
+          K,
+          any,
+          C
+        >;
+      }
+    >,
+  ): void {
+    // TODO: implement
+    type;
+    fields;
   }
 
   public getSchema(): GraphQLSchema {
@@ -908,8 +955,27 @@ const firstInputObject = inputObject({
   description: 'some description here',
 });
 
+typeContainer.fieldQueries(User, {
+  id: new ObjectFieldQuery({
+    // TODO: find a way to do this without having to init the class
+    args: {
+      a: String.nullable,
+    },
+    resolve: (root, args, context) => {
+      return 'a';
+    },
+  }),
+  membership: new ObjectFieldQuery({
+    args: {},
+    resolve: (root, args, context) => {
+      return Membership.internalType.values.enterprise; // TODO: find a way to access the internals of the enum type.
+    },
+  }),
+});
+
 typeContainer.query({
   listOfThings: new RootQueryField({
+    // TODO: find a way to do this without having to init the class
     type: list(String),
     args: {
       f: recursiveInputType,
