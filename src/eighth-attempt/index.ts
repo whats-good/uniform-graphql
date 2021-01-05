@@ -232,14 +232,15 @@ class ScalarInternalType<N extends string, I> extends InternalType<N, I> {
   }
 }
 
-type ScalarType<N extends string, I> = RealizedType<
-  ScalarInternalType<N, I>,
-  false
->;
+type ScalarType<
+  N extends string,
+  I,
+  NULLABLE extends boolean = false
+> = RealizedType<ScalarInternalType<N, I>, NULLABLE>;
 
 const scalar = <N extends string, I>(
   params: IScalarTypeConstructorParams<N, I>,
-): ScalarType<N, I> => {
+): ScalarType<N, I, false> => {
   const scalarType = new ScalarInternalType(params);
   return new RealizedType({
     internalType: scalarType,
@@ -340,14 +341,15 @@ class EnumInternalType<
   }
 }
 
-export type EnumType<N extends string, D extends EnumValuesMap> = RealizedType<
-  EnumInternalType<N, D>,
-  false
->;
+export type EnumType<
+  N extends string,
+  D extends EnumValuesMap,
+  NULLABLE extends boolean = false
+> = RealizedType<EnumInternalType<N, D>, NULLABLE>;
 
 export const enu = <N extends string, D extends EnumValuesMap>(
   params: IEnumTypeConstructorParams<N, D>,
-): EnumType<N, D> => {
+): EnumType<N, D, false> => {
   const internalType = new EnumInternalType(params);
   return new RealizedType({
     internalType,
@@ -419,14 +421,15 @@ class UnionInternalType<
 // TODO: find a way to make sure no 2 conflicting types can be unioned. For example,
 // an object with .id: ID and another with .id: String.
 
-type UnionType<N extends string, U extends Unionables> = RealizedType<
-  UnionInternalType<N, U>,
-  false
->;
+type UnionType<
+  N extends string,
+  U extends Unionables,
+  NULLABLE extends boolean = false
+> = RealizedType<UnionInternalType<N, U>, NULLABLE>;
 
 const union = <N extends string, U extends Unionables>(
   params: IUnionTypeConstructorParams<N, U>,
-): UnionType<N, U> => {
+): UnionType<N, U, false> => {
   const internalType = new UnionInternalType(params);
   return new RealizedType({
     internalType,
@@ -551,12 +554,13 @@ class ObjectInternalType<
 
 type ObjectType<
   N extends string,
-  F extends OutputFieldConstructorArgsMap
-> = RealizedType<ObjectInternalType<N, OutputFields<F>>, false>;
+  F extends OutputFieldConstructorArgsMap,
+  NULLABLE extends boolean = false
+> = RealizedType<ObjectInternalType<N, OutputFields<F>>, NULLABLE>;
 
 const object = <N extends string, F extends OutputFieldConstructorArgsMap>(
   params: IObjectTypeConstructorParams<N, F>,
-): ObjectType<N, F> => {
+): ObjectType<N, F, false> => {
   const internalType = new ObjectInternalType(params);
   return new RealizedType({
     internalType,
@@ -591,23 +595,25 @@ const __list = <T extends RealizedType<any, any>>(type: T) => {
   });
 };
 
-type ListType<T extends OutputRealizedType> = RealizedType<
-  ListInternalType<T>,
-  false
->;
+type ListType<
+  T extends OutputRealizedType,
+  NULLABLE extends boolean = false
+> = RealizedType<ListInternalType<T>, NULLABLE>;
 
-type InputListType<T extends InputRealizedType> = RealizedType<
-  ListInternalType<T>,
-  false
->;
+type InputListType<
+  T extends InputRealizedType,
+  NULLABLE extends boolean = false
+> = RealizedType<ListInternalType<T>, NULLABLE>;
 
-export const list = <T extends OutputRealizedType>(type: T): ListType<T> => {
+export const list = <T extends OutputRealizedType>(
+  type: T,
+): ListType<T, false> => {
   return __list(type);
 };
 
 export const inputlist = <T extends InputRealizedType>(
   type: T,
-): InputListType<T> => {
+): InputListType<T, false> => {
   return __list(type);
 };
 
