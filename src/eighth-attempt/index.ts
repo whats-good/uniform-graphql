@@ -366,9 +366,7 @@ const Membership = enu({
   },
 });
 
-type Unionable =
-  | ObjectInternalType<any, any>
-  | RealizedType<ObjectInternalType<any, any>, any>;
+type Unionable = ObjectInternalType<any, any> | ObjectType<any, any, any>;
 
 type Unionables = Thunkable<[Unionable, Unionable, ...Array<Unionable>]>;
 interface IUnionTypeConstructorParams<N extends string, U extends Unionables> {
@@ -775,33 +773,33 @@ type ResolverReturnTypeOfTypeStruct<S extends TypeStruct> = {
 };
 
 type InternalResolverReturnTypeOfObjectType<
-  R extends RealizedType<ObjectInternalType<any, any>, any>
+  R extends ObjectType<any, any, any>
 > = ResolverReturnTypeOfTypeStruct<
   TypeStructOfOutputFieldConstructorArgsMap<R['internalType']['fields']>
 > & { __typename?: R['internalType']['name'] };
 
 type InternalResolverReturnTypeOfUnionType<
-  R extends RealizedType<UnionInternalType<any, any>, any>
+  R extends UnionType<any, any, any>
 > = InternalResolverReturnTypeOfObjectType<
   Unthunked<R['internalType']['types']>[number]
 >;
 
-type InternalResolverReturnTypeOfListType<
-  R extends RealizedType<ListInternalType<OutputRealizedType>, any>
-> = Array<Promisable<ResolverReturnTypeOf<R['internalType']['type']>>>;
+type InternalResolverReturnTypeOfListType<R extends ListType<any, any>> = Array<
+  Promisable<ResolverReturnTypeOf<R['internalType']['type']>>
+>;
 
 // TODO: For union types, the typename isnt required for now. Get back to this later and
 // make sure that either resolveType of `typename` is provided.
 
-type ResolverReturnTypeOf<
-  R extends OutputRealizedType
-> = R extends RealizedType<ListInternalType<any>, any>
-  ? TypeRealization<R, InternalResolverReturnTypeOfListType<R>>
-  : R extends RealizedType<ObjectInternalType<any, any>, any>
-  ? TypeRealization<R, InternalResolverReturnTypeOfObjectType<R>>
-  : R extends RealizedType<UnionInternalType<any, any>, any>
-  ? TypeRealization<R, InternalResolverReturnTypeOfUnionType<R>>
-  : ExternalTypeOf<R>;
+type ResolverReturnTypeOf<R extends OutputRealizedType> =
+  //
+  R extends ListType<any, any>
+    ? TypeRealization<R, InternalResolverReturnTypeOfListType<R>>
+    : R extends ObjectType<any, any, any>
+    ? TypeRealization<R, InternalResolverReturnTypeOfObjectType<R>>
+    : R extends UnionType<any, any, any>
+    ? TypeRealization<R, InternalResolverReturnTypeOfUnionType<R>>
+    : ExternalTypeOf<R>;
 
 const BestFriend = union({
   name: 'BestFriend',
