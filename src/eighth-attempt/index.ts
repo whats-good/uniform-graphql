@@ -104,7 +104,7 @@ class RootQueryField<
   ): GraphQLFieldConfig<any, any, any> {
     return {
       type: this.type.getGraphQLType(typeContainer) as any,
-      args: mapValues(this.args, (arg, key) => {
+      args: mapValues(this.args, (arg) => {
         const field = toInputField(arg);
         const type = field.getGraphQLInputFieldConfig(typeContainer);
         return type;
@@ -125,6 +125,11 @@ export class TypeContainer<C extends GraphQLContext> {
   };
   private readonly rootQueries: StringKeys<
     RootQueryField<OutputRealizedType, any, C>
+  > = {};
+
+  // TODO: consider making this the same thing as the OutputField
+  private readonly objectFieldQueries: StringKeys<
+    ObjectFieldQuery<any, any, any, C>
   > = {};
 
   constructor(params: { contextGetter: ContextGetter<C> }) {
@@ -151,6 +156,13 @@ export class TypeContainer<C extends GraphQLContext> {
     });
   }
 
+  private getObjectFieldQueryKey = (params: {
+    name: string;
+    fieldName: string;
+  }): string => {
+    return `${params.name}:${params.fieldName}`;
+  };
+
   public fieldQueries<R extends ObjectType<any, any, any>>(
     type: R,
     fields: Partial<
@@ -164,9 +176,22 @@ export class TypeContainer<C extends GraphQLContext> {
       }
     >,
   ): void {
-    // TODO: implement
-    type;
-    fields;
+    forEach(fields, (currentField, fieldName) => {
+      if (currentField) {
+        const key = this.getObjectFieldQueryKey({ name: type.name, fieldName });
+        this.objectFieldQueries[key] = <ObjectFieldQuery<any, any, any, C>>(
+          currentField
+        ); // TODO: make sure this isn't buggy
+      }
+    });
+  }
+
+  public getFieldQuery(params: {
+    name: string;
+    fieldName: string;
+  }): Maybe<ObjectFieldQuery<any, any, any, C>> {
+    const key = this.getObjectFieldQueryKey(params);
+    return this.objectFieldQueries[key];
   }
 
   public getSchema(): GraphQLSchema {
@@ -588,10 +613,26 @@ class ObjectInternalType<
       // resolveObject: TODO: implement
       // isTypeOf: TODO: implement
       fields: () =>
-        mapValues(this.fields, (field) => {
+        mapValues(this.fields, (field, fieldName) => {
           const unthunkedField = unthunk(field);
+          const objectFieldQuery = typeContainer.getFieldQuery({
+            name: this.name,
+            fieldName,
+          });
           const baseOutputField = toOutputField(unthunkedField);
-          return baseOutputField.getGraphQLFieldConfig(typeContainer);
+          const args = objectFieldQuery?.args || {};
+          return {
+            ...baseOutputField.getGraphQLFieldConfig(typeContainer),
+            args: mapValues(args, (arg) => {
+              // TODO: remove duplicated code.
+              const field = toInputField(arg);
+              const type = field.getGraphQLInputFieldConfig(typeContainer);
+              return type;
+            }),
+            resolve: objectFieldQuery?.resolve,
+            // deprecationReason: 'xyz', // TODO: implement
+            // description: 'abc', // TODO: implement
+          };
         }),
     });
   }
@@ -965,10 +1006,19 @@ typeContainer.fieldQueries(User, {
       return 'a';
     },
   }),
+  firstName: new ObjectFieldQuery({
+    args: {
+      a: String.nullable,
+    },
+    resolve: (root, args) => {
+      // TODO: create a utility function that resolves selected fields of the root.
+      return `${root.id}`;
+    },
+  }),
   membership: new ObjectFieldQuery({
-    args: {},
+    args: {}, // TODO: allow undefined
     resolve: (root, args, context) => {
-      return Membership.internalType.values.enterprise; // TODO: find a way to access the internals of the enum type.
+      return Membership.internalType.values.free; // TODO: find a way to access the internals of the enum type.
     },
   }),
 });
