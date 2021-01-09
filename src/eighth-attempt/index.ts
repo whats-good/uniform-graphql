@@ -7,6 +7,7 @@ import {
   GraphQLInputFieldConfig,
   GraphQLInputObjectType,
   GraphQLInt,
+  GraphQLInterfaceType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -28,6 +29,21 @@ import {
 import { forEach, mapValues } from 'lodash';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
+
+/**
+ * Remaining items:
+ *
+ * TODO: Add the interface type
+ * TODO: Add mutations
+ * TODO: Add object field resolver utilities (i.e conversion from async thunkables to normal)
+ * TODO: give the developer more flexibility in terms of determining the root type.
+ * TODO: enable developers to omit the args
+ * TODO: enable devleopers to omit nullable fields
+ * TODO: implement all the deprecationReason & description fields
+ * TODO: implement all the isTypeOf & resolveType methods for abstract type resolutions
+ * TODO: make the objectfield more useful or remove it.
+ *
+ */
 
 interface StringKeys<T> {
   [key: string]: T;
