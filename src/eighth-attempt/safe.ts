@@ -14,6 +14,7 @@ import {
   GraphQLScalarType,
   GraphQLString,
   GraphQLType,
+  isInputObjectType,
   ValueNode,
 } from 'graphql';
 import { brandOf, Maybe, Thunkable, unthunk, Unthunked } from './utils';
@@ -307,6 +308,7 @@ type OutputInternalType =
 type InputInternalType =
   | ScalarInternalType<any, any>
   | EnumInternalType<any, any>
+  | InputObjectInternalType<any, any>
   | ListInternalType<InputRealizedType>;
 
 type OutputRealizedType = RealizedType<OutputInternalType, any>;
@@ -412,23 +414,27 @@ type TypeInInputMapValue<
   : never;
 
 type InputFieldConstructorParamsInInputMapValue<
-  V extends InputFieldsMapValue<any>
+  V extends InputFieldsMapValue<InputRealizedType>
 > = InputFieldConstructorParams<TypeInInputMapValue<V>>;
 
-type InputFieldsMap = StringKeys<Thunkable<InputFieldsMapValue<any>>>;
+type InputFieldsMap = StringKeys<
+  Thunkable<InputFieldsMapValue<InputRealizedType>>
+>;
 
 type ObfuscatedInputFieldsMap<M extends InputFieldsMap> = {
-  [K in keyof M]: Thunkable<
-    | TypeInInputMapValue<Unthunked<M[K]>>
-    | InputFieldConstructorParamsInInputMapValue<Unthunked<M[K]>>
-  >;
+  [K in keyof M]:
+    | M[K]
+    | Thunkable<
+        | TypeInInputMapValue<Unthunked<M[K]>>
+        | InputFieldConstructorParamsInInputMapValue<Unthunked<M[K]>>
+      >;
 };
 
 type TypeOfInputFieldsMap<M extends InputFieldsMap> = {
   [K in keyof M]: ExternalTypeOf<TypeInInputMapValue<Unthunked<M[K]>>>;
 };
 
-interface IInputInternalTypeConstructorParams<
+interface IInputObjectInternalTypeConstructorParams<
   N extends string,
   M extends InputFieldsMap
 > {
@@ -454,7 +460,7 @@ class InputObjectInternalType<
   public readonly fields: M;
   public readonly description?: string;
 
-  constructor(params: IInputInternalTypeConstructorParams<N, M>) {
+  constructor(params: IInputObjectInternalTypeConstructorParams<N, M>) {
     super(params);
     this.fields = params.fields;
     this.description = params.description;
@@ -475,3 +481,42 @@ class InputObjectInternalType<
     });
   }
 }
+
+type InputObjectType<
+  N extends string,
+  M extends InputFieldsMap,
+  NULLABLE extends boolean = false
+> = RealizedType<InputObjectInternalType<N, M>, NULLABLE>;
+
+const inputObject = <N extends string, M extends InputFieldsMap>(
+  params: IInputObjectInternalTypeConstructorParams<N, M>,
+): InputObjectType<N, ObfuscatedInputFieldsMap<M>> => {
+  const internalType: InputObjectInternalType<
+    N,
+    ObfuscatedInputFieldsMap<M>
+  > = new InputObjectInternalType(params);
+  return new RealizedType({
+    internalType,
+    isNullable: false,
+  });
+};
+
+type ABC = InputObjectType<
+  'ABC',
+  {
+    x: typeof String;
+    y: typeof Float;
+    z: ABC;
+  }
+>;
+
+const abc: ABC = inputObject({
+  name: 'ABC',
+  fields: {
+    x: () => String,
+    y: () => ({
+      type: Float,
+    }),
+    z: () => abc,
+  },
+});
