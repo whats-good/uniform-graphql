@@ -52,7 +52,7 @@ export type ThenArgRecursive<T> = T extends PromiseLike<infer U>
 export type Promisable<T> = T | Promise<T>;
 
 interface Branded {
-  __BRAND__: string;
+  __BRAND__?: string;
 }
 
 type BrandOf<T extends Branded> = T['__BRAND__'];

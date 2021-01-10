@@ -16,7 +16,7 @@ import {
   GraphQLType,
   ValueNode,
 } from 'graphql';
-import { Maybe } from './utils';
+import { brandOf, Maybe, Thunkable, unthunk, Unthunked } from './utils';
 import mapValues from 'lodash/mapValues';
 /**
  * Remaining items:
@@ -360,6 +360,16 @@ export const inputlist = <T extends InputRealizedType>(
 ): InputListType<T, false> => {
   return __list(type);
 };
+
+type ExternalTypeOf<R extends RealizedType<any, any>> = TypeRealization<
+  R,
+  R['internalType']['__INTERNAL_TYPE__']
+>;
+
+type TypeRealization<
+  R extends OutputRealizedType,
+  T
+> = R['isNullable'] extends true ? Maybe<T> : T;
 
 interface IInputFieldConstructorParams<R extends InputRealizedType> {
   type: R;
