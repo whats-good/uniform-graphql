@@ -1,8 +1,13 @@
 import {
+  GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLEnumType,
+  GraphQLFieldConfigArgumentMap,
   GraphQLFloat,
   GraphQLID,
+  GraphQLInputFieldConfig,
+  GraphQLInputFieldMap,
+  GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -355,3 +360,31 @@ export const inputlist = <T extends InputRealizedType>(
 ): InputListType<T, false> => {
   return __list(type);
 };
+
+interface IInputFieldConstructorParams<R extends InputRealizedType> {
+  type: R;
+  deprecationReason?: string;
+  description?: string;
+}
+
+class InputField<R extends InputRealizedType> {
+  public readonly type: R;
+  public readonly deprecationReason?: string;
+  public readonly description?: string;
+
+  constructor(params: IInputFieldConstructorParams<R>) {
+    this.type = params.type;
+    this.deprecationReason = params.deprecationReason;
+    this.description = params.description;
+  }
+
+  getGraphQLInputFieldConfig(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLInputFieldConfig {
+    return {
+      type: this.type.getGraphQLType(typeContainer) as any,
+      deprecationReason: this.deprecationReason,
+      description: this.description,
+    };
+  }
+}
