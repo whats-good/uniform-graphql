@@ -11,6 +11,7 @@ import {
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
+  GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
   GraphQLType,
@@ -486,11 +487,14 @@ type InputObjectType<
   N extends string,
   M extends InputFieldsMap,
   NULLABLE extends boolean = false
-> = RealizedType<InputObjectInternalType<N, M>, NULLABLE>;
+> = RealizedType<
+  InputObjectInternalType<N, ObfuscatedInputFieldsMap<M>>,
+  NULLABLE
+>;
 
 const inputObject = <N extends string, M extends InputFieldsMap>(
   params: IInputObjectInternalTypeConstructorParams<N, M>,
-): InputObjectType<N, ObfuscatedInputFieldsMap<M>> => {
+): InputObjectType<N, M> => {
   const internalType: InputObjectInternalType<
     N,
     ObfuscatedInputFieldsMap<M>
@@ -520,3 +524,25 @@ const abc: ABC = inputObject({
     z: () => abc,
   },
 });
+
+const obj = new GraphQLObjectType({
+  name: 'yo',
+  fields: {
+    id: {
+      type: GraphQLID,
+      args: {
+        a: {
+          type: GraphQLString,
+          deprecationReason: 'yo',
+          description: 'x',
+        },
+      },
+    },
+  },
+});
+
+type ArgsMap = StringKeys<InputFieldsMapValue<InputRealizedType>>;
+
+/**
+ * TODO: Make an output field class that takes arguments into consideration.
+ */
