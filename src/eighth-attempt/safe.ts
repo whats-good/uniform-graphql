@@ -2,6 +2,7 @@ import {
   GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLEnumType,
+  GraphQLFieldConfig,
   GraphQLFieldConfigArgumentMap,
   GraphQLFloat,
   GraphQLID,
@@ -546,3 +547,41 @@ type ArgsMap = StringKeys<InputFieldsMapValue<InputRealizedType>>;
 /**
  * TODO: Make an output field class that takes arguments into consideration.
  */
+
+interface IOutputFieldConstructorParams<
+  R extends OutputRealizedType,
+  M extends ArgsMap
+> {
+  type: R;
+  args: M;
+  deprecationReason?: string;
+  description?: string;
+}
+
+class OutputField<R extends OutputRealizedType, M extends ArgsMap> {
+  public readonly type: R;
+  public readonly args: M;
+  public readonly deprecationReason?: string;
+  public readonly description?: string;
+
+  constructor(params: IOutputFieldConstructorParams<R, M>) {
+    this.type = params.type;
+    this.args = params.args;
+    this.deprecationReason = params.deprecationReason;
+    this.description = params.description;
+  }
+
+  getGraphQLFieldConfig(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLFieldConfig<any, any, any> {
+    return {
+      type: this.type.getGraphQLType(typeContainer) as any,
+      args: mapValues(this.args, (arg) => {
+        const inputField = toInputField(arg);
+        return inputField.getGraphQLInputFieldConfig(typeContainer);
+      }),
+      deprecationReason: this.deprecationReason,
+      description: this.description,
+    };
+  }
+}
