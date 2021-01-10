@@ -423,3 +423,55 @@ type ObfuscatedInputFieldsMap<M extends InputFieldsMap> = {
     | InputFieldConstructorParamsInInputMapValue<Unthunked<M[K]>>
   >;
 };
+
+type TypeOfInputFieldsMap<M extends InputFieldsMap> = {
+  [K in keyof M]: ExternalTypeOf<TypeInInputMapValue<Unthunked<M[K]>>>;
+};
+
+interface IInputInternalTypeConstructorParams<
+  N extends string,
+  M extends InputFieldsMap
+> {
+  name: N;
+  fields: M;
+  description?: string;
+}
+
+const toInputField = <V extends InputFieldsMapValue<any>>(
+  v: V,
+): InputField<TypeInInputMapValue<V>> => {
+  if (brandOf(v as any) == 'realizedtype') {
+    return new InputField({ type: v as any });
+  } else {
+    return new InputField(v as any);
+  }
+};
+
+class InputObjectInternalType<
+  N extends string,
+  M extends InputFieldsMap
+> extends InternalType<N, TypeOfInputFieldsMap<M>> {
+  public readonly fields: M;
+  public readonly description?: string;
+
+  constructor(params: IInputInternalTypeConstructorParams<N, M>) {
+    super(params);
+    this.fields = params.fields;
+    this.description = params.description;
+  }
+
+  protected getFreshInternalGraphQLType(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLInputObjectType {
+    return new GraphQLInputObjectType({
+      name: this.name,
+      description: this.description,
+      fields: () =>
+        mapValues(this.fields, (protoField) => {
+          const unthunkedProtoField = unthunk(protoField);
+          const inputField = toInputField(unthunkedProtoField);
+          return inputField.getGraphQLInputFieldConfig(typeContainer);
+        }),
+    });
+  }
+}
