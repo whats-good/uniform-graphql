@@ -1,13 +1,10 @@
 import {
-  GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLEnumType,
   GraphQLFieldConfig,
-  GraphQLFieldConfigArgumentMap,
   GraphQLFloat,
   GraphQLID,
   GraphQLInputFieldConfig,
-  GraphQLInputFieldMap,
   GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
@@ -16,12 +13,12 @@ import {
   GraphQLScalarType,
   GraphQLString,
   GraphQLType,
-  isInputObjectType,
+  GraphQLUnionType,
   ValueNode,
 } from 'graphql';
 import { brandOf, Maybe, Thunkable, unthunk, Unthunked } from './utils';
 import mapValues from 'lodash/mapValues';
-import { memoize } from 'lodash';
+
 /**
  * Remaining items:
  *
@@ -306,7 +303,8 @@ export const enu = <N extends string, D extends EnumValuesMap>(
 type OutputInternalType =
   | ScalarInternalType<any, any>
   | EnumInternalType<any, any>
-  | OutputObjectInternalType<any, any>
+  | ObjectInternalType<any, any>
+  | UnionInternalType<any, any>
   | ListInternalType<OutputRealizedType>;
 
 type InputInternalType =
@@ -662,7 +660,7 @@ interface IOutputObjectInternalTypeConstructorParams<
   description?: string;
 }
 
-class OutputObjectInternalType<
+class ObjectInternalType<
   N extends string,
   M extends OutputFieldsMap
 > extends InternalType<N, TypeOfOutputFieldsMap<M>> {
@@ -695,18 +693,15 @@ type ObjectType<
   N extends string,
   M extends OutputFieldsMap,
   NULLABLE extends boolean = false
-> = RealizedType<
-  OutputObjectInternalType<N, ObfuscatedOutputFieldsMap<M>>,
-  NULLABLE
->;
+> = RealizedType<ObjectInternalType<N, ObfuscatedOutputFieldsMap<M>>, NULLABLE>;
 
 const object = <N extends string, M extends OutputFieldsMap>(
   params: IOutputObjectInternalTypeConstructorParams<N, M>,
 ): ObjectType<N, M> => {
-  const internalType: OutputObjectInternalType<
+  const internalType: ObjectInternalType<
     N,
     ObfuscatedOutputFieldsMap<M>
-  > = new OutputObjectInternalType(params);
+  > = new ObjectInternalType(params);
   return new RealizedType({
     internalType,
     isNullable: false,
@@ -744,4 +739,88 @@ const Membership = enu({
     paid: null,
     enterprise: null,
   },
+});
+
+type Unionable =
+  | ObjectInternalType<string, OutputFieldsMap>
+  | ObjectType<string, OutputFieldsMap, boolean>;
+
+type Unionables = Thunkable<[Unionable, Unionable, ...Array<Unionable>]>;
+interface IUnionTypeConstructorParams<N extends string, U extends Unionables> {
+  name: UnionInternalType<N, U>['name'];
+  types: UnionInternalType<N, U>['types'];
+  description?: UnionInternalType<N, U>['description'];
+  // resolveType?: UnionInternalType<N, U>['resolveType']; // TODO: implement the abstract type resolutions
+}
+
+// type ResolveTypeFnOf<U extends Unionables> = (
+//   resolved: InternalResolverReturnTypeOfUnionType<
+//     RealizedType<UnionInternalType<any, U>, any>
+//   >,
+// ) => Required<typeof resolved['__typename']>;
+
+class UnionInternalType<
+  N extends string,
+  U extends Unionables
+> extends InternalType<N, Unthunked<U>[number]> {
+  public readonly types: U;
+  public readonly description?: string;
+  // public readonly resolveType?: ResolveTypeFnOf<U>;
+
+  constructor(params: IUnionTypeConstructorParams<N, U>) {
+    super(params);
+    this.types = params.types;
+    // this.resolveType = params.resolveType;
+  }
+
+  protected getFreshInternalGraphQLType(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLUnionType {
+    const unthunkedTypes = unthunk(this.types);
+    const types = unthunkedTypes.map((type) => {
+      if (type instanceof RealizedType) {
+        return type.internalType.getInternalGraphQLType(typeContainer);
+      } else {
+        return type.getInternalGraphQLType(typeContainer);
+      }
+    });
+    return new GraphQLUnionType({
+      name: this.name,
+      description: this.description,
+      types: types as any,
+      // resolveType: this.resolveType as any,
+    });
+  }
+}
+
+// TODO: find a way to make sure no 2 conflicting types can be unioned. For example,
+// an object with .id: ID and another with .id: String.
+
+type UnionType<
+  N extends string,
+  U extends Unionables,
+  NULLABLE extends boolean = false
+> = RealizedType<UnionInternalType<N, U>, NULLABLE>;
+
+const union = <N extends string, U extends Unionables>(
+  params: IUnionTypeConstructorParams<N, U>,
+): UnionType<N, U, false> => {
+  const internalType = new UnionInternalType(params);
+  return new RealizedType({
+    internalType,
+    isNullable: false,
+  });
+};
+
+const AnimalType = object({
+  name: 'Animal',
+  fields: {
+    id: ID,
+    name: String,
+  },
+});
+
+const BestFriend = union({
+  name: 'BestFriend',
+  types: [AnimalType, UserType],
 });
