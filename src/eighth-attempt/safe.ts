@@ -305,6 +305,7 @@ export const enu = <N extends string, D extends EnumValuesMap>(
 type OutputInternalType =
   | ScalarInternalType<any, any>
   | EnumInternalType<any, any>
+  | OutputObjectInternalType<any, any>
   | ListInternalType<OutputRealizedType>;
 
 type InputInternalType =
@@ -548,7 +549,7 @@ type ArgsMap = StringKeys<InputFieldsMapValue<InputRealizedType>>;
  * TODO: Make an output field class that takes arguments into consideration.
  */
 
-interface IOutputFieldConstructorParams<
+interface OutputFieldConstructorParams<
   R extends OutputRealizedType,
   M extends ArgsMap
 > {
@@ -564,7 +565,7 @@ class OutputField<R extends OutputRealizedType, M extends ArgsMap> {
   public readonly deprecationReason?: string;
   public readonly description?: string;
 
-  constructor(params: IOutputFieldConstructorParams<R, M>) {
+  constructor(params: OutputFieldConstructorParams<R, M>) {
     this.type = params.type;
     this.args = params.args;
     this.deprecationReason = params.deprecationReason;
@@ -585,3 +586,141 @@ class OutputField<R extends OutputRealizedType, M extends ArgsMap> {
     };
   }
 }
+
+type OutputFieldsMapValue<R extends OutputRealizedType, M extends ArgsMap> =
+  | R
+  | OutputFieldConstructorParams<R, M>;
+
+type TypeInOutputMapValue<
+  V extends OutputFieldsMapValue<OutputRealizedType, ArgsMap>
+> = V extends OutputRealizedType
+  ? V
+  : V extends OutputFieldConstructorParams<OutputRealizedType, ArgsMap>
+  ? V['type']
+  : never;
+
+type ArgsMapInOutputMapValue<
+  V extends OutputFieldsMapValue<OutputRealizedType, ArgsMap>
+> = V extends ArgsMap
+  ? V
+  : V extends OutputFieldConstructorParams<OutputRealizedType, ArgsMap>
+  ? V['args']
+  : never;
+
+type OutputFieldConstructorParamsInOutputMapValue<
+  V extends OutputFieldsMapValue<OutputRealizedType, ArgsMap>
+> = OutputFieldConstructorParams<
+  TypeInOutputMapValue<V>,
+  ArgsMapInOutputMapValue<V>
+>;
+
+type OutputFieldsMap = StringKeys<
+  Thunkable<OutputFieldsMapValue<OutputRealizedType, ArgsMap>>
+>;
+
+type ObfuscatedOutputFieldsMap<M extends OutputFieldsMap> = {
+  [K in keyof M]:
+    | M[K]
+    | Thunkable<
+        | TypeInOutputMapValue<Unthunked<M[K]>>
+        | OutputFieldConstructorParamsInOutputMapValue<Unthunked<M[K]>>
+      >;
+};
+
+type TypeOfOutputFieldsMap<M extends OutputFieldsMap> = {
+  [K in keyof M]: ExternalTypeOf<TypeInOutputMapValue<Unthunked<M[K]>>>;
+};
+
+interface IOutputObjectInternalTypeConstructorParams<
+  N extends string,
+  M extends OutputFieldsMap
+> {
+  name: N;
+  fields: M;
+  description?: string;
+}
+
+const toOutputField = <
+  V extends OutputFieldsMapValue<OutputRealizedType, ArgsMap>
+>(
+  v: V,
+): OutputField<TypeInOutputMapValue<V>, ArgsMapInOutputMapValue<V>> => {
+  if (brandOf(v as any) == 'realizedtype') {
+    return new OutputField({ type: v as any, args: {} as any });
+  } else {
+    return new OutputField(v as any);
+  }
+};
+
+interface IOutputObjectInternalTypeConstructorParams<
+  N extends string,
+  M extends OutputFieldsMap
+> {
+  name: N;
+  fields: M;
+  description?: string;
+}
+
+class OutputObjectInternalType<
+  N extends string,
+  M extends OutputFieldsMap
+> extends InternalType<N, TypeOfOutputFieldsMap<M>> {
+  public readonly fields: M;
+  public readonly description?: string;
+
+  constructor(params: IOutputObjectInternalTypeConstructorParams<N, M>) {
+    super(params);
+    this.fields = params.fields;
+    this.description = params.description;
+  }
+
+  protected getFreshInternalGraphQLType(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLObjectType {
+    return new GraphQLObjectType({
+      name: this.name,
+      description: this.description,
+      fields: () =>
+        mapValues(this.fields, (protoField) => {
+          const unthunkedProtoField = unthunk(protoField);
+          const outputField = toOutputField(unthunkedProtoField);
+          return outputField.getGraphQLFieldConfig(typeContainer);
+        }),
+    });
+  }
+}
+
+type ObjectType<
+  N extends string,
+  M extends OutputFieldsMap,
+  NULLABLE extends boolean = false
+> = RealizedType<
+  OutputObjectInternalType<N, ObfuscatedOutputFieldsMap<M>>,
+  NULLABLE
+>;
+
+const object = <N extends string, M extends OutputFieldsMap>(
+  params: IInputObjectInternalTypeConstructorParams<N, M>,
+): ObjectType<N, M> => {
+  const internalType: OutputObjectInternalType<
+    N,
+    ObfuscatedOutputFieldsMap<M>
+  > = new OutputObjectInternalType(params);
+  return new RealizedType({
+    internalType,
+    isNullable: false,
+  });
+};
+
+const abcd = object({
+  name: 'ABCD',
+  fields: {
+    id: {
+      type: ID,
+      args: {}, // TODO: make this one omittable.
+    },
+    firstName: String,
+  },
+});
+
+// TODO: check for recursive types on the output object
