@@ -371,7 +371,7 @@ type TypeRealization<
   T
 > = R['isNullable'] extends true ? Maybe<T> : T;
 
-interface IInputFieldConstructorParams<R extends InputRealizedType> {
+interface InputFieldConstructorParams<R extends InputRealizedType> {
   type: R;
   deprecationReason?: string;
   description?: string;
@@ -382,7 +382,7 @@ class InputField<R extends InputRealizedType> {
   public readonly deprecationReason?: string;
   public readonly description?: string;
 
-  constructor(params: IInputFieldConstructorParams<R>) {
+  constructor(params: InputFieldConstructorParams<R>) {
     this.type = params.type;
     this.deprecationReason = params.deprecationReason;
     this.description = params.description;
@@ -398,3 +398,28 @@ class InputField<R extends InputRealizedType> {
     };
   }
 }
+
+type InputFieldsMapValue<R extends InputRealizedType> =
+  | R
+  | InputFieldConstructorParams<R>;
+
+type TypeInInputMapValue<
+  V extends InputFieldsMapValue<any>
+> = V extends InputRealizedType
+  ? V
+  : V extends InputFieldConstructorParams<any>
+  ? V['type']
+  : never;
+
+type InputFieldConstructorParamsInInputMapValue<
+  V extends InputFieldsMapValue<any>
+> = InputFieldConstructorParams<TypeInInputMapValue<V>>;
+
+type InputFieldsMap = StringKeys<Thunkable<InputFieldsMapValue<any>>>;
+
+type ObfuscatedInputFieldsMap<M extends InputFieldsMap> = {
+  [K in keyof M]: Thunkable<
+    | TypeInInputMapValue<Unthunked<M[K]>>
+    | InputFieldConstructorParamsInInputMapValue<Unthunked<M[K]>>
+  >;
+};
