@@ -532,7 +532,6 @@ type OutputInternalType =
 
 type InputInternalType =
   | ScalarInternalType<any, any>
-  | UnionInternalType<any, any>
   | EnumInternalType<any, any>
   | InputObjectInternalType<any, any>
   | ListInternalType<InputRealizedType>;

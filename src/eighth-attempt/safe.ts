@@ -21,6 +21,7 @@ import {
 } from 'graphql';
 import { brandOf, Maybe, Thunkable, unthunk, Unthunked } from './utils';
 import mapValues from 'lodash/mapValues';
+import { memoize } from 'lodash';
 /**
  * Remaining items:
  *
@@ -319,7 +320,7 @@ type InputRealizedType = RealizedType<InputInternalType, any>;
 
 class ListInternalType<
   T extends RealizedType<InternalType<any, any>, any>
-> extends InternalType<string, T> {
+> extends InternalType<string, Array<ExternalTypeOf<T>>> {
   public readonly type: T;
 
   constructor(params: { type: T }) {
@@ -700,7 +701,7 @@ type ObjectType<
 >;
 
 const object = <N extends string, M extends OutputFieldsMap>(
-  params: IInputObjectInternalTypeConstructorParams<N, M>,
+  params: IOutputObjectInternalTypeConstructorParams<N, M>,
 ): ObjectType<N, M> => {
   const internalType: OutputObjectInternalType<
     N,
@@ -712,15 +713,35 @@ const object = <N extends string, M extends OutputFieldsMap>(
   });
 };
 
-const abcd = object({
-  name: 'ABCD',
+type UserType = ObjectType<
+  'User',
+  {
+    id: typeof ID;
+    self: UserType;
+    selfArray: {
+      type: ListType<UserType>;
+      args: { a: typeof String }; // TODO: make args ommittable
+    };
+  }
+>;
+
+const UserType: UserType = object({
+  name: 'User',
   fields: {
-    id: {
-      type: ID,
-      args: {}, // TODO: make this one omittable.
-    },
-    firstName: String,
+    id: () => ID,
+    self: () => UserType,
+    selfArray: () => ({
+      type: list(UserType),
+      args: { a: String },
+    }),
   },
 });
 
-// TODO: check for recursive types on the output object
+const Membership = enu({
+  name: 'Membership',
+  values: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
