@@ -2,11 +2,13 @@ import {
   GraphQLBoolean,
   GraphQLEnumType,
   GraphQLFieldConfig,
+  GraphQLFieldConfigMap,
   GraphQLFloat,
   GraphQLID,
   GraphQLInputFieldConfig,
   GraphQLInputObjectType,
   GraphQLInt,
+  GraphQLInterfaceType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -617,6 +619,17 @@ type OutputFieldsMap = StringKeys<
   Thunkable<OutputFieldsMapValue<OutputRealizedType, ArgsMap>>
 >;
 
+const toGraphQLFieldConfigMap = (params: {
+  fields: OutputFieldsMap;
+  typeContainer: AnyTypeContainer;
+}): GraphQLFieldConfigMap<any, any> => {
+  return mapValues(params.fields, (protoField) => {
+    const unthunkedProtoField = unthunk(protoField);
+    const field = toOutputField(unthunkedProtoField);
+    return field.getGraphQLFieldConfig(params.typeContainer);
+  });
+};
+
 type ObfuscatedOutputFieldsMap<M extends OutputFieldsMap> = {
   [K in keyof M]:
     | M[K]
@@ -680,10 +693,9 @@ class ObjectInternalType<
       name: this.name,
       description: this.description,
       fields: () =>
-        mapValues(this.fields, (protoField) => {
-          const unthunkedProtoField = unthunk(protoField);
-          const outputField = toOutputField(unthunkedProtoField);
-          return outputField.getGraphQLFieldConfig(typeContainer);
+        toGraphQLFieldConfigMap({
+          fields: this.fields,
+          typeContainer,
         }),
     });
   }
@@ -824,3 +836,60 @@ const BestFriend = union({
   name: 'BestFriend',
   types: [AnimalType, UserType],
 });
+
+interface IInterfaceInternalTypeConstructorParams<
+  N extends string,
+  M extends OutputFieldsMap,
+  I extends Implementors<M>
+> {
+  name: N;
+  fields: M;
+  implementors: I;
+  description?: string;
+}
+
+type Implements<M extends OutputFieldsMap> =
+  | ObjectInternalType<any, ObfuscatedOutputFieldsMap<M>>
+  | ObjectType<any, ObfuscatedOutputFieldsMap<M>, boolean>;
+
+type Implementors<M extends OutputFieldsMap> = Thunkable<
+  [Implements<M>, ...Array<Implements<M>>]
+>;
+
+class InterfaceInternalType<
+  N extends string,
+  M extends OutputFieldsMap,
+  I extends Implementors<M>
+> extends InternalType<N, TypeOfOutputFieldsMap<M>> {
+  public readonly fields: M;
+  public readonly implementors: I;
+  public readonly description?: string;
+
+  constructor(params: IInterfaceInternalTypeConstructorParams<N, M, I>) {
+    super(params);
+    this.fields = params.fields;
+    this.implementors = params.implementors;
+    this.description = params.description;
+  }
+
+  protected getFreshInternalGraphQLType(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLType {
+    // TODO: make it so that typeContainer registers all the interfaces first,
+    // only then it should create the output object types along with their
+    // interface fields. This would be done during the schema construction.
+
+    return new GraphQLInterfaceType({
+      name: this.name,
+      description: this.description,
+      // resolveType: // TODO: implement
+      fields: () =>
+        toGraphQLFieldConfigMap({
+          fields: this.fields,
+          typeContainer,
+        }),
+    });
+  }
+}
+
+// TODO: implement interfaceType
