@@ -307,6 +307,7 @@ type OutputInternalType =
   | EnumInternalType<any, any>
   | ObjectInternalType<any, any>
   | UnionInternalType<any, any>
+  | InterfaceInternalType<any, any, any>
   | ListInternalType<OutputRealizedType>;
 
 type InputInternalType =
@@ -893,3 +894,28 @@ class InterfaceInternalType<
 }
 
 // TODO: implement interfaceType
+
+type InterfaceType<
+  N extends string,
+  M extends OutputFieldsMap,
+  I extends Implementors<M>,
+  NULLABLE extends boolean = false
+> = RealizedType<
+  InterfaceInternalType<N, ObfuscatedOutputFieldsMap<M>, I>,
+  NULLABLE
+>;
+
+// TODO: consolidate these function names and find a way to deal with the reserved keywords.
+export const interfaceType = <
+  N extends string,
+  M extends OutputFieldsMap,
+  I extends Implementors<M>
+>(
+  params: IInterfaceInternalTypeConstructorParams<N, M, I>,
+): InterfaceType<N, M, I> => {
+  const internalType = new InterfaceInternalType(params);
+  return new RealizedType({
+    internalType,
+    isNullable: false,
+  });
+};
