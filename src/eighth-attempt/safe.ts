@@ -13,6 +13,7 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
+  GraphQLSchema,
   GraphQLString,
   GraphQLType,
   GraphQLUnionType,
@@ -20,17 +21,19 @@ import {
 } from 'graphql';
 import { brandOf, Maybe, Thunkable, unthunk, Unthunked } from './utils';
 import mapValues from 'lodash/mapValues';
+import { ApolloServer } from 'apollo-server-express';
+import express from 'express';
 
 /**
  * Remaining items:
  *
- * TODO: Add the interface type
  * TODO: Add mutations
  * TODO: Add object field resolver utilities (i.e conversion from async thunkables to normal)
  * TODO: give the developer more flexibility in terms of determining the root type.
  * TODO: enable developers to omit the args
  * TODO: enable devleopers to omit nullable fields
  * TODO: implement all the deprecationReason & description fields
+ * TODO: add resolveType to union types
  * TODO: implement all the isTypeOf & resolveType methods for abstract type resolutions
  * TODO: make the objectfield more useful or remove it.
  *
@@ -68,6 +71,7 @@ export class TypeContainer<C extends GraphQLContext> {
     type: AnyType,
     fallback: FallbackGraphQLTypeFn,
   ): GraphQLType {
+    // TODO: do a 2 phase scan: first, identify all the interfaces involved, then add the interfaces to the types objects
     const existingType = this.internalGraphQLTypes[type.name];
     if (existingType) {
       return existingType;
@@ -109,7 +113,7 @@ class RealizedType<T extends AnyType, N extends boolean> {
     this.isNullable = params.isNullable;
   }
 
-  public get name() {
+  public get name(): T['name'] {
     return this.internalType.name;
   }
 
@@ -725,6 +729,7 @@ type UserType = ObjectType<
   'User',
   {
     id: typeof ID;
+    name: typeof String;
     self: UserType;
     selfArray: {
       type: ListType<UserType>;
@@ -737,6 +742,7 @@ const UserType: UserType = object({
   name: 'User',
   fields: {
     id: () => ID,
+    name: String,
     self: () => UserType,
     selfArray: () => ({
       type: list(UserType),
@@ -755,8 +761,9 @@ const Membership = enu({
 });
 
 type Unionable =
-  | ObjectInternalType<string, OutputFieldsMap>
-  | ObjectType<string, OutputFieldsMap, boolean>;
+  // TODO: maybe we dont need the internal types in abstract types
+  // | ObjectInternalType<string, OutputFieldsMap>
+  ObjectType<string, OutputFieldsMap, boolean>;
 
 type Unionables = Thunkable<[Unionable, Unionable, ...Array<Unionable>]>;
 interface IUnionTypeConstructorParams<N extends string, U extends Unionables> {
@@ -791,11 +798,12 @@ class UnionInternalType<
   ): GraphQLUnionType {
     const unthunkedTypes = unthunk(this.types);
     const types = unthunkedTypes.map((type) => {
-      if (type instanceof RealizedType) {
-        return type.internalType.getInternalGraphQLType(typeContainer);
-      } else {
-        return type.getInternalGraphQLType(typeContainer);
-      }
+      return type.internalType.getInternalGraphQLType(typeContainer);
+      // if (type instanceof RealizedType) {
+      //   return type.internalType.getInternalGraphQLType(typeContainer);
+      // } else {
+      //   return type.getInternalGraphQLType(typeContainer);
+      // }
     });
     return new GraphQLUnionType({
       name: this.name,
@@ -846,12 +854,14 @@ interface IInterfaceInternalTypeConstructorParams<
   name: N;
   fields: M;
   implementors: I;
+  resolveType: InterfaceInternalType<N, M, I>['resolveType'];
   description?: string;
 }
 
 type Implements<M extends OutputFieldsMap> =
-  | ObjectInternalType<any, ObfuscatedOutputFieldsMap<M>>
-  | ObjectType<any, ObfuscatedOutputFieldsMap<M>, boolean>;
+  // TODO: maybe we dont need the internal types in abstract types
+  // | ObjectInternalType<any, ObfuscatedOutputFieldsMap<M>>
+  ObjectType<any, ObfuscatedOutputFieldsMap<M>, boolean>;
 
 type Implementors<M extends OutputFieldsMap> = Thunkable<
   [Implements<M>, ...Array<Implements<M>>]
@@ -865,12 +875,16 @@ class InterfaceInternalType<
   public readonly fields: M;
   public readonly implementors: I;
   public readonly description?: string;
+  public readonly resolveType: (
+    r: ExternalTypeOf<Unthunked<I>[number]>,
+  ) => Unthunked<I>[number]['name'];
 
   constructor(params: IInterfaceInternalTypeConstructorParams<N, M, I>) {
     super(params);
     this.fields = params.fields;
     this.implementors = params.implementors;
     this.description = params.description;
+    this.resolveType = params.resolveType;
   }
 
   protected getFreshInternalGraphQLType(
@@ -883,7 +897,7 @@ class InterfaceInternalType<
     return new GraphQLInterfaceType({
       name: this.name,
       description: this.description,
-      // resolveType: // TODO: implement
+      resolveType: this.resolveType,
       fields: () =>
         toGraphQLFieldConfigMap({
           fields: this.fields,
@@ -892,8 +906,6 @@ class InterfaceInternalType<
     });
   }
 }
-
-// TODO: implement interfaceType
 
 type InterfaceType<
   N extends string,
@@ -919,3 +931,78 @@ export const interfaceType = <
     isNullable: false,
   });
 };
+
+const idInterface = interfaceType({
+  name: 'IdInterface',
+  fields: {
+    id: ID,
+  },
+  implementors: [UserType, AnimalType],
+  resolveType: (x) => {
+    return 'User' as const;
+  },
+});
+
+const nameInterface = interfaceType({
+  name: 'NameInterface',
+  fields: {
+    id: ID,
+  },
+  implementors: [UserType, AnimalType],
+  resolveType: (x) => {
+    return 'Animal' as const;
+  },
+});
+
+const typeContainer = new TypeContainer({
+  contextGetter: () => ({}),
+});
+
+const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'Root',
+    fields: {
+      id: {
+        type: GraphQLID,
+      },
+      // TODO: the type container should understand what objects implement what interfaces
+      // and expose them on the schema.
+      idInterface: {
+        type: idInterface.getGraphQLType(typeContainer) as any,
+      },
+      nameInterface: {
+        type: nameInterface.getGraphQLType(typeContainer) as any,
+        resolve: () => {
+          return {
+            name: 'kerem',
+          };
+        },
+      },
+      user: {
+        type: UserType.getGraphQLType(typeContainer) as any,
+      },
+      animal: {
+        type: AnimalType.getGraphQLType(typeContainer) as any,
+      },
+    },
+  }),
+});
+
+const apolloServer = new ApolloServer({
+  schema,
+});
+
+const PORT = 4001;
+
+const start = () => {
+  const app = express();
+  apolloServer.applyMiddleware({ app });
+
+  app.listen({ port: PORT }, () => {
+    console.log(
+      `🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`,
+    );
+  });
+};
+
+start();
