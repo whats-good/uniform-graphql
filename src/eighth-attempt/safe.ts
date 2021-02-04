@@ -36,6 +36,7 @@ import express from 'express';
  * TODO: add resolveType to union types
  * TODO: implement all the isTypeOf & resolveType methods for abstract type resolutions
  * TODO: make the objectfield more useful or remove it.
+ * TODO: make a better resolveType function for unions & interfaces
  *
  */
 
@@ -710,6 +711,9 @@ class ObjectInternalType<
       description: this.description,
       interfaces: () => {
         const interfaces = typeContainer.getImplementedInterfaces(this);
+        if (!interfaces.length) {
+          return null;
+        }
         return interfaces.map(
           (cur) => cur.getInternalGraphQLType(typeContainer) as any,
         );
@@ -787,14 +791,8 @@ interface IUnionTypeConstructorParams<N extends string, U extends Unionables> {
   name: UnionInternalType<N, U>['name'];
   types: UnionInternalType<N, U>['types'];
   description?: UnionInternalType<N, U>['description'];
-  // resolveType?: UnionInternalType<N, U>['resolveType']; // TODO: implement the abstract type resolutions
+  resolveType: UnionInternalType<N, U>['resolveType'];
 }
-
-// type ResolveTypeFnOf<U extends Unionables> = (
-//   resolved: InternalResolverReturnTypeOfUnionType<
-//     RealizedType<UnionInternalType<any, U>, any>
-//   >,
-// ) => Required<typeof resolved['__typename']>;
 
 class UnionInternalType<
   N extends string,
@@ -802,31 +800,28 @@ class UnionInternalType<
 > extends InternalType<N, Unthunked<U>[number]> {
   public readonly types: U;
   public readonly description?: string;
-  // public readonly resolveType?: ResolveTypeFnOf<U>;
+  public readonly resolveType: (
+    r: ExternalTypeOf<Unthunked<U>[number]>,
+  ) => Unthunked<U>[number]['name'];
 
   constructor(params: IUnionTypeConstructorParams<N, U>) {
     super(params);
     this.types = params.types;
-    // this.resolveType = params.resolveType;
+    this.resolveType = params.resolveType;
   }
 
   protected getFreshInternalGraphQLType(
     typeContainer: AnyTypeContainer,
   ): GraphQLUnionType {
     const unthunkedTypes = unthunk(this.types);
-    const types = unthunkedTypes.map((type) => {
-      return type.internalType.getInternalGraphQLType(typeContainer);
-      // if (type instanceof RealizedType) {
-      //   return type.internalType.getInternalGraphQLType(typeContainer);
-      // } else {
-      //   return type.getInternalGraphQLType(typeContainer);
-      // }
-    });
+    const types = unthunkedTypes.map((type) =>
+      type.internalType.getInternalGraphQLType(typeContainer),
+    );
     return new GraphQLUnionType({
       name: this.name,
       description: this.description,
       types: types as any,
-      // resolveType: this.resolveType as any,
+      resolveType: this.resolveType as any,
     });
   }
 }
@@ -861,6 +856,10 @@ const AnimalType = object({
 const BestFriend = union({
   name: 'BestFriend',
   types: [AnimalType, UserType],
+  resolveType: (x) => {
+    // TODO: write a better resolveType function that takes the rest of the params into consideration
+    return 'Animal';
+  },
 });
 
 interface IInterfaceInternalTypeConstructorParams<
@@ -966,7 +965,9 @@ const userInterface = interfaceType({
     self: UserType,
   },
   implementors: [UserType],
-  resolveType: (x) => {
+  resolveType: (...args) => {
+    // TODO: find a way to let field resolvers and normal resolvers override the resolve type
+    // TODO: understand what returns first: the field resolver vs the normal resolver vs the resolveType fn
     return 'User' as const;
   },
 });
@@ -1022,6 +1023,15 @@ const schema = new GraphQLSchema({
       },
       animal: {
         type: AnimalType.getGraphQLType(typeContainer) as any,
+      },
+      bestFriend: {
+        type: BestFriend.getGraphQLType(typeContainer) as any,
+        resolve: () => {
+          return {
+            name: 'kerem',
+            __typename: 'User',
+          };
+        },
       },
     },
   }),
