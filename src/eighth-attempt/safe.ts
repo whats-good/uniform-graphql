@@ -62,20 +62,47 @@ export class TypeContainer<C extends GraphQLContext> {
     Boolean: GraphQLBoolean,
     ID: GraphQLID,
   };
+  private readonly implementedInterfaces: StringKeys<
+    Set<InterfaceInternalType<any, any, any>>
+  > = {};
 
   constructor(params: { contextGetter: ContextGetter<C> }) {
     this.contextGetter = params.contextGetter;
+  }
+
+  public getImplementedInterfaces(
+    type: ObjectInternalType<any, any>,
+  ): InterfaceInternalType<any, any, any>[] {
+    const interfaces = this.implementedInterfaces[type.name];
+    if (interfaces) {
+      return Array.from(interfaces);
+    }
+    return [];
+  }
+
+  private registerImplementors(
+    interfaceType: InterfaceInternalType<any, any, any>,
+  ): void {
+    const implementors: Implements<any>[] = unthunk(interfaceType.implementors);
+    implementors.forEach((currentImplementor) => {
+      if (!this.implementedInterfaces[currentImplementor.name]) {
+        this.implementedInterfaces[currentImplementor.name] = new Set();
+      }
+      this.implementedInterfaces[currentImplementor.name].add(interfaceType);
+    });
   }
 
   public getInternalGraphQLType(
     type: AnyType,
     fallback: FallbackGraphQLTypeFn,
   ): GraphQLType {
-    // TODO: do a 2 phase scan: first, identify all the interfaces involved, then add the interfaces to the types objects
     const existingType = this.internalGraphQLTypes[type.name];
     if (existingType) {
       return existingType;
     } else {
+      if (type instanceof InterfaceInternalType) {
+        this.registerImplementors(type);
+      }
       const newType = fallback(this);
       this.internalGraphQLTypes[type.name] = newType;
       return this.getInternalGraphQLType(type, fallback);
@@ -533,22 +560,6 @@ const abc: ABC = inputObject({
   },
 });
 
-const obj = new GraphQLObjectType({
-  name: 'yo',
-  fields: {
-    id: {
-      type: GraphQLID,
-      args: {
-        a: {
-          type: GraphQLString,
-          deprecationReason: 'yo',
-          description: 'x',
-        },
-      },
-    },
-  },
-});
-
 type ArgsMap = StringKeys<InputFieldsMapValue<InputRealizedType>>;
 
 /**
@@ -697,6 +708,12 @@ class ObjectInternalType<
     return new GraphQLObjectType({
       name: this.name,
       description: this.description,
+      interfaces: () => {
+        const interfaces = typeContainer.getImplementedInterfaces(this);
+        return interfaces.map(
+          (cur) => cur.getInternalGraphQLType(typeContainer) as any,
+        );
+      },
       fields: () =>
         toGraphQLFieldConfigMap({
           fields: this.fields,
@@ -943,10 +960,21 @@ const idInterface = interfaceType({
   },
 });
 
+const userInterface = interfaceType({
+  name: 'UserInterface',
+  fields: {
+    self: UserType,
+  },
+  implementors: [UserType],
+  resolveType: (x) => {
+    return 'User' as const;
+  },
+});
+
 const nameInterface = interfaceType({
   name: 'NameInterface',
   fields: {
-    id: ID,
+    name: String,
   },
   implementors: [UserType, AnimalType],
   resolveType: (x) => {
@@ -975,6 +1003,17 @@ const schema = new GraphQLSchema({
         resolve: () => {
           return {
             name: 'kerem',
+          };
+        },
+      },
+      userInterface: {
+        type: userInterface.getGraphQLType(typeContainer) as any,
+        resolve: () => {
+          return {
+            id: 'kerem',
+            get self() {
+              return this;
+            },
           };
         },
       },
