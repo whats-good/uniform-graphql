@@ -33,10 +33,7 @@ import express from 'express';
  * TODO: enable developers to omit the args
  * TODO: enable devleopers to omit nullable fields
  * TODO: implement all the deprecationReason & description fields
- * TODO: add resolveType to union types
- * TODO: implement all the isTypeOf & resolveType methods for abstract type resolutions
  * TODO: make the objectfield more useful or remove it.
- * TODO: make a better resolveType function for unions & interfaces
  *
  */
 
