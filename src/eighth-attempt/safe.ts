@@ -797,7 +797,9 @@ class UnionInternalType<
 > extends InternalType<N, Unthunked<U>[number]> {
   public readonly types: U;
   public readonly description?: string;
-  public readonly resolveType: (r: unknown) => Unthunked<U>[number]['name'];
+  public readonly resolveType: (
+    r: InternalResolveTypeOfUnionInternalType<UnionInternalType<N, U>>,
+  ) => Unthunked<U>[number]['name'];
 
   constructor(params: IUnionTypeConstructorParams<N, U>) {
     super(params);
@@ -888,7 +890,11 @@ class InterfaceInternalType<
   public readonly fields: M;
   public readonly implementors: I;
   public readonly description?: string;
-  public readonly resolveType: (r: unknown) => Unthunked<I>[number]['name'];
+  public readonly resolveType: (
+    r: InternalResolveTypeOfInterfaceInternalType<
+      InterfaceInternalType<N, M, I>
+    >,
+  ) => Unthunked<I>[number]['name'];
 
   constructor(params: IInterfaceInternalTypeConstructorParams<N, M, I>) {
     super(params);
@@ -993,13 +999,19 @@ type InternalResolveTypeOfListType<R extends ListType<any, any>> = Array<
   ResolveTypeOf<R['internalType']['type']>
 >;
 
+type InternalResolveTypeOfUnionInternalType<
+  I extends UnionInternalType<any, any>
+> = ResolveTypeOf<I['types'][number]>;
 type InternalResolveTypeOfUnionType<
   R extends UnionType<any, any, any>
-> = ResolveTypeOf<R['internalType']['types'][number]>;
+> = InternalResolveTypeOfUnionInternalType<R['internalType']>;
 
+type InternalResolveTypeOfInterfaceInternalType<
+  I extends InterfaceInternalType<any, any, any>
+> = ResolveTypeOf<I['implementors'][number]>;
 type InternalResolveTypeOfInterfaceType<
   R extends InterfaceType<any, any, any, any>
-> = ResolveTypeOf<R['internalType']['implementors'][number]>;
+> = InternalResolveTypeOfInterfaceInternalType<R['internalType']>;
 
 type ResolveTypeOf<R extends OutputRealizedType> =
   //
