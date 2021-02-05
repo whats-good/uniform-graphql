@@ -781,10 +781,7 @@ const Membership = enu({
   },
 });
 
-type Unionable =
-  // TODO: maybe we dont need the internal types in abstract types
-  // | ObjectInternalType<string, OutputFieldsMap>
-  ObjectType<string, OutputFieldsMap, boolean>;
+type Unionable = ObjectType<string, OutputFieldsMap, boolean>;
 
 type Unionables = Thunkable<[Unionable, Unionable, ...Array<Unionable>]>;
 interface IUnionTypeConstructorParams<N extends string, U extends Unionables> {
@@ -800,9 +797,7 @@ class UnionInternalType<
 > extends InternalType<N, Unthunked<U>[number]> {
   public readonly types: U;
   public readonly description?: string;
-  public readonly resolveType: (
-    r: ExternalTypeOf<Unthunked<U>[number]>,
-  ) => Unthunked<U>[number]['name'];
+  public readonly resolveType: (r: unknown) => Unthunked<U>[number]['name'];
 
   constructor(params: IUnionTypeConstructorParams<N, U>) {
     super(params);
@@ -874,10 +869,11 @@ interface IInterfaceInternalTypeConstructorParams<
   description?: string;
 }
 
-type Implements<M extends OutputFieldsMap> =
-  // TODO: maybe we dont need the internal types in abstract types
-  // | ObjectInternalType<any, ObfuscatedOutputFieldsMap<M>>
-  ObjectType<any, ObfuscatedOutputFieldsMap<M>, boolean>;
+type Implements<M extends OutputFieldsMap> = ObjectType<
+  any,
+  ObfuscatedOutputFieldsMap<M>,
+  boolean
+>;
 
 type Implementors<M extends OutputFieldsMap> = Thunkable<
   [Implements<M>, ...Array<Implements<M>>]
@@ -891,9 +887,7 @@ class InterfaceInternalType<
   public readonly fields: M;
   public readonly implementors: I;
   public readonly description?: string;
-  public readonly resolveType: (
-    r: ExternalTypeOf<Unthunked<I>[number]>,
-  ) => Unthunked<I>[number]['name'];
+  public readonly resolveType: (r: unknown) => Unthunked<I>[number]['name'];
 
   constructor(params: IInterfaceInternalTypeConstructorParams<N, M, I>) {
     super(params);
@@ -966,8 +960,9 @@ const userInterface = interfaceType({
   },
   implementors: [UserType],
   resolveType: (...args) => {
+    // TODO: RESOLVE TYPE RUNS BEFORE ANYTHING. UPDATE THE CODE ADAPT
+
     // TODO: find a way to let field resolvers and normal resolvers override the resolve type
-    // TODO: understand what returns first: the field resolver vs the normal resolver vs the resolveType fn
     return 'User' as const;
   },
 });
@@ -1028,8 +1023,14 @@ const schema = new GraphQLSchema({
         type: BestFriend.getGraphQLType(typeContainer) as any,
         resolve: () => {
           return {
-            name: 'kerem',
+            name: async () => {
+              return 'keremkazan';
+            },
             __typename: 'User',
+            kerem: async () => {
+              return 'kazan';
+            },
+            kazan: () => 'kerem',
           };
         },
       },
