@@ -19,7 +19,14 @@ import {
   GraphQLUnionType,
   ValueNode,
 } from 'graphql';
-import { brandOf, Maybe, Thunkable, unthunk, Unthunked } from './utils';
+import {
+  brandOf,
+  Maybe,
+  Thunkable,
+  unthunk,
+  Unthunked,
+  Promisable,
+} from './utils';
 import mapValues from 'lodash/mapValues';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
@@ -34,7 +41,11 @@ import express from 'express';
  * TODO: enable devleopers to omit nullable fields
  * TODO: implement all the deprecationReason & description fields
  * TODO: make the objectfield more useful or remove it.
- *
+ * TODO: create type guards for the internal types: { is:(a: unknown) is ThisType }
+ * NOTE: field resolvers are async awaited before the root fields! this means
+ * that the root object in field resolvers won't necessarily be equal to a
+ * fully resolved object! In fact, maybe it should be set to unknown first.
+ * Or at least it should be typed as a map of Promisable Thunkables.
  */
 
 interface StringKeys<T> {
@@ -538,26 +549,6 @@ const inputObject = <N extends string, M extends InputFieldsMap>(
   });
 };
 
-type ABC = InputObjectType<
-  'ABC',
-  {
-    x: typeof String;
-    y: typeof Float;
-    z: ABC;
-  }
->;
-
-const abc: ABC = inputObject({
-  name: 'ABC',
-  fields: {
-    x: () => String,
-    y: () => ({
-      type: Float,
-    }),
-    z: () => abc,
-  },
-});
-
 type ArgsMap = StringKeys<InputFieldsMapValue<InputRealizedType>>;
 
 /**
@@ -778,6 +769,18 @@ const Membership = enu({
   },
 });
 
+const BetterUser = object({
+  name: 'BetterUser',
+  fields: {
+    id: ID,
+    membership: Membership,
+    firstName: {
+      type: String.nullable,
+      args: { a: String },
+    },
+  },
+});
+
 type Unionable = ObjectType<string, OutputFieldsMap, boolean>;
 
 type Unionables = Thunkable<[Unionable, Unionable, ...Array<Unionable>]>;
@@ -842,6 +845,7 @@ const AnimalType = object({
   fields: {
     id: ID,
     name: String,
+    specialAnimalPropery: Membership,
   },
 });
 
@@ -975,6 +979,47 @@ const nameInterface = interfaceType({
   },
 });
 
+type InternalResolveTypeOfObjectType<R extends ObjectType<any, any, any>> = {
+  [K in keyof R['internalType']['fields']]: Promisable<
+    Thunkable<
+      ResolveTypeOf<
+        TypeInOutputMapValue<Unthunked<R['internalType']['fields'][K]>>
+      >
+    >
+  >;
+};
+
+type InternalResolveTypeOfListType<R extends ListType<any, any>> = Array<
+  ResolveTypeOf<R['internalType']['type']>
+>;
+
+type InternalResolveTypeOfUnionType<
+  R extends UnionType<any, any, any>
+> = ResolveTypeOf<R['internalType']['types'][number]>;
+
+type InternalResolveTypeOfInterfaceType<
+  R extends InterfaceType<any, any, any, any>
+> = ResolveTypeOf<R['internalType']['implementors'][number]>;
+
+type ResolveTypeOf<R extends OutputRealizedType> =
+  //
+  R extends ObjectType<any, any, any>
+    ? TypeRealization<R, InternalResolveTypeOfObjectType<R>>
+    : R extends ListType<any, any>
+    ? TypeRealization<R, InternalResolveTypeOfListType<R>>
+    : R extends UnionType<any, any, any>
+    ? TypeRealization<R, InternalResolveTypeOfUnionType<R>>
+    : R extends InterfaceType<any, any, any, any>
+    ? TypeRealization<R, InternalResolveTypeOfInterfaceType<R>>
+    : ExternalTypeOf<R>;
+
+type a = ResolveTypeOf<typeof ID>;
+type b = ResolveTypeOf<typeof Membership>;
+type c = ResolveTypeOf<UserType>;
+type d = ResolveTypeOf<ListType<UserType>>;
+type e = ResolveTypeOf<typeof BestFriend>;
+type f = ResolveTypeOf<typeof nameInterface>;
+
 const typeContainer = new TypeContainer({
   contextGetter: () => ({}),
 });
@@ -1028,6 +1073,39 @@ const schema = new GraphQLSchema({
               return 'kazan';
             },
             kazan: () => 'kerem',
+          };
+        },
+      },
+      betterUser: {
+        type: BetterUser.getGraphQLType(typeContainer) as any,
+      },
+      executionOrder: {
+        type: new GraphQLObjectType({
+          name: 'ExecutionOrder',
+          fields: {
+            firstField: {
+              type: GraphQLString,
+              resolve: async (...args) => {
+                return 'after execution';
+              },
+            },
+            secondField: {
+              type: GraphQLString,
+            },
+            thirdField: {
+              type: GraphQLString,
+            },
+          },
+        }),
+        resolve: async (...upperResolveArgs) => {
+          return {
+            firstField: async () => {
+              return 'before lower level';
+            },
+            secondField: () => {
+              return 'before lower level';
+            },
+            thirdField: 'before lower level',
           };
         },
       },
