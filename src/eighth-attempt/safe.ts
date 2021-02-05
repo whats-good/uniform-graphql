@@ -551,10 +551,6 @@ const inputObject = <N extends string, M extends InputFieldsMap>(
 
 type ArgsMap = StringKeys<InputFieldsMapValue<InputRealizedType>>;
 
-/**
- * TODO: Make an output field class that takes arguments into consideration.
- */
-
 interface OutputFieldConstructorParams<
   R extends OutputRealizedType,
   M extends ArgsMap
@@ -646,6 +642,10 @@ type ObfuscatedOutputFieldsMap<M extends OutputFieldsMap> = {
 
 type TypeOfOutputFieldsMap<M extends OutputFieldsMap> = {
   [K in keyof M]: ExternalTypeOf<TypeInOutputMapValue<Unthunked<M[K]>>>;
+};
+
+type TypeOfArgsMap<A extends ArgsMap> = {
+  [K in keyof A]: TypeInInputMapValue<A[K]>;
 };
 
 interface IOutputObjectInternalTypeConstructorParams<
@@ -1013,6 +1013,17 @@ type ResolveTypeOf<R extends OutputRealizedType> =
     ? TypeRealization<R, InternalResolveTypeOfInterfaceType<R>>
     : ExternalTypeOf<R>;
 
+type ResolverFn<
+  R extends OutputRealizedType, // to be resolved
+  S, // root / source
+  A extends ArgsMap, // arguments
+  C extends GraphQLContext // context
+> = (
+  source: S,
+  args: TypeOfArgsMap<A>,
+  context: C,
+) => Promisable<ResolveTypeOf<R>>;
+
 type a = ResolveTypeOf<typeof ID>;
 type b = ResolveTypeOf<typeof Membership>;
 type c = ResolveTypeOf<UserType>;
@@ -1023,6 +1034,11 @@ type f = ResolveTypeOf<typeof nameInterface>;
 const typeContainer = new TypeContainer({
   contextGetter: () => ({}),
 });
+
+type g = ResolverFn<UserType, undefined, { kerem: typeof String }, { k: 'k' }>;
+const f = (g: g) => {
+  return g;
+};
 
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -1057,7 +1073,19 @@ const schema = new GraphQLSchema({
       },
       user: {
         type: UserType.getGraphQLType(typeContainer) as any,
-      },
+        resolve: f((source, args, context) => {
+          return {
+            id: 'kerem',
+            name: 'kerem',
+            get self() {
+              return this;
+            },
+            get selfArray() {
+              return [this];
+            },
+          };
+        }),
+      } as any,
       animal: {
         type: AnimalType.getGraphQLType(typeContainer) as any,
       },
