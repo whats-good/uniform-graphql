@@ -34,13 +34,11 @@ import express from 'express';
 /**
  * Remaining items:
  *
- * TODO: Add mutations
  * TODO: Add object field resolver utilities (i.e conversion from async thunkables to normal)
  * TODO: give the developer more flexibility in terms of determining the root type.
  * TODO: enable developers to omit the args
  * TODO: enable devleopers to omit nullable fields
  * TODO: implement all the deprecationReason & description fields
- * TODO: make the objectfield more useful or remove it.
  * TODO: create type guards for the internal types: { is:(a: unknown) is ThisType }
  * NOTE: field resolvers are async awaited before the root fields! this means
  * that the root object in field resolvers won't necessarily be equal to a
@@ -74,6 +72,8 @@ export class TypeContainer<C extends GraphQLContext> {
   private readonly implementedInterfaces: StringKeys<
     Set<InterfaceInternalType<any, any, any>>
   > = {};
+  private readonly queries: StringKeys<QueryField<any, any, C>> = {};
+  private readonly mutations: StringKeys<QueryField<any, any, C>> = {};
 
   constructor(params: { contextGetter: ContextGetter<C> }) {
     this.contextGetter = params.contextGetter;
@@ -87,6 +87,14 @@ export class TypeContainer<C extends GraphQLContext> {
       return Array.from(interfaces);
     }
     return [];
+  }
+
+  public addQuery<R extends OutputRealizedType, M extends ArgsMap>(
+    name: string,
+    query: QueryFieldConstructorParams<R, M, C>,
+  ): void {
+    const queryField = new QueryField(query);
+    this.queries[name] = queryField;
   }
 
   private registerImplementors(
@@ -116,6 +124,29 @@ export class TypeContainer<C extends GraphQLContext> {
       this.internalGraphQLTypes[type.name] = newType;
       return this.getInternalGraphQLType(type, fallback);
     }
+  }
+
+  public getSchema(): GraphQLSchema {
+    const query = new GraphQLObjectType({
+      name: 'Query',
+      fields: mapValues(this.queries, (field) =>
+        field.getGraphQLFieldConfig(this),
+      ),
+    });
+
+    const mutationFields = mapValues(this.mutations, (field) =>
+      field.getGraphQLFieldConfig(this),
+    );
+
+    const mutation = new GraphQLObjectType({
+      name: 'Mutation',
+      fields: mutationFields,
+    });
+
+    return new GraphQLSchema({
+      query,
+      mutation: Object.values(mutationFields).length ? mutation : null,
+    });
   }
 }
 
@@ -589,6 +620,53 @@ class OutputField<R extends OutputRealizedType, M extends ArgsMap> {
   }
 }
 
+interface QueryFieldConstructorParams<
+  R extends OutputRealizedType,
+  M extends ArgsMap,
+  C extends GraphQLContext
+> {
+  type: R;
+  args: M;
+  deprecationReason?: string;
+  description?: string;
+  resolve: ResolverFn<R, undefined, M, C>;
+}
+
+class QueryField<
+  R extends OutputRealizedType,
+  M extends ArgsMap,
+  C extends GraphQLContext
+> {
+  public readonly type: R;
+  public readonly args: M;
+  public readonly resolve: ResolverFn<R, undefined, M, C>;
+  public readonly deprecationReason?: string;
+  public readonly description?: string;
+
+  constructor(params: QueryFieldConstructorParams<R, M, C>) {
+    this.type = params.type;
+    this.args = params.args;
+    this.deprecationReason = params.deprecationReason;
+    this.description = params.description;
+    this.resolve = params.resolve;
+  }
+
+  getGraphQLFieldConfig(
+    typeContainer: AnyTypeContainer,
+  ): GraphQLFieldConfig<any, any, any> {
+    return {
+      type: this.type.getGraphQLType(typeContainer) as any,
+      args: mapValues(this.args, (arg) => {
+        const inputField = toInputField(arg);
+        return inputField.getGraphQLInputFieldConfig(typeContainer);
+      }),
+      deprecationReason: this.deprecationReason,
+      description: this.description,
+      resolve: this.resolve,
+    };
+  }
+}
+
 type OutputFieldsMapValue<R extends OutputRealizedType, M extends ArgsMap> =
   | R
   | OutputFieldConstructorParams<R, M>;
@@ -1052,106 +1130,123 @@ const f = (g: g) => {
   return g;
 };
 
-const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
-    name: 'Root',
-    fields: {
-      id: {
-        type: GraphQLID,
+typeContainer.addQuery('kerem', {
+  type: UserType,
+  args: {
+    k: ID,
+  },
+  resolve: (root, args, context) => {
+    return {
+      id: 'kerem',
+      name: 'name' + args.k,
+      get self() {
+        return this;
       },
-      // TODO: the type container should understand what objects implement what interfaces
-      // and expose them on the schema.
-      idInterface: {
-        type: idInterface.getGraphQLType(typeContainer) as any,
-      },
-      nameInterface: {
-        type: nameInterface.getGraphQLType(typeContainer) as any,
-        resolve: () => {
-          return {
-            name: 'kerem',
-          };
-        },
-      },
-      userInterface: {
-        type: userInterface.getGraphQLType(typeContainer) as any,
-        resolve: () => {
-          return {
-            id: 'kerem',
-            get self() {
-              return this;
-            },
-          };
-        },
-      },
-      user: {
-        type: UserType.getGraphQLType(typeContainer) as any,
-        resolve: f((source, args, context) => {
-          return {
-            id: 'kerem',
-            name: 'kerem',
-            get self() {
-              return this;
-            },
-            get selfArray() {
-              return [this];
-            },
-          };
-        }),
-      } as any,
-      animal: {
-        type: AnimalType.getGraphQLType(typeContainer) as any,
-      },
-      bestFriend: {
-        type: BestFriend.getGraphQLType(typeContainer) as any,
-        resolve: () => {
-          return {
-            name: async () => {
-              return 'keremkazan';
-            },
-            __typename: 'User',
-            kerem: async () => {
-              return 'kazan';
-            },
-            kazan: () => 'kerem',
-          };
-        },
-      },
-      betterUser: {
-        type: BetterUser.getGraphQLType(typeContainer) as any,
-      },
-      executionOrder: {
-        type: new GraphQLObjectType({
-          name: 'ExecutionOrder',
-          fields: {
-            firstField: {
-              type: GraphQLString,
-              resolve: async (...args) => {
-                return 'after execution';
-              },
-            },
-            secondField: {
-              type: GraphQLString,
-            },
-            thirdField: {
-              type: GraphQLString,
-            },
-          },
-        }),
-        resolve: async (...upperResolveArgs) => {
-          return {
-            firstField: async () => {
-              return 'before lower level';
-            },
-            secondField: () => {
-              return 'before lower level';
-            },
-            thirdField: 'before lower level',
-          };
-        },
-      },
-    },
-  }),
+      selfArray: [],
+    };
+  },
 });
+
+const schema = typeContainer.getSchema();
+
+// const schema = new GraphQLSchema({
+//   query: new GraphQLObjectType({
+//     name: 'Root',
+//     fields: {
+//       id: {
+//         type: GraphQLID,
+//       },
+//       idInterface: {
+//         type: idInterface.getGraphQLType(typeContainer) as any,
+//       },
+//       nameInterface: {
+//         type: nameInterface.getGraphQLType(typeContainer) as any,
+//         resolve: () => {
+//           return {
+//             name: 'kerem',
+//           };
+//         },
+//       },
+//       userInterface: {
+//         type: userInterface.getGraphQLType(typeContainer) as any,
+//         resolve: () => {
+//           return {
+//             id: 'kerem',
+//             get self() {
+//               return this;
+//             },
+//           };
+//         },
+//       },
+//       user: {
+//         type: UserType.getGraphQLType(typeContainer) as any,
+//         resolve: f((source, args, context) => {
+//           return {
+//             id: 'kerem',
+//             name: 'kerem',
+//             get self() {
+//               return this;
+//             },
+//             get selfArray() {
+//               return [this];
+//             },
+//           };
+//         }),
+//       } as any,
+//       animal: {
+//         type: AnimalType.getGraphQLType(typeContainer) as any,
+//       },
+//       bestFriend: {
+//         type: BestFriend.getGraphQLType(typeContainer) as any,
+//         resolve: () => {
+//           return {
+//             name: async () => {
+//               return 'keremkazan';
+//             },
+//             __typename: 'User',
+//             kerem: async () => {
+//               return 'kazan';
+//             },
+//             kazan: () => 'kerem',
+//           };
+//         },
+//       },
+//       betterUser: {
+//         type: BetterUser.getGraphQLType(typeContainer) as any,
+//       },
+//       executionOrder: {
+//         type: new GraphQLObjectType({
+//           name: 'ExecutionOrder',
+//           fields: {
+//             firstField: {
+//               type: GraphQLString,
+//               resolve: async (...args) => {
+//                 return 'after execution';
+//               },
+//             },
+//             secondField: {
+//               type: GraphQLString,
+//             },
+//             thirdField: {
+//               type: GraphQLString,
+//             },
+//           },
+//         }),
+//         resolve: async (...upperResolveArgs) => {
+//           return {
+//             firstField: async () => {
+//               return 'before lower level';
+//             },
+//             secondField: () => {
+//               return 'before lower level';
+//             },
+//             thirdField: 'before lower level',
+//           };
+//         },
+//       },
+//     },
+//   }),
+// });
 
 const apolloServer = new ApolloServer({
   schema,
