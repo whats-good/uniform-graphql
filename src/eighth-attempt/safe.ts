@@ -97,6 +97,14 @@ export class TypeContainer<C extends GraphQLContext> {
     this.queries[name] = queryField;
   }
 
+  public addMutation<R extends OutputRealizedType, M extends ArgsMap>(
+    name: string,
+    query: QueryFieldConstructorParams<R, M, C>,
+  ): void {
+    const queryField = new QueryField(query);
+    this.mutations[name] = queryField;
+  }
+
   private registerImplementors(
     interfaceType: InterfaceInternalType<any, any, any>,
   ): void {
@@ -1139,6 +1147,23 @@ typeContainer.addQuery('kerem', {
     return {
       id: 'kerem',
       name: 'name' + args.k,
+      get self() {
+        return this;
+      },
+      selfArray: [],
+    };
+  },
+});
+
+typeContainer.addMutation('kazan', {
+  type: UserType,
+  args: {
+    ke: String,
+  },
+  resolve: (root, args, context) => {
+    return {
+      id: 'kerem',
+      name: 'name' + args.ke,
       get self() {
         return this;
       },
