@@ -39,6 +39,9 @@ export const unthunk = <T extends Thunkable<any>>(t: T): Unthunked<T> => {
  * 3. The thunkable value is an infinitely nestable "promisable" that eventually resolves to the desired
  * value.
  */
+export interface StringKeys<T> {
+  [key: string]: T;
+}
 
 export type RecursivePromisable<T> =
   | T
