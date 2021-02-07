@@ -35,11 +35,9 @@ import { forEach } from 'lodash';
 /**
  * Remaining items:
  *
- * TODO: give the developer more flexibility in terms of determining the root type.
- * TODO: enable developers to omit the args
- * TODO: enable devleopers to omit nullable fields
  * TODO: implement all the deprecationReason & description fields
  * TODO: create type guards for the internal types: { is:(a: unknown) is ThisType }
+ * TODO: find a way to make the schema initable through async factories / containers
  */
 
 interface StringKeys<T> {
@@ -470,7 +468,7 @@ export const list = <T extends OutputRealizedType>(
   return __list(type);
 };
 
-export const inputlist = <T extends InputRealizedType>(
+export const inputList = <T extends InputRealizedType>(
   type: T,
 ): InputListType<T, false> => {
   return __list(type);
@@ -1059,7 +1057,6 @@ type InterfaceType<
   NULLABLE
 >;
 
-// TODO: consolidate these function names and find a way to deal with the reserved keywords.
 export const interfaceType = <
   N extends string,
   M extends OutputFieldsMap,
@@ -1241,6 +1238,17 @@ typeContainer.addMutation('kazan', {
 });
 
 const schema = typeContainer.getSchema();
+
+export const t = {
+  scalar,
+  enum: enu,
+  object,
+  interface: interfaceType,
+  inputObject: inputObject,
+  list,
+  inputList,
+  union,
+};
 
 // const schema = new GraphQLSchema({
 //   query: new GraphQLObjectType({
