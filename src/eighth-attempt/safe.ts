@@ -648,9 +648,11 @@ class OutputField<R extends OutputRealizedType, M extends ArgsMap> {
     this.description = params.description;
   }
 
-  getGraphQLFieldConfig(
-    typeContainer: AnyTypeContainer,
-  ): GraphQLFieldConfig<any, any, any> {
+  getGraphQLFieldConfig(params: {
+    typeContainer: AnyTypeContainer;
+    objectName?: string;
+    fieldName: string;
+  }): GraphQLFieldConfig<any, any, any> {
     return {
       type: this.type.getGraphQLType(typeContainer) as any,
       args: mapValues(this.args, (arg) => {
@@ -659,6 +661,12 @@ class OutputField<R extends OutputRealizedType, M extends ArgsMap> {
       }),
       deprecationReason: this.deprecationReason,
       description: this.description,
+      resolve: params.objectName
+        ? (typeContainer.getFieldResolver(
+            params.objectName,
+            params.fieldName,
+          ) as any)
+        : undefined,
     };
   }
 }
@@ -744,11 +752,16 @@ type OutputFieldsMap = StringKeys<
 const toGraphQLFieldConfigMap = (params: {
   fields: OutputFieldsMap;
   typeContainer: AnyTypeContainer;
+  objectName?: string;
 }): GraphQLFieldConfigMap<any, any> => {
-  return mapValues(params.fields, (protoField) => {
+  return mapValues(params.fields, (protoField, fieldName) => {
     const unthunkedProtoField = unthunk(protoField);
     const field = toOutputField(unthunkedProtoField);
-    return field.getGraphQLFieldConfig(params.typeContainer);
+    return field.getGraphQLFieldConfig({
+      fieldName,
+      typeContainer,
+      objectName: params.objectName,
+    });
   });
 };
 
@@ -766,7 +779,7 @@ type TypeOfOutputFieldsMap<M extends OutputFieldsMap> = {
 };
 
 type TypeOfArgsMap<A extends ArgsMap> = {
-  [K in keyof A]: TypeInInputMapValue<A[K]>;
+  [K in keyof A]: ExternalTypeOf<TypeInInputMapValue<A[K]>>;
 };
 
 interface IOutputObjectInternalTypeConstructorParams<
@@ -831,6 +844,7 @@ class ObjectInternalType<
         toGraphQLFieldConfigMap({
           fields: this.fields,
           typeContainer,
+          objectName: this.name,
         }),
     });
   }
@@ -1172,12 +1186,19 @@ type FieldResolversOf<I extends ObjectInternalType<any, any>> = {
 };
 
 typeContainer.addFieldResolvers(UserType, {
-  id: (root, args, context) => {
-    return 'kerem';
+  id: async (root, args, context) => {
+    return (await unthunk(root.id)) + 'fieldResolved';
   },
   selfArray: async (root, args, context) => {
     const id = await unthunk(root.id);
-    return [];
+    const otherId = root.id;
+    return [
+      root,
+      {
+        ...root,
+        id: args.a + id,
+      },
+    ];
   },
 });
 
@@ -1186,14 +1207,25 @@ typeContainer.addQuery('kerem', {
   args: {
     k: ID,
   },
-  resolve: (root, args, context) => {
+  resolve: async (root, args, context) => {
     return {
-      id: 'kerem',
+      id: async () => {
+        return 'kerem';
+      },
       name: 'name' + args.k,
       get self() {
         return this;
       },
-      selfArray: [],
+      selfArray: async () => [
+        {
+          id: 'id',
+          name: 'name',
+          get self() {
+            return this;
+          },
+          selfArray: [],
+        },
+      ],
     };
   },
 });
