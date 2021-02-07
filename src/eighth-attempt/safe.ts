@@ -175,7 +175,9 @@ export class TypeContainer<C extends GraphQLContext> {
 
     const mutation = new GraphQLObjectType({
       name: 'Mutation',
-      fields: mutationFields,
+      fields: () => {
+        return mutationFields;
+      },
     });
 
     return new GraphQLSchema({
@@ -1348,6 +1350,50 @@ export const t = {
 //     },
 //   }),
 // });
+
+function Query<T extends OutputRealizedType, M extends ArgsMap>(params: {
+  type: T;
+  args: M;
+  deprecationReason?: string;
+  description?: string;
+}) {
+  console.log('f(): evaluated');
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: {
+      value?: (
+        root: undefined,
+        args: TypeOfArgsMap<M>,
+        context: { kerem: string },
+      ) => Promisable<ResolveTypeOf<T>>;
+      enumerable?: any;
+      configurable?: any;
+      writable?: any;
+      get?: any;
+      set?: any;
+    },
+  ) {
+    descriptor.value;
+    console.log('f(): called');
+  };
+}
+
+class Kerem {
+  @Query({
+    type: ID,
+    args: { someArg: String },
+  })
+  public async id(
+    root: undefined,
+    args: { someArg: string },
+    context: any,
+  ): Promise<number | string> {
+    return 1234;
+  }
+}
+
+const k = new Kerem();
 
 const apolloServer = new ApolloServer({
   schema,
