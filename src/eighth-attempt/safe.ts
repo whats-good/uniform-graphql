@@ -1161,8 +1161,13 @@ type ResolverFn<
   context: C,
 ) => Promisable<ResolveTypeOf<R>>;
 
+type MyGraphQLContext = {
+  kerem: string;
+  kazan: string;
+};
+
 const typeContainer = new TypeContainer({
-  contextGetter: () => ({ keremContext: false }),
+  contextGetter: () => ({ kerem: 'kerem', kazan: 'kazan' }),
 });
 
 type FieldResolversOf<
@@ -1177,70 +1182,6 @@ type FieldResolversOf<
   >;
 };
 
-typeContainer.addFieldResolvers(UserType, {
-  id: async (root, args, context) => {
-    return (await unthunk(root.id)) + 'fieldResolved';
-  },
-  selfArray: async (root, args, context) => {
-    const id = await unthunk(root.id);
-    const otherId = root.id;
-    return [
-      root,
-      {
-        ...root,
-        id: args.a + id,
-      },
-    ];
-  },
-});
-
-typeContainer.addQuery('kerem', {
-  type: UserType,
-  args: {
-    k: ID,
-  },
-  resolve: async (root, args, context) => {
-    return {
-      id: async () => {
-        return 'kerem';
-      },
-      name: 'name' + args.k,
-      get self() {
-        return this;
-      },
-      selfArray: async () => [
-        {
-          id: 'id',
-          name: 'name',
-          get self() {
-            return this;
-          },
-          selfArray: [],
-        },
-      ],
-    };
-  },
-});
-
-typeContainer.addMutation('kazan', {
-  type: UserType,
-  args: {
-    ke: String,
-  },
-  resolve: (root, args, context) => {
-    return {
-      id: 'kerem',
-      name: 'name' + args.ke,
-      get self() {
-        return this;
-      },
-      selfArray: [],
-    };
-  },
-});
-
-const schema = typeContainer.getSchema();
-
 export const t = {
   scalar,
   enum: enu,
@@ -1252,148 +1193,71 @@ export const t = {
   union,
 };
 
-// const schema = new GraphQLSchema({
-//   query: new GraphQLObjectType({
-//     name: 'Root',
-//     fields: {
-//       id: {
-//         type: GraphQLID,
-//       },
-//       idInterface: {
-//         type: idInterface.getGraphQLType(typeContainer) as any,
-//       },
-//       nameInterface: {
-//         type: nameInterface.getGraphQLType(typeContainer) as any,
-//         resolve: () => {
-//           return {
-//             name: 'kerem',
-//           };
-//         },
-//       },
-//       userInterface: {
-//         type: userInterface.getGraphQLType(typeContainer) as any,
-//         resolve: () => {
-//           return {
-//             id: 'kerem',
-//             get self() {
-//               return this;
-//             },
-//           };
-//         },
-//       },
-//       user: {
-//         type: UserType.getGraphQLType(typeContainer) as any,
-//         resolve: f((source, args, context) => {
-//           return {
-//             id: 'kerem',
-//             name: 'kerem',
-//             get self() {
-//               return this;
-//             },
-//             get selfArray() {
-//               return [this];
-//             },
-//           };
-//         }),
-//       } as any,
-//       animal: {
-//         type: AnimalType.getGraphQLType(typeContainer) as any,
-//       },
-//       bestFriend: {
-//         type: BestFriend.getGraphQLType(typeContainer) as any,
-//         resolve: () => {
-//           return {
-//             name: async () => {
-//               return 'keremkazan';
-//             },
-//             __typename: 'User',
-//             kerem: async () => {
-//               return 'kazan';
-//             },
-//             kazan: () => 'kerem',
-//           };
-//         },
-//       },
-//       betterUser: {
-//         type: BetterUser.getGraphQLType(typeContainer) as any,
-//       },
-//       executionOrder: {
-//         type: new GraphQLObjectType({
-//           name: 'ExecutionOrder',
-//           fields: {
-//             firstField: {
-//               type: GraphQLString,
-//               resolve: async (...args) => {
-//                 return 'after execution';
-//               },
-//             },
-//             secondField: {
-//               type: GraphQLString,
-//             },
-//             thirdField: {
-//               type: GraphQLString,
-//             },
-//           },
-//         }),
-//         resolve: async (...upperResolveArgs) => {
-//           return {
-//             firstField: async () => {
-//               return 'before lower level';
-//             },
-//             secondField: () => {
-//               return 'before lower level';
-//             },
-//             thirdField: 'before lower level',
-//           };
-//         },
-//       },
-//     },
-//   }),
-// });
-
-function Query<T extends OutputRealizedType, M extends ArgsMap>(params: {
-  type: T;
-  args: M;
-  deprecationReason?: string;
-  description?: string;
-}) {
+function Query() {
   console.log('f(): evaluated');
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: {
-      value?: (
-        root: undefined,
-        args: TypeOfArgsMap<M>,
-        context: { kerem: string },
-      ) => Promisable<ResolveTypeOf<T>>;
-      enumerable?: any;
-      configurable?: any;
-      writable?: any;
-      get?: any;
-      set?: any;
-    },
-  ) {
-    descriptor.value;
+  return function (target: Resolver<any>, propertyKey: string) {
     console.log('f(): called');
   };
 }
 
-class Kerem {
-  @Query({
-    type: ID,
-    args: { someArg: String },
-  })
-  public async id(
-    root: undefined,
-    args: { someArg: string },
-    context: any,
-  ): Promise<number | string> {
-    return 1234;
+// TODO: when we use deocrators, typechecking & code completion gets reversed.
+// decorators wait for the original code to be typed correctly before wrapping the
+// original code. however, what we want is the decorator to enforce its own
+// expected types onto the methods. how do we do that while not having the end
+// user constantly manually writing types?
+
+// TODO: find a way to get the resolve functions to instantiate new resolver objects
+// and pass them into the schema appropriately, without causing race conditions,
+// running the queries in isolation from each other. This will probably happen through
+// differently "Bound" resolvers where the meaning of "this" changes as set during
+// the initial request. Do the same for field resolvers.
+
+/**
+ * TODO: when we describe the function inside the decorator,
+ * we lose access to the object instance
+ */
+
+/**
+ * TODO: how do we describe the queries without having the typeContainer?
+ */
+
+abstract class Resolver<C extends GraphQLContext> {
+  public readonly graphQLContext!: C;
+
+  public query<R extends OutputRealizedType, M extends ArgsMap>(
+    query: QueryFieldConstructorParams<R, M, C>,
+  ): QueryField<R, M, C> {
+    return new QueryField(query);
   }
 }
 
-const k = new Kerem();
+class Kerem extends Resolver<MyGraphQLContext> {
+  public uuid: string;
+
+  constructor() {
+    super();
+    this.uuid = uniqueId();
+  }
+
+  public someQuery = this.query({
+    type: UserType,
+    args: { k: String },
+    resolve: async (root, args, context) => {
+      return {
+        id: 'id' + this.uuid,
+        name: 'name',
+        get self() {
+          return this;
+        },
+        selfArray: [],
+      };
+    },
+  });
+}
+
+typeContainer.registerResolvers([Kerem]);
+
+const schema = typeContainer.getSchema();
 
 const apolloServer = new ApolloServer({
   schema,
