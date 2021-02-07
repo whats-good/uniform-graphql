@@ -30,7 +30,7 @@ import {
 import mapValues from 'lodash/mapValues';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import { forEach } from 'lodash';
+import { forEach, uniqueId } from 'lodash';
 
 /**
  * Remaining items:
@@ -1239,6 +1239,7 @@ class Kerem extends Resolver<MyGraphQLContext> {
     this.uuid = uniqueId();
   }
 
+  // TODO: is there a way to do this query constructor via t.query insead of this.query?
   public someQuery = this.query({
     type: UserType,
     args: { k: String },
@@ -1254,8 +1255,6 @@ class Kerem extends Resolver<MyGraphQLContext> {
     },
   });
 }
-
-typeContainer.registerResolvers([Kerem]);
 
 const schema = typeContainer.getSchema();
 
