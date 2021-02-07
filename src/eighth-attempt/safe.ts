@@ -31,21 +31,15 @@ import mapValues from 'lodash/mapValues';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import { forEach } from 'lodash';
-import { field } from '../OutputField';
 
 /**
  * Remaining items:
  *
- * TODO: Add object field resolver utilities (i.e conversion from async thunkables to normal)
  * TODO: give the developer more flexibility in terms of determining the root type.
  * TODO: enable developers to omit the args
  * TODO: enable devleopers to omit nullable fields
  * TODO: implement all the deprecationReason & description fields
  * TODO: create type guards for the internal types: { is:(a: unknown) is ThisType }
- * NOTE: field resolvers are async awaited before the root fields! this means
- * that the root object in field resolvers won't necessarily be equal to a
- * fully resolved object! In fact, maybe it should be set to unknown first.
- * Or at least it should be typed as a map of Promisable Thunkables.
  */
 
 interface StringKeys<T> {
@@ -116,7 +110,7 @@ export class TypeContainer<C extends GraphQLContext> {
 
   public addFieldResolvers<R extends ObjectType<any, any>>(
     type: R,
-    resolvers: Partial<FieldResolversOf<R['internalType']>>,
+    resolvers: Partial<FieldResolversOf<R['internalType'], C>>,
   ): void {
     forEach(resolvers, (resolver, fieldName) => {
       if (resolver) {
@@ -877,7 +871,7 @@ type UserType = ObjectType<
     self: UserType;
     selfArray: {
       type: ListType<UserType>;
-      args: { a: typeof String }; // TODO: make args ommittable
+      args: { a: typeof String };
     };
   }
 >;
@@ -1042,10 +1036,6 @@ class InterfaceInternalType<
   protected getFreshInternalGraphQLType(
     typeContainer: AnyTypeContainer,
   ): GraphQLType {
-    // TODO: make it so that typeContainer registers all the interfaces first,
-    // only then it should create the output object types along with their
-    // interface fields. This would be done during the schema construction.
-
     return new GraphQLInterfaceType({
       name: this.name,
       description: this.description,
@@ -1173,15 +1163,18 @@ type ResolverFn<
 ) => Promisable<ResolveTypeOf<R>>;
 
 const typeContainer = new TypeContainer({
-  contextGetter: () => ({}),
+  contextGetter: () => ({ keremContext: false }),
 });
 
-type FieldResolversOf<I extends ObjectInternalType<any, any>> = {
+type FieldResolversOf<
+  I extends ObjectInternalType<any, any>,
+  C extends GraphQLContext
+> = {
   [K in keyof I['fields']]: ResolverFn<
     TypeInOutputMapValue<Unthunked<I['fields'][K]>>,
     InternalResolveTypeOfObjectInternalType<I>,
     ArgsMapInOutputMapValue<Unthunked<I['fields'][K]>>,
-    any
+    C
   >;
 };
 
