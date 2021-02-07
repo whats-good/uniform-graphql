@@ -1,7 +1,6 @@
 import { GraphQLFieldConfig } from 'graphql';
 import { mapValues, uniqueId } from 'lodash';
-import { GraphQLContext } from './GraphQLContext';
-import { AnyTypeContainer } from './TypeContainer';
+import { AnyTypeContainer, GraphQLContext } from './TypeContainer';
 import {
   OutputRealizedType,
   TypeRealization,

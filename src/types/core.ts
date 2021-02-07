@@ -9,9 +9,9 @@ import { UnionInternalType } from './output/UnionType';
 import { ListInternalType } from './ListType';
 import { Maybe } from '../utils';
 
-type AnyTypeContainer = TypeContainer<any>;
 export type AnyType = InternalType<any, any>;
 
+type AnyTypeContainer = TypeContainer<any>;
 export abstract class InternalType<N extends string, I> {
   public readonly name: N;
   public readonly __INTERNAL_TYPE__!: I;

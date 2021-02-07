@@ -11,7 +11,6 @@ import {
 import { Maybe, StringKeys, unthunk } from './utils';
 import mapValues from 'lodash/mapValues';
 import { forEach } from 'lodash';
-import { GraphQLContext } from './GraphQLContext';
 import {
   FieldResolversOf,
   QueryField,
@@ -30,6 +29,7 @@ import { ObjectInternalType } from './types/output/ObjectType';
 type ContextGetter<C extends GraphQLContext> = () => C;
 
 export type AnyTypeContainer = TypeContainer<any>;
+export type GraphQLContext = StringKeys<unknown>;
 
 type FallbackGraphQLTypeFn = (typeContainer: AnyTypeContainer) => GraphQLType;
 
