@@ -30,6 +30,8 @@ import {
 import mapValues from 'lodash/mapValues';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
+import { forEach } from 'lodash';
+import { field } from '../OutputField';
 
 /**
  * Remaining items:
@@ -73,6 +75,9 @@ export class TypeContainer<C extends GraphQLContext> {
     Set<InterfaceInternalType<any, any, any>>
   > = {};
   private readonly queries: StringKeys<QueryField<any, any, C>> = {};
+  private readonly fieldResolvers: StringKeys<
+    ResolverFn<any, any, any, C>
+  > = {};
   private readonly mutations: StringKeys<QueryField<any, any, C>> = {};
 
   constructor(params: { contextGetter: ContextGetter<C> }) {
@@ -89,12 +94,42 @@ export class TypeContainer<C extends GraphQLContext> {
     return [];
   }
 
+  public getFieldResolver(
+    typeName: string,
+    fieldName: string,
+  ): Maybe<ResolverFn<any, any, any, C>> {
+    const resolverKey = this.getFieldResolverKey(typeName, fieldName);
+    return this.fieldResolvers[resolverKey];
+  }
+
   public addQuery<R extends OutputRealizedType, M extends ArgsMap>(
     name: string,
     query: QueryFieldConstructorParams<R, M, C>,
   ): void {
     const queryField = new QueryField(query);
     this.queries[name] = queryField;
+  }
+
+  private getFieldResolverKey(typeName: string, fieldName: string) {
+    return `${typeName}:-:${fieldName}`;
+  }
+
+  public addFieldResolvers<R extends ObjectType<any, any>>(
+    type: R,
+    resolvers: Partial<FieldResolversOf<R['internalType']>>,
+  ): void {
+    forEach(resolvers, (resolver, fieldName) => {
+      if (resolver) {
+        const resolverKey = this.getFieldResolverKey(type.name, fieldName);
+        this.fieldResolvers[resolverKey] = resolver as ResolverFn<
+          any,
+          any,
+          any,
+          any
+        >;
+      }
+    });
+    this.fieldResolvers[type.name];
   }
 
   public addMutation<R extends OutputRealizedType, M extends ArgsMap>(
@@ -1071,15 +1106,16 @@ const nameInterface = interfaceType({
   },
 });
 
-type InternalResolveTypeOfObjectType<R extends ObjectType<any, any, any>> = {
-  [K in keyof R['internalType']['fields']]: Promisable<
-    Thunkable<
-      ResolveTypeOf<
-        TypeInOutputMapValue<Unthunked<R['internalType']['fields'][K]>>
-      >
-    >
+type InternalResolveTypeOfObjectInternalType<
+  I extends ObjectInternalType<any, any>
+> = {
+  [K in keyof I['fields']]: Thunkable<
+    Promisable<ResolveTypeOf<TypeInOutputMapValue<Unthunked<I['fields'][K]>>>>
   >;
 };
+type InternalResolveTypeOfObjectType<
+  R extends ObjectType<any, any, any>
+> = InternalResolveTypeOfObjectInternalType<R['internalType']>;
 
 type InternalResolveTypeOfListType<R extends ListType<any, any>> = Array<
   ResolveTypeOf<R['internalType']['type']>
@@ -1122,21 +1158,28 @@ type ResolverFn<
   context: C,
 ) => Promisable<ResolveTypeOf<R>>;
 
-type a = ResolveTypeOf<typeof ID>;
-type b = ResolveTypeOf<typeof Membership>;
-type c = ResolveTypeOf<UserType>;
-type d = ResolveTypeOf<ListType<UserType>>;
-type e = ResolveTypeOf<typeof BestFriend>;
-type f = ResolveTypeOf<typeof nameInterface>;
-
 const typeContainer = new TypeContainer({
   contextGetter: () => ({}),
 });
 
-type g = ResolverFn<UserType, undefined, { kerem: typeof String }, { k: 'k' }>;
-const f = (g: g) => {
-  return g;
+type FieldResolversOf<I extends ObjectInternalType<any, any>> = {
+  [K in keyof I['fields']]: ResolverFn<
+    TypeInOutputMapValue<Unthunked<I['fields'][K]>>,
+    InternalResolveTypeOfObjectInternalType<I>,
+    ArgsMapInOutputMapValue<Unthunked<I['fields'][K]>>,
+    any
+  >;
 };
+
+typeContainer.addFieldResolvers(UserType, {
+  id: (root, args, context) => {
+    return 'kerem';
+  },
+  selfArray: async (root, args, context) => {
+    const id = await unthunk(root.id);
+    return [];
+  },
+});
 
 typeContainer.addQuery('kerem', {
   type: UserType,
