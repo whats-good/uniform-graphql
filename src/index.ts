@@ -3,6 +3,7 @@ import express from 'express';
 import { t, ListType, ObjectType } from './types';
 import { TypeContainer } from './TypeContainer';
 import { unthunk } from './utils';
+import { Resolver } from './Resolver';
 
 /**
  * Remaining items:
@@ -10,6 +11,7 @@ import { unthunk } from './utils';
  * TODO: implement all the deprecationReason & description fields
  * TODO: create type guards for the internal types: { is:(a: unknown) is ThisType }
  * TODO: find a way to make the schema initable through async factories / containers
+ * TODO: enable ioc containers
  * TODO: sometimes the subfield will be impossible to compute unless the arguments of
  * the subfield are given to the field resolver. In those cases, how can we have the
  * root query to always return the result? The result would depend on the args, so this
@@ -179,6 +181,15 @@ typeContainer.addMutation('kazan', {
     };
   },
 });
+
+class Kerem extends Resolver<any> {
+  public x = this.query({
+    type: t.id,
+    resolve: () => 'kerem',
+  });
+}
+
+typeContainer.registerResolvers([Kerem]);
 
 const schema = typeContainer.getSchema();
 

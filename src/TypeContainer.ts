@@ -15,6 +15,7 @@ import {
   FieldResolversOf,
   QueryField,
   QueryFieldConstructorParams,
+  ResolverConstructor,
   ResolverFn,
 } from './Resolver';
 import { ObjectType } from './types';
@@ -33,6 +34,12 @@ export type GraphQLContext = StringKeys<unknown>;
 
 type FallbackGraphQLTypeFn = (typeContainer: AnyTypeContainer) => GraphQLType;
 
+export type QueryFieldGroup = {
+  queryField: QueryField<any, any, any>;
+  fieldName: string;
+  resolverConstructor: ResolverConstructor<any>;
+};
+
 export class TypeContainer<C extends GraphQLContext> {
   private readonly contextGetter: ContextGetter<C>;
   private readonly internalGraphQLTypes: StringKeys<GraphQLType> = {
@@ -50,9 +57,31 @@ export class TypeContainer<C extends GraphQLContext> {
     ResolverFn<any, any, any, C>
   > = {};
   private readonly mutations: StringKeys<QueryField<any, any, C>> = {};
+  private readonly queryFieldGroups: Map<
+    ResolverFn<any, any, any, any>,
+    QueryFieldGroup
+  > = new Map();
 
   constructor(params: { contextGetter: ContextGetter<C> }) {
     this.contextGetter = params.contextGetter;
+  }
+
+  public registerResolvers(
+    resolverConstructors: ResolverConstructor<C>[],
+  ): void {
+    resolverConstructors.forEach((CurrentResolverConstructor) => {
+      const resolver = new CurrentResolverConstructor();
+      for (const fieldName in resolver) {
+        const property = (<any>resolver)[fieldName];
+        if (property instanceof QueryField) {
+          this.queryFieldGroups.set(property.resolve, {
+            fieldName,
+            queryField: property,
+            resolverConstructor: CurrentResolverConstructor,
+          });
+        }
+      }
+    });
   }
 
   public getImplementedInterfaces(
