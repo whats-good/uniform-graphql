@@ -10,6 +10,10 @@ import { unthunk } from './utils';
  * TODO: implement all the deprecationReason & description fields
  * TODO: create type guards for the internal types: { is:(a: unknown) is ThisType }
  * TODO: find a way to make the schema initable through async factories / containers
+ * TODO: sometimes the subfield will be impossible to compute unless the arguments of
+ * the subfield are given to the field resolver. In those cases, how can we have the
+ * root query to always return the result? The result would depend on the args, so this
+ * seems to be impossible, unless we force the devs to always pass the fieldResolver too?
  */
 
 type UserType = ObjectType<
@@ -77,7 +81,7 @@ const BestFriend = t.union({
   },
 });
 
-const userInterface = t.interface({
+const UserInterface = t.interface({
   name: 'UserInterface',
   fields: {
     self: UserType,
