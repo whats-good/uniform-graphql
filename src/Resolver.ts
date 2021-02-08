@@ -1,8 +1,6 @@
 import { GraphQLFieldConfig } from 'graphql';
-import { mapValues, uniqueId } from 'lodash';
-import { UserType } from '.';
+import mapValues from 'lodash/mapValues';
 import { AnyTypeContainer, GraphQLContext } from './TypeContainer';
-import { t } from './types';
 import {
   OutputRealizedType,
   TypeRealization,
@@ -122,7 +120,7 @@ export class QueryField<
   }
 }
 
-abstract class Resolver<C extends GraphQLContext> {
+export abstract class Resolver<C extends GraphQLContext> {
   public readonly graphQLContext!: C;
 
   public query<R extends OutputRealizedType, M extends ArgsMap>(
@@ -132,35 +130,9 @@ abstract class Resolver<C extends GraphQLContext> {
   }
 }
 
-type MyGraphQLContext = {
-  kerem: string;
-  kazan: string;
+export type ResolverConstructor<C extends GraphQLContext> = {
+  new (...args: any[]): Resolver<C>;
 };
-
-class Kerem extends Resolver<MyGraphQLContext> {
-  public uuid: string;
-
-  constructor() {
-    super();
-    this.uuid = uniqueId();
-  }
-
-  // TODO: is there a way to do this query constructor via t.query insead of this.query?
-  public someQuery = this.query({
-    type: UserType,
-    args: { k: t.string },
-    resolve: async (root, args, context) => {
-      return {
-        id: 'id' + this.uuid,
-        name: 'name',
-        get self() {
-          return this;
-        },
-        selfArray: [],
-      };
-    },
-  });
-}
 
 export type FieldResolversOf<
   I extends ObjectInternalType<any, any>,
