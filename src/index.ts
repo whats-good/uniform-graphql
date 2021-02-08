@@ -125,9 +125,6 @@ typeContainer.addFieldResolvers(UserType, {
 
 typeContainer.addQuery('kerem', {
   type: UserType,
-  args: {
-    k: t.id,
-  },
   resolve: async (root, args, context) => {
     return {
       id: async () => {
@@ -147,6 +144,17 @@ typeContainer.addQuery('kerem', {
           selfArray: [],
         },
       ],
+    };
+  },
+});
+
+typeContainer.addQuery('kazan', {
+  type: nameInterface,
+  resolve: async (root, args, context) => {
+    return {
+      id: 'yo',
+      name: 'yo',
+      specialAnimalPropery: 'enterprise' as const,
     };
   },
 });

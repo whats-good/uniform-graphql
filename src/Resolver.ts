@@ -86,7 +86,7 @@ export interface QueryFieldConstructorParams<
   C extends GraphQLContext
 > {
   type: R;
-  args: M;
+  args?: M;
   deprecationReason?: string;
   description?: string;
   resolve: ResolverFn<R, undefined, M, C>;
@@ -98,7 +98,7 @@ export class QueryField<
   C extends GraphQLContext
 > {
   public readonly type: R;
-  public readonly args: M;
+  public readonly args?: M;
   public readonly resolve: ResolverFn<R, undefined, M, C>;
   public readonly deprecationReason?: string;
   public readonly description?: string;
