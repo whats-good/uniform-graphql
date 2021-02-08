@@ -25,7 +25,7 @@ type UserType = ObjectType<
   }
 >;
 
-const UserType: UserType = t.object({
+export const UserType: UserType = t.object({
   name: 'User',
   fields: {
     id: () => t.id,

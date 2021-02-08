@@ -1,6 +1,8 @@
 import { GraphQLFieldConfig } from 'graphql';
 import { mapValues, uniqueId } from 'lodash';
+import { UserType } from '.';
 import { AnyTypeContainer, GraphQLContext } from './TypeContainer';
+import { t } from './types';
 import {
   OutputRealizedType,
   TypeRealization,
@@ -51,13 +53,6 @@ export type ResolverFn<
   args: TypeOfArgsMap<A>,
   context: C,
 ) => Promisable<ResolveTypeOf<R>>;
-
-function Query() {
-  console.log('f(): evaluated');
-  return function (target: Resolver<any>, propertyKey: string) {
-    console.log('f(): called');
-  };
-}
 
 // TODO: when we use deocrators, typechecking & code completion gets reversed.
 // decorators wait for the original code to be typed correctly before wrapping the
@@ -151,39 +146,20 @@ class Kerem extends Resolver<MyGraphQLContext> {
   }
 
   // TODO: is there a way to do this query constructor via t.query insead of this.query?
-  // TODO: why is this infinitely deep? Is it due to the graphQLContext type?
-  // public someQuery = this.query({
-  //   type: UserType,
-  //   args: { k: t.string },
-  //   resolve: async (root, args, context) => {
-  //     return {
-  //       id: 'id' + this.uuid,
-  //       name: 'name',
-  //       get self() {
-  //         return this;
-  //       },
-  //       selfArray: [],
-  //     };
-  //   },
-  // });
-
-  // TODO: why is this infinitely deep?
-  // public y = () => {
-  //   return new QueryField({
-  //     args: { k: t.string },
-  //     type: UserType,
-  //     resolve: async () => {
-  //       return {
-  //         id: 'id' + this.uuid,
-  //         name: 'name',
-  //         get self() {
-  //           return this;
-  //         },
-  //         selfArray: [],
-  //       };
-  //     },
-  //   });
-  // };
+  public someQuery = this.query({
+    type: UserType,
+    args: { k: t.string },
+    resolve: async (root, args, context) => {
+      return {
+        id: 'id' + this.uuid,
+        name: 'name',
+        get self() {
+          return this;
+        },
+        selfArray: [],
+      };
+    },
+  });
 }
 
 export type FieldResolversOf<
