@@ -1,6 +1,5 @@
 {
   "name": "@statically-typed-graphql/examples",
-  "private": true,
   "version": "0.0.3",
   "description": "Usage examples for @statically-typed-graphql",
   "repository": {
