@@ -21,8 +21,10 @@
 ## Install
 
 ```sh
-npm install reflect-metadata graphql @statically-typed-graphql/core
+npm install @statically-typed-graphql/core
 ```
+
+⚠️ `graphql` is a peer dependency
 
 ## Quickstart
 
@@ -232,7 +234,7 @@ type Animal {
 
 #### Unified Type System
 
-No need to maintain two separate type systems for GraphQL and TypeSCript while trying to keep them in sync. Once you create your types, all will be taken care of for you. You will never need to manually type out function parameter types or return types. Everything is inferred from your unified types; all you need to do is to fill in the blanks.
+No need to maintain two separate type systems for GraphQL and TypeScript while trying to keep them in sync. Once you create your unified types, all will be taken care of. You will never need to manually type out function parameter types or return types. Everything is inferred from your unified types; all you need to do is to fill in the blanks.
 
 ![Code autocompletion for resolvers](https://i.ibb.co/Wvg8Mkp/autocomplete-enum.png)
 
@@ -241,6 +243,35 @@ _Example 1_: The compiler is complaining because the `resolve` function is incor
 ![Args types in TypeScript](https://i.ibb.co/BnzKQDW/inferred-args-type.png)
 
 _Example 2_: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL backend, we don't need to manually write any `TypeScript` types for our resolvers. This inclues the resolver function arguments and the return type.
+
+### Documentation
+
+#### Types
+
+The first step in our workflow is creating the unified types that will serve as the building blocks for our backend. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
+
+**Built-in Scalars**
+
+`@statically-typed-graphql` ships with 5 built-in scalars:
+
+<!-- // TODO: make this a table. -->
+
+- `t.id`: Corresponds to `GraphQLNonNull<GraphQLID>` at runtime. At compile time, resolves to type `string | number`.
+- `t.float`: Corresponds to `GraphQLNonNull<GraphQLFloat>` at runtime. At compile time, resolves to type `number`.
+- `t.int`: Corresponds to `GraphQLNonNull<GraphQLInt>` at runtime. At compile time, resolves to type `number`.
+- `t.boolean`: Corresponds to `GraphQLNonNull<GraphQLBoolean>` at runtime. At compilte time, resolves to type `boolean`.
+- `t.string`: Corresponds to `GraphQLNonNull<GraphQLString>` at runtime. At compile time, resolves to type `string`.
+
+All types, including scalars, will have a `.nullable` property, which will make a type nullable both at runtime for `GraphQL` and compile time for `TypeScript`. For example:
+
+- `t.id.nullable`: Corresponds to `GraphQLID` at runtime. At compile time, resolves to type `string | number | null | undefined`.
+- `t.string.nullable`: Corresponds to `GraphQLString` at runtime. At compile time, resolves to type `string | null | undefined`.
+
+**Custom Scalars**
+
+You can use the `t.scalar` type factory to create any custom unified scalars, which will carry both runtime and compile time type information just like any other type in our system.
+
+<!-- TODO: nail the custom scalars -->
 
 ## Author
 
