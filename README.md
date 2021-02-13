@@ -6,6 +6,7 @@
   <a href="#" target="_blank">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
+
 </p>
 
 > Create code-first graphql backends in TypeScript with zero type-safety compromises.
@@ -20,7 +21,7 @@
 ## Install
 
 ```sh
-npm install @statically-typed-graphql/core
+npm install reflect-metadata graphql @statically-typed-graphql/core
 ```
 
 ## Quickstart
@@ -131,6 +132,62 @@ app.listen({ port: PORT }, () => {
 ```
 
 <!-- TODO: add images ![Code autocompletion for resolvers](https://i.ibb.co/8sNb25r/auto-complete-2.png) -->
+
+## Getting Started
+
+### Motivation
+
+GraphQL backends usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL backends create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first backends on the other hand implement the resolvers first and have the typedefs generated / derived from the code. Both approaches have their pros and cons. This library falls somewhere in the middle, but it's closer to the code-first camp.
+
+The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. This is a difficult problem, because type-safety is concerned with compile-time whereas GraphQL schemas are concerned with runtime. What we need is a unified approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas.
+
+### Philosophy
+
+In GraphQL, every type is `null-first`, which means it's gonna be nullable unless it's explicitly wrapped with a `GraphQLNonNull` type. In `TypeScript` on the other hand, types are `non-null-first`: non-nullable by default unless they are explicitly made nullable. This tension is something that few code-first approaches acknowledge and solve for, which results in schema-code mismatches and general developer pain.
+
+In this library, we're gonna side with `TypeScript` when it comes to nullability, because we are a code-first library and we want to play nicely with our programming language. This is why everything is non-nullable unless they are explicitly made nullable.
+
+```ts
+/** Null-first: Things are nullable by default, unless explicitly made non-nullable */
+
+import {
+  GraphQLID,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString,
+} from 'graphql';
+
+const User = new GraphQLObjectType({
+  name: 'User',
+  fields: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    fullName: { type: GraphQLString },
+  },
+});
+```
+
+```ts
+/** Non-null-first: Things are non-nullable by default, unless explicitly made nullable */
+
+import { t } from '@statically-typed-graphql/core';
+
+const User = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    fullName: t.string.nullable,
+  },
+});
+```
+
+```graphql
+# Both codes result with the same typedef:
+
+type User {
+  id: ID!
+  fullName: String
+}
+```
 
 ## Author
 
