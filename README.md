@@ -133,7 +133,7 @@ app.listen({ port: PORT }, () => {
 
 <!-- TODO: add images  -->
 
-## Going Deep
+## Deep Dive
 
 ### Motivation
 
@@ -236,11 +236,11 @@ No need to maintain two separate type systems and trying to keep them in sync. O
 
 ![Code autocompletion for resolvers](https://i.ibb.co/Wvg8Mkp/autocomplete-enum.png)
 
-_Example 1_: The compiler is complaining because the `resolve` function is incorrectly implemented. When we ask for hints on the `membership` field, we are hinted that we need to return one of the listed type literals.
+_Example 1_: The compiler is complaining because the `resolve` function is incorrectly implemented. When we ask for hints on the `membership` field, we are show that we need to return one of the listed type literals.
 
-![Code autocompletion for resolvers](https://i.ibb.co/BnzKQDW/inferred-args-type.png)
+![Args types in TypeScript](https://i.ibb.co/BnzKQDW/inferred-args-type.png)
 
-_Example 2_: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL backend, we don't need to manually write any `TypeScript` types for our resolvers.
+_Example 2_: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL backend, we don't need to manually write any `TypeScript` types for our resolvers. This inclues the resolver function arguments and the return type.
 
 ## Author
 
