@@ -7,6 +7,7 @@ import {
   TypeContainer,
   unthunk,
 } from '@statically-typed-graphql/core';
+import { argsToArgsConfig } from 'graphql/type/definition';
 // import { TypeContainer } from './TypeContainer';
 // import { unthunk } from './utils';
 // import { Resolver } from './Resolver';
@@ -84,6 +85,25 @@ const Membership = t.enum({
   },
 });
 
+const Animal = t.object({
+  name: 'Animal',
+  fields: {
+    id: t.id,
+    age: t.int,
+    name: t.string,
+  },
+});
+
+const User = t.object({
+  name: 'User',
+  fields: {
+    id: t.id, // using out of box scalars
+    fullName: t.string.nullable, // every type can be made nullable
+    membership: Membership, // using a user-made type
+    pets: t.list(Animal), // making a list out of a user-made type
+  },
+});
+
 const BetterUser = t.object({
   name: 'BetterUser',
   fields: {
@@ -108,9 +128,8 @@ const AnimalType = t.object({
 const BestFriend = t.union({
   name: 'BestFriend',
   types: [AnimalType, UserType],
-  resolveType: (x) => {
-    // TODO: write a better resolveType function that takes the rest of the params into consideration
-    return 'Animal';
+  resolveType: async (val) => {
+    return 'Animal' as const;
   },
 });
 
@@ -139,77 +158,52 @@ const nameInterface = t.interface({
   },
 });
 
-const typeContainer = new TypeContainer({
-  contextGetter: () => ({ kerem: 'kerem', kazan: 'kazan' }),
-});
+const typeContainer = new TypeContainer();
 
-typeContainer.addFieldResolvers(UserType, {
-  id: async (root, args, context) => {
-    return (await unthunk(root.id)) + 'fieldResolved';
+typeContainer.query('user', {
+  type: User,
+  args: {
+    id: t.id,
   },
-  selfArray: async (root, args, context) => {
-    const id = await unthunk(root.id);
-    const otherId = root.id;
-    return [
-      root,
-      {
-        ...root,
-        id: (args.a || 'k') + id,
-      },
-    ];
-  },
-});
-
-typeContainer.addQuery('kerem', {
-  type: UserType,
-  resolve: async (root, args, context) => {
+  resolve: async (_, args, context) => {
     return {
-      id: async () => {
-        return 'kerem';
-      },
-      name: 'name' + args.k,
-      get self() {
-        return this;
-      },
-      selfArray: async () => [
+      id: args.id, // types automatically enforced for args.
+      fullName: () => 'John Johnson', // for object fields, you can return thunks
+      membership: 'enterprise' as const, // enum values are type literals
+      pets: async () => [
+        /**
+         * object fields can also return async thunks. this is useful for
+         * potentially expensive computations.
+         */
         {
-          id: 'id',
-          name: 'name',
-          get self() {
-            return this;
-          },
-          selfArray: [],
+          name: 'Lulu',
+          id: 'cat-1',
+          age: 10,
         },
       ],
     };
   },
 });
 
-typeContainer.addQuery('kazan', {
-  type: nameInterface,
-  resolve: async (root, args, context) => {
+typeContainer.mutation('signup', {
+  type: User,
+  args: {
+    email: t.string,
+  },
+  resolve: (_, args, context) => {
     return {
-      id: 'yo',
-      name: 'yo',
-      specialAnimalPropery: 'enterprise' as const,
+      id: 'newly signedup user id',
+      fullName: 'newly signed up user name',
+      membership: 'free' as const,
+      pets: [],
     };
   },
 });
 
-typeContainer.addMutation('kazan', {
-  type: UserType,
-  args: {
-    ke: t.string,
-  },
-  resolve: (root, args, context) => {
-    return {
-      id: 'kerem',
-      name: 'name' + args.ke,
-      get self() {
-        return this;
-      },
-      selfArray: [],
-    };
+// can also add optional field resolvers.
+typeContainer.fieldResolvers(User, {
+  fullName: async (root) => {
+    return 'overriding fullname';
   },
 });
 

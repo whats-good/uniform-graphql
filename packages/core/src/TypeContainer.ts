@@ -39,7 +39,6 @@ export type QueryFieldGroup = {
 };
 
 export class TypeContainer<C extends GraphQLContext> {
-  private readonly contextGetter: ContextGetter<C>;
   private readonly internalGraphQLTypes: StringKeys<GraphQLType> = {
     String: GraphQLString,
     Float: GraphQLFloat,
@@ -51,7 +50,7 @@ export class TypeContainer<C extends GraphQLContext> {
     Set<InterfaceInternalType<any, any, any>>
   > = {};
   private readonly queries: StringKeys<QueryField<any, any, C>> = {};
-  private readonly fieldResolvers: StringKeys<
+  private readonly fieldResolversMap: StringKeys<
     ResolverFn<any, any, any, C>
   > = {};
   private readonly mutations: StringKeys<QueryField<any, any, C>> = {};
@@ -59,10 +58,6 @@ export class TypeContainer<C extends GraphQLContext> {
     ResolverFn<any, any, any, any>,
     QueryFieldGroup
   > = new Map();
-
-  constructor(params: { contextGetter: ContextGetter<C> }) {
-    this.contextGetter = params.contextGetter;
-  }
 
   public registerResolvers(
     resolverConstructors: ResolverConstructor<C>[],
@@ -97,10 +92,10 @@ export class TypeContainer<C extends GraphQLContext> {
     fieldName: string,
   ): Maybe<ResolverFn<any, any, any, C>> {
     const resolverKey = this.getFieldResolverKey(typeName, fieldName);
-    return this.fieldResolvers[resolverKey];
+    return this.fieldResolversMap[resolverKey];
   }
 
-  public addQuery<R extends OutputRealizedType, M extends ArgsMap>(
+  public query<R extends OutputRealizedType, M extends ArgsMap>(
     name: string,
     query: QueryFieldConstructorParams<R, M, C>,
   ): void {
@@ -112,14 +107,14 @@ export class TypeContainer<C extends GraphQLContext> {
     return `${typeName}:-:${fieldName}`;
   }
 
-  public addFieldResolvers<R extends ObjectType<any, any>>(
+  public fieldResolvers<R extends ObjectType<any, any>>(
     type: R,
     resolvers: Partial<FieldResolversOf<R['internalType'], C>>,
   ): void {
     forEach(resolvers, (resolver, fieldName) => {
       if (resolver) {
         const resolverKey = this.getFieldResolverKey(type.name, fieldName);
-        this.fieldResolvers[resolverKey] = resolver as ResolverFn<
+        this.fieldResolversMap[resolverKey] = resolver as ResolverFn<
           any,
           any,
           any,
@@ -127,10 +122,10 @@ export class TypeContainer<C extends GraphQLContext> {
         >;
       }
     });
-    this.fieldResolvers[type.name];
+    this.fieldResolversMap[type.name];
   }
 
-  public addMutation<R extends OutputRealizedType, M extends ArgsMap>(
+  public mutation<R extends OutputRealizedType, M extends ArgsMap>(
     name: string,
     query: QueryFieldConstructorParams<R, M, C>,
   ): void {
