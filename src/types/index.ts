@@ -1,6 +1,6 @@
 import { Boolean, Float, ID, Int, String, scalar } from './ScalarType';
 import { enu } from './EnumType';
-import { inputList, list } from './ListType';
+import { list } from './ListType';
 import { inputObject } from './input/InputObjectType';
 import { object } from './output/ObjectType';
 import { union } from './output/UnionType';
@@ -8,7 +8,7 @@ import { interfaceType } from './output/InterfaceType';
 
 export { ScalarType } from './ScalarType';
 export { EnumType } from './EnumType';
-export { ListType, InputListType } from './ListType';
+export { ListType } from './ListType';
 export { InputObjectType } from './input/InputObjectType';
 export { ObjectType } from './output/ObjectType';
 export { UnionType } from './output/UnionType';
@@ -23,7 +23,6 @@ export const t = {
   scalar,
   enum: enu,
   list,
-  inputList,
   inputObject,
   object,
   union,

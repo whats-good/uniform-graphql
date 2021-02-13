@@ -1,13 +1,7 @@
 import { GraphQLList } from 'graphql';
 import { ResolveTypeOf } from '../Resolver';
 import { AnyTypeContainer } from '../TypeContainer';
-import {
-  ExternalTypeOf,
-  InputRealizedType,
-  InternalType,
-  OutputRealizedType,
-  RealizedType,
-} from './core';
+import { ExternalTypeOf, InternalType, RealizedType } from './core';
 
 export type InternalResolveTypeOfListType<R extends ListType<any, any>> = Array<
   ResolveTypeOf<R['internalType']['type']>
@@ -30,7 +24,14 @@ export class ListInternalType<
   }
 }
 
-const __list = <T extends RealizedType<any, any>>(type: T) => {
+export type ListType<
+  T extends RealizedType<any, any>,
+  NULLABLE extends boolean = false
+> = RealizedType<ListInternalType<T>, NULLABLE>;
+
+export const list = <T extends RealizedType<any, any>>(
+  type: T,
+): ListType<T, false> => {
   const internalType = new ListInternalType({
     type,
   });
@@ -38,26 +39,4 @@ const __list = <T extends RealizedType<any, any>>(type: T) => {
     internalType,
     isNullable: false,
   });
-};
-
-export type ListType<
-  T extends OutputRealizedType,
-  NULLABLE extends boolean = false
-> = RealizedType<ListInternalType<T>, NULLABLE>;
-
-export type InputListType<
-  T extends InputRealizedType,
-  NULLABLE extends boolean = false
-> = RealizedType<ListInternalType<T>, NULLABLE>;
-
-export const list = <T extends OutputRealizedType>(
-  type: T,
-): ListType<T, false> => {
-  return __list(type);
-};
-
-export const inputList = <T extends InputRealizedType>(
-  type: T,
-): InputListType<T, false> => {
-  return __list(type);
 };

@@ -26,10 +26,22 @@ type UserType = ObjectType<
     self: UserType;
     selfArray: {
       type: ListType<UserType>;
-      args: { a: typeof t.string };
+      args: {
+        a: typeof t.string.nullable;
+        b: ListType<typeof t.string>['nullable'];
+        c: typeof inputObject.nullable;
+        d: ListType<typeof inputObject>['nullable'];
+      };
     };
   }
 >;
+
+const inputObject = t.inputObject({
+  name: 'InputObject',
+  fields: {
+    a: t.list(t.string),
+  },
+});
 
 export const UserType: UserType = t.object({
   name: 'User',
@@ -39,8 +51,21 @@ export const UserType: UserType = t.object({
     self: () => UserType,
     selfArray: () => ({
       type: t.list(UserType),
-      args: { a: t.string },
+      args: {
+        a: t.string.nullable,
+        b: t.list(t.string).nullable,
+        c: inputObject.nullable,
+        d: t.list(inputObject).nullable,
+      },
     }),
+  },
+});
+
+const inputObject2 = t.inputObject({
+  name: 'InputObject2',
+  fields: {
+    a: t.list(t.string),
+    b: inputObject,
   },
 });
 
@@ -123,7 +148,7 @@ typeContainer.addFieldResolvers(UserType, {
       root,
       {
         ...root,
-        id: args.a + id,
+        id: (args.a || 'k') + id,
       },
     ];
   },
