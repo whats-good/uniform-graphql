@@ -235,10 +235,10 @@ type Animal {
 No need to maintain two separate type systems and trying to keep them in sync. Once you create your types, all will be taken care of for you. You will never need to manually type out function parameter types or return types. Everything is inferred from your unified types, all you need to do is to fill in the blanks:
 
 ![Code autocompletion for resolvers](https://i.ibb.co/Wvg8Mkp/autocomplete-enum.png)
-**Example 1**: The compiler is complaining because the `resolve` function is incorrectly implemented. When we ask for hints on the `membership` field, we are hinted that we need to return one of the listed type literals.
+_Example 1_: The compiler is complaining because the `resolve` function is incorrectly implemented. When we ask for hints on the `membership` field, we are hinted that we need to return one of the listed type literals.
 
 ![Code autocompletion for resolvers](https://i.ibb.co/BnzKQDW/inferred-args-type.png)
-**Example 2**: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL backend, we don't need to manually write any `TypeScript` types for our resolvers.
+_Example 2_: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL backend, we don't need to manually write any `TypeScript` types for our resolvers.
 
 ## Author
 
