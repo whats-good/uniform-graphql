@@ -1,5 +1,4 @@
 import { GraphQLFieldConfig } from 'graphql';
-import mapValues from 'lodash/mapValues';
 import { AnyTypeContainer, GraphQLContext } from './TypeContainer';
 import {
   OutputRealizedType,
@@ -27,7 +26,7 @@ import {
   InternalResolveTypeOfUnionType,
   UnionType,
 } from './types/output/UnionType';
-import { Promisable, Unthunked } from './utils';
+import { mapValues, Promisable, Unthunked } from './utils';
 
 export type ResolveTypeOf<R extends OutputRealizedType> =
   //

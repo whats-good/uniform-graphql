@@ -1,7 +1,6 @@
 import { GraphQLEnumType } from 'graphql';
-import { mapValues } from 'lodash';
 import { InternalType, RealizedType } from './core';
-import { StringKeys } from '../utils';
+import { mapValues, StringKeys } from '../utils';
 
 interface IEnumValue {
   deprecationReason?: string;

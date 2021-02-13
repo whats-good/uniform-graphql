@@ -8,9 +8,7 @@ import {
   GraphQLString,
   GraphQLType,
 } from 'graphql';
-import { Maybe, StringKeys, unthunk } from './utils';
-import mapValues from 'lodash/mapValues';
-import { forEach } from 'lodash';
+import { forEach, mapValues, Maybe, StringKeys, unthunk } from './utils';
 import {
   FieldResolversOf,
   QueryField,

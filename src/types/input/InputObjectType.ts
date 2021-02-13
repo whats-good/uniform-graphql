@@ -1,8 +1,7 @@
 import { GraphQLInputObjectType } from 'graphql';
-import { mapValues } from 'lodash';
 import { AnyTypeContainer } from '../../TypeContainer';
 import { InternalType, RealizedType } from '../core';
-import { unthunk } from '../../utils';
+import { mapValues, unthunk } from '../../utils';
 import { toInputField } from './InputField';
 import {
   InputFieldsMap,

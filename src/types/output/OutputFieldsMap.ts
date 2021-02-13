@@ -1,7 +1,12 @@
 import { GraphQLFieldConfigMap } from 'graphql';
-import { mapValues } from 'lodash';
 import { AnyTypeContainer } from '../../TypeContainer';
-import { StringKeys, Thunkable, unthunk, Unthunked } from '../../utils';
+import {
+  mapValues,
+  StringKeys,
+  Thunkable,
+  unthunk,
+  Unthunked,
+} from '../../utils';
 import { ExternalTypeOf, OutputRealizedType } from '../core';
 import { ArgsMap } from '../input/ArgsMap';
 import { TypeInInputMapValue } from '../input/InputFieldsMap';
@@ -66,8 +71,4 @@ export type ObfuscatedOutputFieldsMap<M extends OutputFieldsMap> = {
 
 export type TypeOfOutputFieldsMap<M extends OutputFieldsMap> = {
   [K in keyof M]: ExternalTypeOf<TypeInOutputMapValue<Unthunked<M[K]>>>;
-};
-
-type TypeOfArgsMap<A extends ArgsMap> = {
-  [K in keyof A]: ExternalTypeOf<TypeInInputMapValue<A[K]>>;
 };

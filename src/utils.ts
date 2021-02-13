@@ -1,3 +1,9 @@
+import lodashMapValues from 'lodash/mapValues';
+import lodashForEach from 'lodash/forEach';
+
+export const forEach = lodashForEach;
+export const mapValues = lodashMapValues;
+
 export type Maybe<T> = T | null | undefined;
 
 export type Thunk<T> = () => T;

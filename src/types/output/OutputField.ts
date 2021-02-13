@@ -1,5 +1,4 @@
 import { GraphQLFieldConfig } from 'graphql';
-import { mapValues } from 'lodash';
 import { AnyTypeContainer } from '../../TypeContainer';
 import { OutputRealizedType } from '../core';
 import { toInputField } from '../input/InputField';
@@ -9,7 +8,7 @@ import {
   OutputFieldsMapValue,
   TypeInOutputMapValue,
 } from './OutputFieldsMap';
-import { brandOf } from '../../utils';
+import { brandOf, mapValues } from '../../utils';
 
 export interface OutputFieldConstructorParams<
   R extends OutputRealizedType,
