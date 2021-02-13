@@ -1,5 +1,5 @@
 import { GraphQLType, GraphQLInterfaceType } from 'graphql';
-import { Thunkable, Unthunked } from '../../utils';
+import { Thunkable, Unthunked, Promisable } from '../../utils';
 import { AnyTypeContainer } from '../../TypeContainer';
 import { InternalType, RealizedType } from '../core';
 import { ObjectType } from './ObjectType';
@@ -52,7 +52,7 @@ export class InterfaceInternalType<
     r: InternalResolveTypeOfInterfaceInternalType<
       InterfaceInternalType<N, M, I>
     >,
-  ) => Unthunked<I>[number]['name'];
+  ) => Promisable<Unthunked<I>[number]['name']>;
 
   constructor(params: InterfaceInternalTypeConstructorParams<N, M, I>) {
     super(params);

@@ -1,5 +1,5 @@
 import { GraphQLUnionType } from 'graphql';
-import { Thunkable, Unthunked, unthunk } from '../../utils';
+import { Thunkable, Unthunked, unthunk, Promisable } from '../../utils';
 import { AnyTypeContainer } from '../../TypeContainer';
 import { InternalType, RealizedType } from '../core';
 import { ObjectType } from './ObjectType';
@@ -34,7 +34,7 @@ export class UnionInternalType<
   public readonly description?: string;
   public readonly resolveType: (
     r: InternalResolveTypeOfUnionInternalType<UnionInternalType<N, U>>,
-  ) => Unthunked<U>[number]['name'];
+  ) => Promisable<Unthunked<U>[number]['name']>;
 
   constructor(params: IUnionTypeConstructorParams<N, U>) {
     super(params);
