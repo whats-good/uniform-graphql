@@ -236,7 +236,7 @@ No need to maintain two separate type systems for GraphQL and TypeSCript while t
 
 ![Code autocompletion for resolvers](https://i.ibb.co/Wvg8Mkp/autocomplete-enum.png)
 
-_Example 1_: The compiler is complaining because the `resolve` function is incorrectly implemented. When we ask for hints on the `membership` field, we are show that we need to return one of the listed type literals.
+_Example 1_: The compiler is complaining because the `resolve` function is incorrectly implemented. When we ask for hints on the `membership` field, we are shown that we need to return one of the listed type literals.
 
 ![Args types in TypeScript](https://i.ibb.co/BnzKQDW/inferred-args-type.png)
 
