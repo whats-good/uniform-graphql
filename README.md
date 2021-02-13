@@ -56,7 +56,7 @@ const User = t.object({
     id: t.id,
     fullName: t.string.nullable, // every type can be made nullable
     membership: Membership, // using a user-made type
-    pets: t.list(Animal), // making a list from of a user-made type
+    pets: t.list(Animal), // making a list from a user-made type
   },
 });
 
