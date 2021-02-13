@@ -1,7 +1,7 @@
 {
   "name": "@statically-typed-graphql/core",
   "version": "0.0.1",
-  "description": "Create graphql backends with zero type-safety compromises",
+  "description": "Create code-first graphql backends in TypeScript with zero type-safety compromise",
   "repository": {
     "type": "git",
     "url": "https://github.com/mechanical-turk/statically-typed-graphql"

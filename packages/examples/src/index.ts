@@ -216,8 +216,7 @@ typeContainer.addMutation('kazan', {
 const schema = typeContainer.getSchema();
 
 const apolloServer = new ApolloServer({
-  // TODO: why doesn't it work?
-  schema: schema as any,
+  schema,
 });
 
 const PORT = 4001;
