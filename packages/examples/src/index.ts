@@ -167,14 +167,10 @@ typeContainer.query('user', {
   },
   resolve: async (_, args, context) => {
     return {
-      id: args.id, // types automatically enforced for args.
-      fullName: () => 'John Johnson', // for object fields, you can return thunks
-      membership: 'enterprise' as const, // enum values are type literals
+      id: args.id,
+      fullName: () => 'John Johnson',
+      membership: 'enterprise' as const,
       pets: async () => [
-        /**
-         * object fields can also return async thunks. this is useful for
-         * potentially expensive computations.
-         */
         {
           name: 'Lulu',
           id: 'cat-1',
