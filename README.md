@@ -273,6 +273,75 @@ You can use the `t.scalar` type factory to create any custom unified scalars, wh
 
 <!-- TODO: nail the custom scalars -->
 
+**Enums**
+
+You can use the `t.enum` type factory to crate unified enums:
+
+```ts
+const Membership = t.enum({
+  name: 'Membership',
+  values: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
+```
+
+At compile time, this type will resolve to the following string literal union: `"free" | "paid" | "enterprise"`. At GraphQL runtime, it will correspond to:
+
+```graphql
+enum Membership {
+  free
+  paid
+  enterprise
+}
+```
+
+**Objects**
+
+Up until now, we just dealt with simple and self-contained types. However, the true power of GraphQL comes from how it lets us compose simpler types to create more complex types. Let's begin with the `t.object` type factory:
+
+<!-- TODO: Use Email type for a custom scalar example -->
+
+```ts
+// Copying the Membership example from above for convenience
+const Membership = t.enum({
+  name: 'Membership',
+  values: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
+
+const User = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    email: t.string.nullable,
+    membership: Membership,
+  },
+});
+
+// At compile time, this will resolve to:
+
+type User = {
+  id: string | number;
+  email: string | undefined | null;
+  membership: 'free' | 'paid' | 'enterprise';
+};
+```
+
+```graphql
+# And at GraphQL runtime, it will correspond to:
+type User {
+  id: ID!
+  email: String
+  membership: Membership!
+}
+```
+
 ## Author
 
 👤 **Kerem Kazan**
