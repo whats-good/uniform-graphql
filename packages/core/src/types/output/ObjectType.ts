@@ -11,16 +11,7 @@ import {
   TypeOfOutputFieldsMap,
 } from './OutputFieldsMap';
 
-interface IOutputObjectInternalTypeConstructorParams<
-  N extends string,
-  M extends OutputFieldsMap
-> {
-  name: N;
-  fields: M;
-  description?: string;
-}
-
-interface IOutputObjectInternalTypeConstructorParams<
+export interface IOutputObjectInternalTypeConstructorParams<
   N extends string,
   M extends OutputFieldsMap
 > {

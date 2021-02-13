@@ -9,7 +9,7 @@ import {
   TypeOfInputFieldsMap,
 } from './InputFieldsMap';
 
-interface InputObjectInternalTypeConstructorParams<
+export interface InputObjectInternalTypeConstructorParams<
   N extends string,
   M extends InputFieldsMap
 > {

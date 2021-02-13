@@ -9,7 +9,10 @@ import { ResolveTypeOf } from '../../Resolver';
 type Unionable = ObjectType<string, OutputFieldsMap, boolean>;
 
 type Unionables = Thunkable<[Unionable, Unionable, ...Array<Unionable>]>;
-interface IUnionTypeConstructorParams<N extends string, U extends Unionables> {
+export interface IUnionTypeConstructorParams<
+  N extends string,
+  U extends Unionables
+> {
   name: UnionInternalType<N, U>['name'];
   types: UnionInternalType<N, U>['types'];
   description?: UnionInternalType<N, U>['description'];

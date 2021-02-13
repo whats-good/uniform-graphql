@@ -17,7 +17,7 @@ type ScalarLiteralParser<TInternal> = (
   variables: Maybe<{ [key: string]: any }>, // TODO: try a better type for serializers
 ) => Maybe<TInternal>;
 
-interface IScalarTypeConstructorParams<N extends string, I> {
+export interface IScalarTypeConstructorParams<N extends string, I> {
   name: N;
   description?: Maybe<string>;
   specifiedByUrl?: Maybe<string>;

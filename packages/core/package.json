@@ -36,7 +36,7 @@
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "reflect-metadata": "file:../../node_modules/reflect-metadaata",
+    "reflect-metadata": "file:../../node_modules/reflect-metadata",
     "ts-node": "file:../../node_modules/ts-node",
     "tsc": "file:../../node_modules/tsc",
     "tsd": "file:../../node_modules/tsd",

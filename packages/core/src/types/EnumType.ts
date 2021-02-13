@@ -2,14 +2,14 @@ import { GraphQLEnumType } from 'graphql';
 import { InternalType, RealizedType } from './core';
 import { mapValues, StringKeys } from '../utils';
 
-interface IEnumValue {
+export interface IEnumValue {
   deprecationReason?: string;
   description?: string;
 }
 
 type EnumValuesMap = StringKeys<IEnumValue | null>;
 
-interface IEnumTypeConstructorParams<
+export interface IEnumTypeConstructorParams<
   N extends string,
   D extends EnumValuesMap
 > {

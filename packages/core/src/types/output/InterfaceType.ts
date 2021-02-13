@@ -2,7 +2,6 @@ import { GraphQLType, GraphQLInterfaceType } from 'graphql';
 import { Thunkable, Unthunked } from '../../utils';
 import { AnyTypeContainer } from '../../TypeContainer';
 import { InternalType, RealizedType } from '../core';
-import { ID } from '../ScalarType';
 import { ObjectType } from './ObjectType';
 import {
   OutputFieldsMap,
@@ -19,7 +18,7 @@ export type InternalResolveTypeOfInterfaceType<
   R extends InterfaceType<any, any, any, any>
 > = InternalResolveTypeOfInterfaceInternalType<R['internalType']>;
 
-interface InterfaceInternalTypeConstructorParams<
+export interface InterfaceInternalTypeConstructorParams<
   N extends string,
   M extends OutputFieldsMap,
   I extends Implementors<M>
