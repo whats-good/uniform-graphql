@@ -1,56 +1,7 @@
 {
-  "name": "@whatsgood/statically-typed-graphql",
-  "version": "0.1.0",
-  "description": "Create graphql backends with zero type-safety compromises",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mechanical-turk/statically-typed-graphql"
-  },
-  "main": "build/index.js",
-  "author": "Kerem Kazan",
-  "license": "MIT",
-  "keywords": [
-    "graphql",
-    "typescript",
-    "statically",
-    "static",
-    "typed",
-    "strongly",
-    "strong",
-    "compile",
-    "time",
-    "compiler"
-  ],
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint '*/**/*.{ts,tsx}'",
-    "build": "tsc -p ./tsconfig.json",
-    "debug": "ts-node ./src/index.ts"
-  },
-  "dependencies": {
-    "lodash": "4.17.20"
-  },
-  "peerDependencies": {
-    "graphql": "^15.3.0"
-  },
+  "name": "@statically-typed-graphql/root",
+  "private": true,
   "devDependencies": {
-    "@types/lodash": "4.14.165",
-    "@types/uuid": "8.3.0",
-    "@typescript-eslint/eslint-plugin": "4.6.1",
-    "@typescript-eslint/parser": "4.6.1",
-    "apollo-server-express": "2.19.0",
-    "body-parser": "1.19.0",
-    "eslint": "7.13.0",
-    "eslint-config-prettier": "6.15.0",
-    "eslint-plugin-import": "2.22.1",
-    "eslint-plugin-prettier": "3.1.4",
-    "express": "4.17.1",
-    "graphql": "^15.3.0",
-    "prettier": "2.1.2",
-    "reflect-metadata": "0.1.13",
-    "ts-node": "9.0.0",
-    "tsc": "1.20150623.0",
-    "tsd": "0.13.1",
-    "typescript": "4.1.2"
+    "lerna": "3.22.1"
   }
 }

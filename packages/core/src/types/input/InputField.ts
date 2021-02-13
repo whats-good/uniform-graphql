@@ -12,12 +12,10 @@ export interface InputFieldConstructorParams<R extends InputRealizedType> {
 
 class InputField<R extends InputRealizedType> {
   public readonly type: R;
-  public readonly deprecationReason?: string;
   public readonly description?: string;
 
   constructor(params: InputFieldConstructorParams<R>) {
     this.type = params.type;
-    this.deprecationReason = params.deprecationReason;
     this.description = params.description;
   }
 
@@ -26,7 +24,6 @@ class InputField<R extends InputRealizedType> {
   ): GraphQLInputFieldConfig {
     return {
       type: this.type.getGraphQLType(typeContainer) as any,
-      deprecationReason: this.deprecationReason,
       description: this.description,
     };
   }
