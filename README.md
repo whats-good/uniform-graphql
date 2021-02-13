@@ -232,7 +232,7 @@ type Animal {
 
 #### Unified Type System
 
-No need to maintain two separate type systems and trying to keep them in sync. Once you create your types, all will be taken care of for you. You will never need to manually type out function parameter types or return types. Everything is inferred from your unified types, all you need to do is to fill in the blanks:
+No need to maintain two separate type systems for GraphQL and TypeSCript while trying to keep them in sync. Once you create your types, all will be taken care of for you. You will never need to manually type out function parameter types or return types. Everything is inferred from your unified types; all you need to do is to fill in the blanks.
 
 ![Code autocompletion for resolvers](https://i.ibb.co/Wvg8Mkp/autocomplete-enum.png)
 
