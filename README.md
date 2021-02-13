@@ -133,7 +133,7 @@ app.listen({ port: PORT }, () => {
 
 <!-- TODO: add images ![Code autocompletion for resolvers](https://i.ibb.co/8sNb25r/auto-complete-2.png) -->
 
-## Getting Started
+## Going Deep
 
 ### Motivation
 
@@ -141,24 +141,22 @@ GraphQL backends usually fall under two schools of thought: `schema-first` vs `c
 
 The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. Developers can't simply rely on the compiler to make sure that their code will match the generated schema, so they have to resort to other means such as decorators and other runtime checks. But it doesn't have to be that way. As it turns out, this is a perfect job for the compiler.
 
-This is a difficult problem, because type-safety is concerned with compile-time whereas GraphQL schemas are concerned with runtime. What we need is a unified approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what this library is all about.
-
-> tl;dr: This library will help you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
+> tl;dr: Type-safety is concerned with compile-time whereas GraphQL schemas are concerned with runtime. What we need is a unified approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what this library is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
 
 ### Philosophy
 
-#### Type-Safety
+#### End-to-End Type Safety
 
-On a GraphQL backend, the most common tasks are
+On a GraphQL backend, the most common tasks are:
 
 - Creating GraphQL types
 - Composing said GraphQL types to create more complex types
 - Implementing query & mutation resolvers that work on said types
 - Implementing field resolvers on the object types
 
-This library is built with compile time type-safety front and center, making it very hard for you to experience type errors at runtime.
+This library is built with compile time type-safety front and center, making it very hard for you to experience type errors at runtime. You will find a simple, streamlined approach that will guide you end-to-end through the tasks listed above.
 
-#### Nullability
+#### Non-Null First
 
 In GraphQL, types are `null-first`, which means they are gonna be nullable unless explicitly wrapped with a `GraphQLNonNull` type. In `TypeScript` on the other hand, types are `non-null-first`: non-nullable by default unless they are explicitly made nullable. This tension is something that few code-first approaches acknowledge and solve for, which results in schema-code mismatches and general developer pain.
 
@@ -203,6 +201,32 @@ const User = t.object({
 type User {
   id: ID!
   fullName: String
+}
+```
+
+#### Composability
+
+One of GraphQL's main benefits is the reusability and composability of types. You can create an `enum` type, which you use in an `object` type, which you use in a `list` type, which you use in an `interface` type, which you use in another `object` type, which you use in a `union` type and so on.
+
+In this library, you will be able to infinitely compose and reuse your types. The solutions include [self referential](https://en.wikipedia.org/wiki/Recursive_data_type) and [mutually recursive](https://en.wikipedia.org/wiki/Recursive_data_type) types, while always adhering to our core principle of end-to-end type safety. Keep on reading to see how we handle such use cases.
+
+```graphql
+# Self referential type
+type User {
+  id: ID!
+  friends: [User]! # type A refers to itself
+}
+
+# Mutually recursive types
+
+type Person {
+  id: ID!
+  pets: [Animal]! # type A refers to type B
+}
+
+type Animal {
+  id: ID!
+  owner: Person! # type B refers to type A
 }
 ```
 
