@@ -139,11 +139,28 @@ app.listen({ port: PORT }, () => {
 
 GraphQL backends usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL backends create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first backends on the other hand implement the resolvers first and have the typedefs generated / derived from the code. Both approaches have their pros and cons. This library falls somewhere in the middle, but it's closer to the code-first camp.
 
-The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. This is a difficult problem, because type-safety is concerned with compile-time whereas GraphQL schemas are concerned with runtime. What we need is a unified approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas.
+The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. Developers can't simply rely on the compiler to make sure that their code will match the generated schema, so they have to resort to other means such as decorators and other runtime checks. But it doesn't have to be that way. As it turns out, this is a perfect job for the compiler.
+
+This is a difficult problem, because type-safety is concerned with compile-time whereas GraphQL schemas are concerned with runtime. What we need is a unified approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what this library is all about.
+
+> tl;dr: This library will help you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
 
 ### Philosophy
 
-In GraphQL, every type is `null-first`, which means it's gonna be nullable unless it's explicitly wrapped with a `GraphQLNonNull` type. In `TypeScript` on the other hand, types are `non-null-first`: non-nullable by default unless they are explicitly made nullable. This tension is something that few code-first approaches acknowledge and solve for, which results in schema-code mismatches and general developer pain.
+#### Type-Safety
+
+On a GraphQL backend, the most common tasks are
+
+- Creating GraphQL types
+- Composing said GraphQL types to create more complex types
+- Implementing query & mutation resolvers that work on said types
+- Implementing field resolvers on the object types
+
+This library is built with compile time type-safety front and center, making it very hard for you to experience type errors at runtime.
+
+#### Nullability
+
+In GraphQL, types are `null-first`, which means they are gonna be nullable unless explicitly wrapped with a `GraphQLNonNull` type. In `TypeScript` on the other hand, types are `non-null-first`: non-nullable by default unless they are explicitly made nullable. This tension is something that few code-first approaches acknowledge and solve for, which results in schema-code mismatches and general developer pain.
 
 In this library, we're gonna side with `TypeScript` when it comes to nullability, because we are a code-first library and we want to play nicely with our programming language. This is why everything is non-nullable unless they are explicitly made nullable.
 
