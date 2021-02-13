@@ -1,6 +1,6 @@
 {
   "name": "@statically-typed-graphql/core",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Create graphql backends with zero type-safety compromises",
   "repository": {
     "type": "git",
@@ -36,9 +36,7 @@
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "reflect-metadata": "file:../../node_modules/reflect-metadata",
     "ts-node": "file:../../node_modules/ts-node",
-    "tsc": "file:../../node_modules/tsc",
     "tsd": "file:../../node_modules/tsd",
     "typescript": "file:../../node_modules/typescript",
     "@types/lodash": "4.14.165",

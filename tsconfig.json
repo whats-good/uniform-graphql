@@ -20,5 +20,6 @@
     "noImplicitThis": true,
     "preserveConstEnums": true,
     "skipLibCheck": true,
+    "importHelpers": true
   },
 }

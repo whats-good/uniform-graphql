@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "cwd": "${workspaceFolder}/packages/core",
+      "cwd": "${workspaceFolder}/packages/examples",
       "type": "node",
       "request": "launch",
       "name": "Debug",

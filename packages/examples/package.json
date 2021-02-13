@@ -1,0 +1,31 @@
+{
+  "name": "@statically-typed-graphql/examples",
+  "version": "0.0.1",
+  "description": "Usage examples for @statically-typed-graphql",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mechanical-turk/statically-typed-graphql"
+  },
+  "main": "build/index.js",
+  "author": "Kerem Kazan",
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint '*/**/*.{ts,tsx}'",
+    "build": "tsc -p ./tsconfig.json",
+    "debug": "ts-node ./src/index.ts"
+  },
+  "dependencies": {
+    "@statically-typed-graphql/core": "0.0.1",
+    "tslib": "2.1.0",
+    "reflect-metadata": "0.1.13",
+    "apollo-server-express": "2.19.0",
+    "body-parser": "1.19.0",
+    "express": "4.17.1"
+  },
+  "devDependencies": {
+    "ts-node": "file:../../node_modules/ts-node",
+    "tsd": "file:../../node_modules/tsd",
+    "typescript": "file:../../node_modules/typescript"
+  }
+}
