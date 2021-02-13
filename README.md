@@ -244,13 +244,11 @@ _Example 1_: The compiler is complaining because the `resolve` function is incor
 
 _Example 2_: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL backend, we don't need to manually write any `TypeScript` types for our resolvers. This inclues the resolver function arguments and the return type.
 
-### Documentation
-
-#### Types
+### Types
 
 The first step in our workflow is creating the unified types that will serve as the building blocks for our backend. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
 
-**Built-in Scalars**
+#### Built-in Scalars
 
 `@statically-typed-graphql` ships with 5 built-in scalars:
 
@@ -267,13 +265,13 @@ All types, including scalars, will have a `.nullable` property, which will make 
 - `t.id.nullable`: Corresponds to `GraphQLID` at runtime. At compile time, resolves to type `string | number | null | undefined`.
 - `t.string.nullable`: Corresponds to `GraphQLString` at runtime. At compile time, resolves to type `string | null | undefined`.
 
-**Custom Scalars**
+#### Custom Scalars
 
 You can use the `t.scalar` type factory to create any custom unified scalars, which will carry both runtime and compile time type information just like any other type in our system.
 
 <!-- TODO: nail the custom scalars -->
 
-**Enums**
+#### Enums
 
 You can use the `t.enum` type factory to crate unified enums:
 
@@ -298,7 +296,7 @@ enum Membership {
 }
 ```
 
-**Objects**
+#### Objects
 
 Up until now, we just dealt with simple and self-contained types. However, the true power of GraphQL comes from how it lets us compose simpler types to create more complex types. Let's begin with the `t.object` type factory:
 
@@ -324,21 +322,83 @@ const User = t.object({
   },
 });
 
-// At compile time, this will resolve to:
-
-type User = {
-  id: string | number;
-  email: string | undefined | null;
-  membership: 'free' | 'paid' | 'enterprise';
-};
+/**
+ * At compile time, this will resolve to:
+ * {
+ *   id: string | number;
+ *   email: string | undefined | null;
+ *   membership: 'free' | 'paid' | 'enterprise';
+ * }
+ */
 ```
 
 ```graphql
 # And at GraphQL runtime, it will correspond to:
+
 type User {
   id: ID!
   email: String
   membership: Membership!
+}
+```
+
+<!-- TODO: let resolvers of object type omit the nullable fields -->
+
+#### Lists
+
+We can use the `t.list` type factory to take an existing type and derive a list from it.
+
+```ts
+// Creating a custom object type to be used inside a list in another type:
+const Animal = t.object({
+  name: 'Animal',
+  fields: {
+    id: t.id,
+    name: t.string.nullable,
+    age: t.int,
+    species: t.string,
+  },
+});
+
+// Now, we'll use the Animal type within a list:
+const Person = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    favoriteFoods: t.list(t.string),
+    pets: t.list(Animal),
+  },
+});
+
+/**
+ * At compile time, this will resolve to:
+ * {
+ *   id: string | number;
+ *   favoriteFoods: Array<string>;
+ *   pets: Array<{
+ *     id: string | number;
+ *     name: string | null | undefined;
+ *     age: Int;
+ *     species: string;
+ *   }>
+ * }
+ */
+```
+
+```graphql
+# And at GraphQL runtime, it will correspond to:
+
+type Animal {
+  id: ID!
+  name: String
+  age: Int!
+  species: String!
+}
+
+type User {
+  id: ID!
+  favoriteFoods: [String!]!
+  pets: [Animal!]!
 }
 ```
 
