@@ -33,8 +33,7 @@
     "tslib": "2.1.0"
   },
   "peerDependencies": {
-    "graphql": "^15.3.0",
-    "reflect-metadata": "^0.1.13"
+    "graphql": "^15.3.0"
   },
   "devDependencies": {
     "@types/lodash": "4.14.165",
