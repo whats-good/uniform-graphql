@@ -1,7 +1,7 @@
 {
   "name": "@statically-typed-graphql/examples",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Usage examples for @statically-typed-graphql",
   "repository": {
     "type": "git",
@@ -17,12 +17,12 @@
     "debug": "ts-node ./src/index.ts"
   },
   "dependencies": {
-    "@statically-typed-graphql/core": "0.0.1",
-    "tslib": "2.1.0",
-    "reflect-metadata": "0.1.13",
+    "@statically-typed-graphql/core": "^0.0.2",
     "apollo-server-express": "2.19.0",
     "body-parser": "1.19.0",
-    "express": "4.17.1"
+    "express": "4.17.1",
+    "reflect-metadata": "0.1.13",
+    "tslib": "2.1.0"
   },
   "devDependencies": {
     "ts-node": "file:../../node_modules/ts-node",
