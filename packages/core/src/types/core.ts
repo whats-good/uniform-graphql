@@ -65,29 +65,26 @@ export class RealizedType<T extends AnyType, N extends boolean> {
   }
 }
 
-type InputOutputSharedInternalType =
+type NeutralInternalType =
   | ScalarInternalType<any, any>
   | EnumInternalType<any, any>
-  | ListInternalType<InputOutputSharedRealizedType>;
+  | ListInternalType<NeutralRealizedType>;
 
 type OutputInternalType =
-  | InputOutputSharedInternalType
+  | NeutralInternalType
   | ObjectInternalType<any, any>
   | UnionInternalType<any, any>
   | InterfaceInternalType<any, any, any>
   | ListInternalType<OutputRealizedType>;
 
 type InputInternalType =
-  | InputOutputSharedInternalType
+  | NeutralInternalType
   | InputObjectInternalType<any, any>
   | ListInternalType<InputRealizedType>;
 
+export type NeutralRealizedType = RealizedType<NeutralInternalType, any>;
 export type OutputRealizedType = RealizedType<OutputInternalType, any>;
 export type InputRealizedType = RealizedType<InputInternalType, any>;
-export type InputOutputSharedRealizedType = RealizedType<
-  InputOutputSharedInternalType,
-  any
->;
 
 export type ExternalTypeOf<R extends RealizedType<any, any>> = TypeRealization<
   R,
