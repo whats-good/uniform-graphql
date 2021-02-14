@@ -29,8 +29,8 @@
     "debug": "ts-node ./src/index.ts"
   },
   "dependencies": {
-    "lodash": "4.17.20",
-    "tslib": "2.1.0"
+    "lodash": "^4.17.20",
+    "tslib": "^2.1.0"
   },
   "peerDependencies": {
     "graphql": "^15.3.0"
