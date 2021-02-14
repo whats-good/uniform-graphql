@@ -269,13 +269,13 @@ All types, including scalars, will have a `.nullable` property, which will make 
 
 #### Custom Scalars
 
-You can use the `t.scalar` type factory to create any custom unified scalars, which will carry both runtime and compile time type information just like any other type in our system.
+Use the `t.scalar` type factory to create any custom unified scalars, which will carry both runtime and compile time type information just like any other type in our system.
 
 <!-- TODO: nail the custom scalars -->
 
 #### Enums
 
-You can use the `t.enum` type factory to crate unified enums:
+Use the `t.enum` type factory to crate unified enums:
 
 ```ts
 const Membership = t.enum({
@@ -348,7 +348,7 @@ type User {
 
 #### Lists
 
-We can use the `t.list` type factory to take an existing type and derive a list from it.
+Use the `t.list` type factory to take an existing type and derive a list from it.
 
 ```ts
 // Creating a custom object type to be used inside a list in another type:
@@ -406,7 +406,7 @@ type User {
 
 #### Unions
 
-In GraphQL, we can create `unions` from `object` types. In our library, we use the `t.union` type factory to combine multiple object types into a union.
+Use the `t.union` type factory to combine multiple object types into a union.
 
 ```ts
 const Animal = t.object({
@@ -431,7 +431,7 @@ const BestFriend = t.union({
   types: [Animal, Person],
   resolveType: (x) => {
     /**
-     * All union types need a resolveType function that will
+     * All abstract types need a resolveType function that will
      * figure out the type name of a resolved object so that
      * GraphQL can understand which Object type this returned
      * piece of data falls under.
@@ -492,6 +492,79 @@ type User {
   id: ID!
   email: String!
   bestFriend: BestFriend!
+}
+```
+
+#### Interfaces
+
+Use the `t.interface` type factory to create unified interface types.
+
+```ts
+const Dog = t.object({
+  name: 'Dog',
+  fields: {
+    species: t.string,
+    isLoyal: t.boolean,
+  },
+});
+
+const Cat = t.object({
+  name: 'Cat',
+  fields: {
+    species: t.string,
+    isDomesticated: t.boolean,
+  },
+});
+
+const Pet = t.interface({
+  name: 'Pet',
+  fields: {
+    species: t.string,
+  },
+
+  /**
+   * the library makes sure that object types
+   * passed here correctly implement the interface.
+  */
+  implementors: [Dog, Cat],
+  resolveType: () => {
+    /**
+     * All abstract types need a resolveType function that will
+     * figure out the type name of a resolved object so that
+     * GraphQL can understand which Object type this returned
+     * piece of data falls under.
+    */
+    if (/** some condition */) {
+      return 'Dog' as const;
+    } else {
+      return 'Cat' as const;
+    }
+  }
+})
+
+/**
+ * At compile time, this will resolve to:
+ * {
+ *   species: string;
+ * }
+ */
+```
+
+```graphql
+# And at GraphQL runtime, it will correspond to:
+
+interface Pet {
+  species: String!
+}
+
+type Dog implements Pet {
+  species: String!
+  isLoyal: Boolean!
+}
+
+type Cat implements Pet {
+  species: String!
+  isDomesticated: Boolean!
 }
 ```
 
