@@ -402,6 +402,97 @@ type User {
 }
 ```
 
+#### Unions
+
+In GraphQL, we can create `unions` from `object` types. In our library, we use the `t.union` type factory to combine multiple object types into a union.
+
+```ts
+const Animal = t.object({
+  name: 'Animal',
+  fields: {
+    id: t.id,
+    name: t.string,
+    species: t.string,
+  },
+});
+
+const Person = t.object({
+  name: 'Person',
+  fields: {
+    id: t.id,
+    fullName: t.string,
+  },
+});
+
+const BestFriend = t.union({
+  name: 'BestFriend',
+  types: [Animal, Person],
+  resolveType: (x) => {
+    /**
+     * All union types need a resolveType function that will
+     * figure out the type name of a resolved object so that
+     * GraphQL can understand which Object type this returned
+     * piece of data falls under.
+    */
+
+    if (/** some condition */) {
+      return 'Person' as const;
+    } else {
+      return 'Animal' as const;
+    }
+  },
+});
+
+const User = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    email: t.string,
+    bestFriend: BestFriend,
+  }
+});
+
+/**
+ * At compile time, this will resolve to:
+ * {
+ *   id: string | number;
+ *   email: string;
+ *   bestFriend: {
+ *     id: string | number;
+ *     name: string;
+ *     species: string;
+ *   } | {
+ *     id: string | number;
+ *     fullName: string;
+ *   }
+ * }
+ */
+
+```
+
+```graphql
+# And at GraphQL runtime, it will correspond to:
+
+type Animal {
+  id: ID!
+  name: String!
+  species: String!
+}
+
+type Person {
+  id: ID!
+  fullName: String!
+}
+
+union BestFriend = Animal | Person
+
+type User {
+  id: ID!
+  email: String!
+  bestFriend: BestFriend!
+}
+```
+
 ## Author
 
 👤 **Kerem Kazan**
