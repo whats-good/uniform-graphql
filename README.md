@@ -30,6 +30,8 @@ npm install @statically-typed-graphql/core
 
 ```ts
 import { t, TypeContainer } from '@statically-typed-graphql/core';
+import { ApolloServer } from 'apollo-server-express';
+import express from 'express';
 
 /** 1. Create your own types  */
 
