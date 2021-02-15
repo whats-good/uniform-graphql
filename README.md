@@ -112,10 +112,8 @@ schemaBuilder.fieldResolvers(User, {
   },
 });
 
-const schema = schemaBuilder.getSchema();
-
 const apolloServer = new ApolloServer({
-  schema,
+  schema: schemaBuilder.getSchema();
 });
 
 const PORT = 4001;
