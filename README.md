@@ -264,13 +264,13 @@ The first step in our workflow is creating the `unified types` that will serve a
 
 All types, including scalars, will have a `.nullable` property, which will make a type nullable both at runtime for `GraphQL` and compile time for `TypeScript`. For example:
 
-|             | GraphQL Type     | TypeScript Type                         |
-| ----------- | ---------------- | --------------------------------------- |
-| `t.id`      | `GraphQLID`      | `string \| number \| null \| undefined` |
-| `t.float`   | `GraphQLFloat`   | `number \| null \| undefined`           |
-| `t.int`     | `GraphQLInt`     | `number \| null \| undefined`           |
-| `t.boolean` | `GraphQLBoolean` | `boolean \| null \| undefined`          |
-| `t.string`  | `GraphQLString>` | `string \| null \| undefined`           |
+|                      | GraphQL Type     | TypeScript Type                         |
+| -------------------- | ---------------- | --------------------------------------- |
+| `t.id.nullable`      | `GraphQLID`      | `string \| number \| null \| undefined` |
+| `t.float.nullable`   | `GraphQLFloat`   | `number \| null \| undefined`           |
+| `t.int.nullable`     | `GraphQLInt`     | `number \| null \| undefined`           |
+| `t.boolean.nullable` | `GraphQLBoolean` | `boolean \| null \| undefined`          |
+| `t.string.nullable`  | `GraphQLString>` | `string \| null \| undefined`           |
 
 #### Custom Scalars
 
