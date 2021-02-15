@@ -18,8 +18,9 @@
 
 ### ✨ [Demo](this is the project demo url) -->
 
-<!-- // TODO: Write a motivation section -->
 <!-- // TODO: copy the readme to the core package -->
+
+⚠️ This is a very young and unstable library. We’re still at `v0`. We have a pretty robust core, but everything is subject to change.
 
 ## Install
 
@@ -592,7 +593,27 @@ type Cat implements Pet {
 }
 ```
 
+### Recommended TSConfig
+
+```json
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": ["es2018", "esnext.asynciterable"],
+    "strict": true // This one isn’t required, but it's highly recommended to experience the type-safety features.
+  }
+}
+```
+
 ## Roadmap
+
+- Stabilize the `t.scalar` type factory
+- IOC & containers
+- Documentation website
+- Write tests (There are none right now)
+- Design a logo (open to suggestions)
+- Argument validation
 
 💡 Coming soon
 
@@ -614,5 +635,3 @@ This library stands on the shoulders of 2 giants:
 - Twitter: [@MechanicalKazan](https://twitter.com/MechanicalKazan)
 - Github: [@mechanical-turk](https://github.com/mechanical-turk)
 - LinkedIn: [@keremkazan](https://linkedin.com/in/keremkazan)
-
-<!-- TODO: create an examples section -->
