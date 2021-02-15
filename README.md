@@ -254,23 +254,25 @@ The first step in our workflow is creating the `unified types` that will serve a
 
 `@statically-typed-graphql` ships with 5 built-in scalars:
 
-|             | GraphQL Type                     | TypeScript Type    |
-| ----------- | -------------------------------- | ------------------ |
-| `t.id`      | `GraphQLNonNull<GraphQLID>`      | `string \| number` |
-| `t.float`   | `GraphQLNonNull<GraphQLFloat>`   | `number`           |
-| `t.int`     | `GraphQLNonNull<GraphQLInt>`     | `number`           |
-| `t.boolean` | `GraphQLNonNull<GraphQLBoolean>` | `boolean`          |
-| `t.string`  | `GraphQLNonNull<GraphQLString>`  | `string`           |
+|             | TypeScript         | GraphQL    |
+| ----------- | ------------------ | ---------- |
+| `t.string`  | `string`           | `String!`  |
+| `t.float`   | `number`           | `Float!`   |
+| `t.int`     | `number`           | `Int!`     |
+| `t.id`      | `string \| number` | `ID!`      |
+| `t.boolean` | `boolean`          | `Boolean!` |
 
-All types, including scalars, will have a `.nullable` property, which will make a type nullable both at runtime for `GraphQL` and compile time for `TypeScript`. For example:
+#### Nullability
 
-|                      | GraphQL Type     | TypeScript Type                         |
-| -------------------- | ---------------- | --------------------------------------- |
-| `t.id.nullable`      | `GraphQLID`      | `string \| number \| null \| undefined` |
-| `t.float.nullable`   | `GraphQLFloat`   | `number \| null \| undefined`           |
-| `t.int.nullable`     | `GraphQLInt`     | `number \| null \| undefined`           |
-| `t.boolean.nullable` | `GraphQLBoolean` | `boolean \| null \| undefined`          |
-| `t.string.nullable`  | `GraphQLString>` | `string \| null \| undefined`           |
+All types, including user-made ones, will have a `.nullable` property, which will make a type nullable both at runtime for `GraphQL` and compile time for `TypeScript`. For example:
+
+|                      | TypeScript                              | GraphQL   |
+| -------------------- | --------------------------------------- | --------- |
+| `t.string.nullable`  | `string \| null \| undefined`           | `String`  |
+| `t.float.nullable`   | `number \| null \| undefined`           | `Float`   |
+| `t.int.nullable`     | `number \| null \| undefined`           | `Int`     |
+| `t.id.nullable`      | `string \| number \| null \| undefined` | `ID`      |
+| `t.boolean.nullable` | `boolean \| null \| undefined`          | `Boolean` |
 
 #### Custom Scalars
 
