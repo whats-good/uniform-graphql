@@ -614,6 +614,7 @@ type Cat implements Pet {
 - Write tests (There are none right now)
 - Design a logo (open to suggestions)
 - Argument validation
+- Remove lodash and become `0 dependency`
 
 💡 Coming soon
 
