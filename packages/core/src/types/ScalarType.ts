@@ -118,3 +118,5 @@ export const ID = scalar<'ID', number | string>({
   description: GraphQLID.description,
   specifiedByUrl: GraphQLID.specifiedByUrl,
 });
+
+// TODO: implement a datetime custom scalar.
