@@ -248,24 +248,29 @@ _Example 2_: When we hover over `args.id`, we see that it's a union type between
 
 ### Types
 
-The first step in our workflow is creating the unified types that will serve as the building blocks for our backend. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
+The first step in our workflow is creating the `unified types` that will serve as the building blocks for our backend. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
 
 #### Built-in Scalars
 
 `@statically-typed-graphql` ships with 5 built-in scalars:
 
-<!-- // TODO: make this a table. -->
-
-- `t.id`: Corresponds to `GraphQLNonNull<GraphQLID>` at runtime. At compile time, resolves to type `string | number`.
-- `t.float`: Corresponds to `GraphQLNonNull<GraphQLFloat>` at runtime. At compile time, resolves to type `number`.
-- `t.int`: Corresponds to `GraphQLNonNull<GraphQLInt>` at runtime. At compile time, resolves to type `number`.
-- `t.boolean`: Corresponds to `GraphQLNonNull<GraphQLBoolean>` at runtime. At compilte time, resolves to type `boolean`.
-- `t.string`: Corresponds to `GraphQLNonNull<GraphQLString>` at runtime. At compile time, resolves to type `string`.
+|             | GraphQL Type                     | TypeScript Type    |
+| ----------- | -------------------------------- | ------------------ |
+| `t.id`      | `GraphQLNonNull<GraphQLID>`      | `string \| number` |
+| `t.float`   | `GraphQLNonNull<GraphQLFloat>`   | `number`           |
+| `t.int`     | `GraphQLNonNull<GraphQLInt>`     | `number`           |
+| `t.boolean` | `GraphQLNonNull<GraphQLBoolean>` | `boolean`          |
+| `t.string`  | `GraphQLNonNull<GraphQLString>`  | `string`           |
 
 All types, including scalars, will have a `.nullable` property, which will make a type nullable both at runtime for `GraphQL` and compile time for `TypeScript`. For example:
 
-- `t.id.nullable`: Corresponds to `GraphQLID` at runtime. At compile time, resolves to type `string | number | null | undefined`.
-- `t.string.nullable`: Corresponds to `GraphQLString` at runtime. At compile time, resolves to type `string | null | undefined`.
+|             | GraphQL Type     | TypeScript Type                         |
+| ----------- | ---------------- | --------------------------------------- |
+| `t.id`      | `GraphQLID`      | `string \| number \| null \| undefined` |
+| `t.float`   | `GraphQLFloat`   | `number \| null \| undefined`           |
+| `t.int`     | `GraphQLInt`     | `number \| null \| undefined`           |
+| `t.boolean` | `GraphQLBoolean` | `boolean \| null \| undefined`          |
+| `t.string`  | `GraphQLString>` | `string \| null \| undefined`           |
 
 #### Custom Scalars
 
