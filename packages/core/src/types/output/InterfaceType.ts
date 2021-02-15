@@ -8,6 +8,7 @@ import {
   ObfuscatedOutputFieldsMap,
   TypeOfOutputFieldsMap,
   toGraphQLFieldConfigMap,
+  OutputFieldsMapResolveType,
 } from './OutputFieldsMap';
 import { ResolveTypeOf } from '../../Resolver';
 
@@ -16,7 +17,7 @@ type InternalResolveTypeOfInterfaceInternalType<
 > = ResolveTypeOf<I['implementors'][number]>;
 export type InternalResolveTypeOfInterfaceType<
   R extends InterfaceType<any, any, any, any>
-> = InternalResolveTypeOfInterfaceInternalType<R['internalType']>;
+> = OutputFieldsMapResolveType<R['internalType']['fields']>;
 
 export interface InterfaceInternalTypeConstructorParams<
   N extends string,
