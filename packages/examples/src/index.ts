@@ -18,13 +18,6 @@ import { t, SchemaBuilder } from '@statically-typed-graphql/core';
  * seems to be impossible, unless we force the devs to always pass the fieldResolver too?
  */
 
-const inputObject = t.inputObject({
-  name: 'InputObject',
-  fields: {
-    a: t.list(t.string),
-  },
-});
-
 const Membership = t.enum({
   name: 'Membership',
   values: {
