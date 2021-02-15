@@ -602,9 +602,9 @@ This library stands on the shoulders of 2 giants:
 
 1. [type-graphql](https://github.com/MichalLytek/type-graphql): This is arguably the strongest code-first GraphQL solution for TypeScript. The author is very friendly and helpful, and has managed to create and maintain a great community. I urge you to check them out and go say hi.
 
-2. [io-ts](https://github.com/gcanti/io-ts): The techniques I’ve found in this library have truly opened my mind to the limitless potential of TypeScript. In many ways, `io-ts` is the library that convinced me that this library was possible.
+2. [io-ts](https://github.com/gcanti/io-ts): The techniques I’ve found in this library have truly opened my mind to the limitless potential of TypeScript. `io-ts` is the library that convinced me that this library was possible.
 
-In a way, this library is `type-graphql` in substance and `io-ts` in form.
+> This library is `type-graphql` in substance and `io-ts` in form.
 
 ## Author
 
