@@ -1,14 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import {
-  t,
-  ListType,
-  ObjectType,
-  TypeContainer,
-  unthunk,
-} from '@statically-typed-graphql/core';
-import { argsToArgsConfig } from 'graphql/type/definition';
-// import { TypeContainer } from './TypeContainer';
+import { t, SchemaBuilder } from '@statically-typed-graphql/core';
+// import { SchemaBuilder } from './SchemaBuilder';
 // import { unthunk } from './utils';
 // import { Resolver } from './Resolver';
 
@@ -25,54 +18,10 @@ import { argsToArgsConfig } from 'graphql/type/definition';
  * seems to be impossible, unless we force the devs to always pass the fieldResolver too?
  */
 
-type UserType = ObjectType<
-  'User',
-  {
-    id: typeof t.id;
-    name: typeof t.string;
-    self: UserType;
-    selfArray: {
-      type: ListType<UserType>;
-      args: {
-        a: typeof t.string.nullable;
-        b: ListType<typeof t.string>['nullable'];
-        c: typeof inputObject.nullable;
-        d: ListType<typeof inputObject>['nullable'];
-      };
-    };
-  }
->;
-
 const inputObject = t.inputObject({
   name: 'InputObject',
   fields: {
     a: t.list(t.string),
-  },
-});
-
-export const UserType: UserType = t.object({
-  name: 'User',
-  fields: {
-    id: () => t.id,
-    name: t.string,
-    self: () => UserType,
-    selfArray: () => ({
-      type: t.list(UserType),
-      args: {
-        a: t.string.nullable,
-        b: t.list(t.string).nullable,
-        c: inputObject.nullable,
-        d: t.list(inputObject).nullable,
-      },
-    }),
-  },
-});
-
-const inputObject2 = t.inputObject({
-  name: 'InputObject2',
-  fields: {
-    a: t.list(t.string),
-    b: inputObject,
   },
 });
 
@@ -104,63 +53,9 @@ const User = t.object({
   },
 });
 
-const BetterUser = t.object({
-  name: 'BetterUser',
-  fields: {
-    id: t.id,
-    membership: Membership,
-    firstName: {
-      type: t.string.nullable,
-      args: { a: t.string },
-    },
-  },
-});
+const schemaBuilder = new SchemaBuilder();
 
-const AnimalType = t.object({
-  name: 'Animal',
-  fields: {
-    id: t.id,
-    name: t.string,
-    specialAnimalPropery: Membership,
-  },
-});
-
-const BestFriend = t.union({
-  name: 'BestFriend',
-  types: [AnimalType, UserType],
-  resolveType: async (val) => {
-    return 'Animal' as const;
-  },
-});
-
-const UserInterface = t.interface({
-  name: 'UserInterface',
-  fields: {
-    self: UserType,
-  },
-  implementors: [UserType],
-  resolveType: (...args) => {
-    // TODO: RESOLVE TYPE RUNS BEFORE ANYTHING. UPDATE THE CODE ADAPT
-
-    // TODO: find a way to let field resolvers and normal resolvers override the resolve type
-    return 'User' as const;
-  },
-});
-
-const nameInterface = t.interface({
-  name: 'NameInterface',
-  fields: {
-    name: t.string,
-  },
-  implementors: [UserType, AnimalType],
-  resolveType: (x) => {
-    return 'Animal' as const;
-  },
-});
-
-const typeContainer = new TypeContainer();
-
-typeContainer.query('user', {
+schemaBuilder.query('user', {
   type: User,
   args: {
     id: t.id,
@@ -181,7 +76,7 @@ typeContainer.query('user', {
   },
 });
 
-typeContainer.mutation('signup', {
+schemaBuilder.mutation('signup', {
   type: User,
   args: {
     email: t.string,
@@ -197,13 +92,13 @@ typeContainer.mutation('signup', {
 });
 
 // can also add optional field resolvers.
-typeContainer.fieldResolvers(User, {
+schemaBuilder.fieldResolvers(User, {
   fullName: async (root) => {
     return 'overriding fullname';
   },
 });
 
-const schema = typeContainer.getSchema();
+const schema = schemaBuilder.getSchema();
 
 const apolloServer = new ApolloServer({
   schema,

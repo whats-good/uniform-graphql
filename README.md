@@ -29,7 +29,7 @@ npm install @statically-typed-graphql/core
 ## Quickstart
 
 ```ts
-import { t, TypeContainer } from '@statically-typed-graphql/core';
+import { t, SchemaBuilder } from '@statically-typed-graphql/core';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 
@@ -67,9 +67,9 @@ const User = t.object({
 
 /** 3. Using your new types, create your resolvers */
 
-const typeContainer = new TypeContainer();
+const schemaBuilder = new SchemaBuilder();
 
-typeContainer.query('user', {
+schemaBuilder.query('user', {
   type: User,
   args: {
     id: t.id,
@@ -94,7 +94,7 @@ typeContainer.query('user', {
   },
 });
 
-typeContainer.mutation('signup', {
+schemaBuilder.mutation('signup', {
   type: User,
   args: {
     email: t.string,
@@ -110,14 +110,14 @@ typeContainer.mutation('signup', {
 });
 
 // can also add optional field resolvers.
-typeContainer.fieldResolvers(User, {
+schemaBuilder.fieldResolvers(User, {
   fullName: async (root) => {
     return 'overriding fullname';
   },
 });
 
 /** 4. Create and use your new graphQL schema. **/
-const schema = typeContainer.getSchema();
+const schema = schemaBuilder.getSchema();
 
 const apolloServer = new ApolloServer({
   schema,
