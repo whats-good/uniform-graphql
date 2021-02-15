@@ -1,7 +1,7 @@
 import { GraphQLObjectType } from 'graphql';
 import { Thunkable, Promisable, Unthunked } from '../../utils';
 import { ResolveTypeOf } from '../../Resolver';
-import { AnyTypeContainer } from '../../TypeContainer';
+import { AnySchemaBuilder } from '../../SchemaBuilder';
 import { InternalType, RealizedType } from '../core';
 import {
   ObfuscatedOutputFieldsMap,
@@ -46,24 +46,24 @@ export class ObjectInternalType<
   }
 
   protected getFreshInternalGraphQLType(
-    typeContainer: AnyTypeContainer,
+    schemaBuilder: AnySchemaBuilder,
   ): GraphQLObjectType {
     return new GraphQLObjectType({
       name: this.name,
       description: this.description,
       interfaces: () => {
-        const interfaces = typeContainer.getImplementedInterfaces(this);
+        const interfaces = schemaBuilder.getImplementedInterfaces(this);
         if (!interfaces.length) {
           return null;
         }
         return interfaces.map(
-          (cur) => cur.getInternalGraphQLType(typeContainer) as any,
+          (cur) => cur.getInternalGraphQLType(schemaBuilder) as any,
         );
       },
       fields: () =>
         toGraphQLFieldConfigMap({
           fields: this.fields,
-          typeContainer,
+          schemaBuilder,
           objectName: this.name,
         }),
     });

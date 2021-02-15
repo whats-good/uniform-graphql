@@ -1,6 +1,6 @@
 import { GraphQLType, GraphQLInterfaceType } from 'graphql';
 import { Thunkable, Unthunked, Promisable } from '../../utils';
-import { AnyTypeContainer } from '../../TypeContainer';
+import { AnySchemaBuilder } from '../../SchemaBuilder';
 import { InternalType, RealizedType } from '../core';
 import { ObjectType } from './ObjectType';
 import {
@@ -63,7 +63,7 @@ export class InterfaceInternalType<
   }
 
   protected getFreshInternalGraphQLType(
-    typeContainer: AnyTypeContainer,
+    schemaBuilder: AnySchemaBuilder,
   ): GraphQLType {
     return new GraphQLInterfaceType({
       name: this.name,
@@ -72,7 +72,7 @@ export class InterfaceInternalType<
       fields: () =>
         toGraphQLFieldConfigMap({
           fields: this.fields,
-          typeContainer,
+          schemaBuilder,
         }),
     });
   }

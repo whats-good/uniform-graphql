@@ -1,5 +1,5 @@
 import { GraphQLFieldConfig } from 'graphql';
-import { AnyTypeContainer, GraphQLContext } from './TypeContainer';
+import { AnySchemaBuilder, GraphQLContext } from './SchemaBuilder';
 import {
   OutputRealizedType,
   TypeRealization,
@@ -69,7 +69,7 @@ export type ResolverFn<
  */
 
 /**
- * TODO: how do we describe the queries without having the typeContainer?
+ * TODO: how do we describe the queries without having the schemaBuilder?
  */
 
 export interface QueryFieldConstructorParams<
@@ -104,13 +104,13 @@ export class QueryField<
   }
 
   getGraphQLFieldConfig(
-    typeContainer: AnyTypeContainer,
+    schemaBuilder: AnySchemaBuilder,
   ): GraphQLFieldConfig<any, any, any> {
     return {
-      type: this.type.getGraphQLType(typeContainer) as any,
+      type: this.type.getGraphQLType(schemaBuilder) as any,
       args: mapValues(this.args, (arg) => {
         const inputField = toInputField(arg);
-        return inputField.getGraphQLInputFieldConfig(typeContainer);
+        return inputField.getGraphQLInputFieldConfig(schemaBuilder);
       }),
       deprecationReason: this.deprecationReason,
       description: this.description,

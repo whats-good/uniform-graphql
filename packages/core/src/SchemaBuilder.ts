@@ -25,12 +25,10 @@ import {
 } from './types/output/InterfaceType';
 import { ObjectInternalType } from './types/output/ObjectType';
 
-type ContextGetter<C extends GraphQLContext> = () => C;
-
-export type AnyTypeContainer = TypeContainer<any>;
+export type AnySchemaBuilder = SchemaBuilder<any>;
 export type GraphQLContext = StringKeys<unknown>;
 
-type FallbackGraphQLTypeFn = (typeContainer: AnyTypeContainer) => GraphQLType;
+type FallbackGraphQLTypeFn = (schemaBuilder: AnySchemaBuilder) => GraphQLType;
 
 export type QueryFieldGroup = {
   queryField: QueryField<any, any, any>;
@@ -38,7 +36,7 @@ export type QueryFieldGroup = {
   resolverConstructor: ResolverConstructor<any>;
 };
 
-export class TypeContainer<C extends GraphQLContext> {
+export class SchemaBuilder<C extends GraphQLContext> {
   private readonly internalGraphQLTypes: StringKeys<GraphQLType> = {
     String: GraphQLString,
     Float: GraphQLFloat,

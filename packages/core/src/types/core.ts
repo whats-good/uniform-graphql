@@ -1,5 +1,5 @@
 import { GraphQLType, GraphQLNonNull } from 'graphql';
-import { TypeContainer } from '../TypeContainer';
+import { AnySchemaBuilder } from '../SchemaBuilder';
 import { ScalarInternalType } from './ScalarType';
 import { EnumInternalType } from './EnumType';
 import { InputObjectInternalType } from './input/InputObjectType';
@@ -11,7 +11,6 @@ import { Maybe } from '../utils';
 
 export type AnyType = InternalType<any, any>;
 
-type AnyTypeContainer = TypeContainer<any>;
 export abstract class InternalType<N extends string, I> {
   public readonly name: N;
   public readonly __INTERNAL_TYPE__!: I;
@@ -21,14 +20,14 @@ export abstract class InternalType<N extends string, I> {
   }
 
   protected abstract getFreshInternalGraphQLType(
-    typeContainer: AnyTypeContainer,
+    schemaBuilder: AnySchemaBuilder,
   ): GraphQLType;
 
   public getInternalGraphQLType = (
-    typeContainer: AnyTypeContainer,
+    schemaBuilder: AnySchemaBuilder,
   ): GraphQLType => {
     const fallback = this.getFreshInternalGraphQLType.bind(this);
-    return typeContainer.getInternalGraphQLType(this, fallback);
+    return schemaBuilder.getInternalGraphQLType(this, fallback);
   };
 }
 
@@ -53,9 +52,9 @@ export class RealizedType<T extends AnyType, N extends boolean> {
     });
   }
 
-  public getGraphQLType(typeContainer: AnyTypeContainer): GraphQLType {
+  public getGraphQLType(schemaBuilder: AnySchemaBuilder): GraphQLType {
     const internalGraphQLType = this.internalType.getInternalGraphQLType(
-      typeContainer,
+      schemaBuilder,
     );
     const externalGraphQLType = this.isNullable
       ? internalGraphQLType

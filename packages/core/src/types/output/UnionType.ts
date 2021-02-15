@@ -1,6 +1,6 @@
 import { GraphQLUnionType } from 'graphql';
 import { Thunkable, Unthunked, unthunk, Promisable } from '../../utils';
-import { AnyTypeContainer } from '../../TypeContainer';
+import { AnySchemaBuilder } from '../../SchemaBuilder';
 import { InternalType, RealizedType } from '../core';
 import { ObjectType } from './ObjectType';
 import { OutputFieldsMap } from './OutputFieldsMap';
@@ -43,11 +43,11 @@ export class UnionInternalType<
   }
 
   protected getFreshInternalGraphQLType(
-    typeContainer: AnyTypeContainer,
+    schemaBuilder: AnySchemaBuilder,
   ): GraphQLUnionType {
     const unthunkedTypes = unthunk(this.types);
     const types = unthunkedTypes.map((type) =>
-      type.internalType.getInternalGraphQLType(typeContainer),
+      type.internalType.getInternalGraphQLType(schemaBuilder),
     );
     return new GraphQLUnionType({
       name: this.name,

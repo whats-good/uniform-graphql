@@ -1,5 +1,5 @@
 import { GraphQLInputFieldConfig } from 'graphql';
-import { AnyTypeContainer } from '../../TypeContainer';
+import { AnySchemaBuilder } from '../../SchemaBuilder';
 import { InputRealizedType } from '../core';
 import { brandOf } from '../../utils';
 import { InputFieldsMapValue, TypeInInputMapValue } from './InputFieldsMap';
@@ -20,10 +20,10 @@ class InputField<R extends InputRealizedType> {
   }
 
   getGraphQLInputFieldConfig(
-    typeContainer: AnyTypeContainer,
+    schemaBuilder: AnySchemaBuilder,
   ): GraphQLInputFieldConfig {
     return {
-      type: this.type.getGraphQLType(typeContainer) as any,
+      type: this.type.getGraphQLType(schemaBuilder) as any,
       description: this.description,
     };
   }

@@ -1,5 +1,5 @@
 import { GraphQLFieldConfigMap } from 'graphql';
-import { AnyTypeContainer } from '../../TypeContainer';
+import { AnySchemaBuilder } from '../../SchemaBuilder';
 import {
   mapValues,
   StringKeys,
@@ -9,7 +9,6 @@ import {
 } from '../../utils';
 import { ExternalTypeOf, OutputRealizedType } from '../core';
 import { ArgsMap } from '../input/ArgsMap';
-import { TypeInInputMapValue } from '../input/InputFieldsMap';
 import { OutputFieldConstructorParams, toOutputField } from './OutputField';
 
 export type OutputFieldsMapValue<
@@ -46,7 +45,7 @@ export type OutputFieldsMap = StringKeys<
 
 export const toGraphQLFieldConfigMap = (params: {
   fields: OutputFieldsMap;
-  typeContainer: AnyTypeContainer;
+  schemaBuilder: AnySchemaBuilder;
   objectName?: string;
 }): GraphQLFieldConfigMap<any, any> => {
   return mapValues(params.fields, (protoField, fieldName) => {
@@ -54,7 +53,7 @@ export const toGraphQLFieldConfigMap = (params: {
     const field = toOutputField(unthunkedProtoField);
     return field.getGraphQLFieldConfig({
       fieldName,
-      typeContainer: params.typeContainer,
+      schemaBuilder: params.schemaBuilder,
       objectName: params.objectName,
     });
   });

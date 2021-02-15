@@ -1,3 +1,3 @@
 export * from './types';
-export * from './TypeContainer';
+export * from './SchemaBuilder';
 export * from './utils';

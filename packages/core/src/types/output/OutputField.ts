@@ -1,5 +1,5 @@
 import { GraphQLFieldConfig } from 'graphql';
-import { AnyTypeContainer } from '../../TypeContainer';
+import { AnySchemaBuilder } from '../../SchemaBuilder';
 import { OutputRealizedType } from '../core';
 import { toInputField } from '../input/InputField';
 import { ArgsMap } from '../input/ArgsMap';
@@ -34,20 +34,20 @@ export class OutputField<R extends OutputRealizedType, M extends ArgsMap> {
   }
 
   getGraphQLFieldConfig(params: {
-    typeContainer: AnyTypeContainer;
+    schemaBuilder: AnySchemaBuilder;
     objectName?: string;
     fieldName: string;
   }): GraphQLFieldConfig<any, any, any> {
     return {
-      type: this.type.getGraphQLType(params.typeContainer) as any,
+      type: this.type.getGraphQLType(params.schemaBuilder) as any,
       args: mapValues(this.args, (arg) => {
         const inputField = toInputField(arg);
-        return inputField.getGraphQLInputFieldConfig(params.typeContainer);
+        return inputField.getGraphQLInputFieldConfig(params.schemaBuilder);
       }),
       deprecationReason: this.deprecationReason,
       description: this.description,
       resolve: params.objectName
-        ? (params.typeContainer.getFieldResolver(
+        ? (params.schemaBuilder.getFieldResolver(
             params.objectName,
             params.fieldName,
           ) as any)

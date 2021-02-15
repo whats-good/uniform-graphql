@@ -1,5 +1,5 @@
 import { GraphQLInputObjectType } from 'graphql';
-import { AnyTypeContainer } from '../../TypeContainer';
+import { AnySchemaBuilder } from '../../SchemaBuilder';
 import { InternalType, RealizedType } from '../core';
 import { mapValues, unthunk } from '../../utils';
 import { toInputField } from './InputField';
@@ -32,7 +32,7 @@ export class InputObjectInternalType<
   }
 
   protected getFreshInternalGraphQLType(
-    typeContainer: AnyTypeContainer,
+    schemaBuilder: AnySchemaBuilder,
   ): GraphQLInputObjectType {
     return new GraphQLInputObjectType({
       name: this.name,
@@ -41,7 +41,7 @@ export class InputObjectInternalType<
         mapValues(this.fields, (protoField) => {
           const unthunkedProtoField = unthunk(protoField);
           const inputField = toInputField(unthunkedProtoField);
-          return inputField.getGraphQLInputFieldConfig(typeContainer);
+          return inputField.getGraphQLInputFieldConfig(schemaBuilder);
         }),
     });
   }

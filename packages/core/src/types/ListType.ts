@@ -1,6 +1,6 @@
 import { GraphQLList } from 'graphql';
 import { ResolveTypeOf } from '../Resolver';
-import { AnyTypeContainer } from '../TypeContainer';
+import { AnySchemaBuilder } from '../SchemaBuilder';
 import { ExternalTypeOf, InternalType, RealizedType } from './core';
 
 export type InternalResolveTypeOfListType<R extends ListType<any, any>> = Array<
@@ -18,9 +18,9 @@ export class ListInternalType<
   }
 
   protected getFreshInternalGraphQLType(
-    typeContainer: AnyTypeContainer,
+    schemaBuilder: AnySchemaBuilder,
   ): GraphQLList<any> {
-    return new GraphQLList(this.type.getGraphQLType(typeContainer));
+    return new GraphQLList(this.type.getGraphQLType(schemaBuilder));
   }
 }
 
