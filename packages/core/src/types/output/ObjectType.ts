@@ -1,17 +1,13 @@
 import { GraphQLObjectType } from 'graphql';
-import { Thunkable, Promisable, Unthunked } from '../../utils';
-import { ResolveTypeOf } from '../../Resolver';
 import { AnySchemaBuilder } from '../../SchemaBuilder';
-import { InternalType, OutputRealizedType, RealizedType } from '../core';
+import { InternalType, RealizedType } from '../core';
 import {
   ObfuscatedOutputFieldsMap,
   OutputFieldsMap,
-  OutputFieldsMapValue,
+  OutputFieldsMapResolveType,
   toGraphQLFieldConfigMap,
-  TypeInOutputMapValue,
   TypeOfOutputFieldsMap,
 } from './OutputFieldsMap';
-import { ArgsMap } from '../input/ArgsMap';
 
 export interface IOutputObjectInternalTypeConstructorParams<
   N extends string,
@@ -22,15 +18,9 @@ export interface IOutputObjectInternalTypeConstructorParams<
   description?: string;
 }
 
-type ObjectFieldResolveType<
-  A extends OutputFieldsMapValue<OutputRealizedType, ArgsMap>
-> = Thunkable<Promisable<ResolveTypeOf<TypeInOutputMapValue<Unthunked<A>>>>>;
-
 export type InternalResolveTypeOfObjectInternalType<
   I extends ObjectInternalType<any, any>
-> = {
-  [K in keyof I['fields']]: ObjectFieldResolveType<I['fields'][K]>;
-};
+> = OutputFieldsMapResolveType<I['fields']>;
 
 export type InternalResolveTypeOfObjectType<
   R extends ObjectType<any, any, any>

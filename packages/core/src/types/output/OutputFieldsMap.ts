@@ -1,7 +1,9 @@
 import { GraphQLFieldConfigMap } from 'graphql';
+import { ResolveTypeOf } from '../../Resolver';
 import { AnySchemaBuilder } from '../../SchemaBuilder';
 import {
   mapValues,
+  Promisable,
   StringKeys,
   Thunkable,
   unthunk,
@@ -74,3 +76,9 @@ export type TypeOfOutputFieldsMap<M extends OutputFieldsMap> = {
 
 export type NullableKeysOfOutputFieldMap<M extends OutputFieldsMap> = keyof { [ K in keyof M as TypeInOutputMapValue<Unthunked<M[K]>>['isNullable'] extends true ? K : never ] : null };
 export type NonNullableKeysOfOutputFieldMap<M extends OutputFieldsMap> = keyof { [ K in keyof M as TypeInOutputMapValue<Unthunked<M[K]>>['isNullable'] extends true ? never : K ] : null };
+
+export type OutputFieldsMapResolveType<M extends OutputFieldsMap> = {
+  [K in keyof M]: Thunkable<
+    Promisable<ResolveTypeOf<TypeInOutputMapValue<Unthunked<M[K]>>>>
+  >;
+};
