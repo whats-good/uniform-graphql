@@ -20,7 +20,7 @@
 
 <!-- // TODO: copy the readme to the core package -->
 
-⚠️ This is a very young and unstable library. We’re still at `v0`. We have a pretty robust core, but everything is subject to change.
+⚠️ Disclaimer: This is a very young and unstable library. We’re still at `v0`. We have a pretty robust core, but everything is subject to change.
 
 ## Install
 
