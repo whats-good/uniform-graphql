@@ -295,9 +295,13 @@ const Membership = t.enum({
 });
 ```
 
-At compile time, this type will resolve to the following string literal union: `"free" | "paid" | "enterprise"`. At GraphQL runtime, it will correspond to:
+```ts
+/** TypeScript */
+type Membersip = 'free' | 'paid' | 'enterprise';
+```
 
 ```graphql
+# GraphQL
 enum Membership {
   free
   paid
@@ -305,9 +309,36 @@ enum Membership {
 }
 ```
 
+#### Input & Output Types
+
+GraphQL makes a clear distinction between input and output types. Input types are concerned with the arguments to our resolvers, and output types are concerned with what we return from our resolvers. Certain types such as scalars can appear both as an input or an output type. However, many input and output types are mutually exclusive.
+
+**Neutral Types**: All scalars, enums, and lists of _neutral types_ fall under this category. For example:
+
+- `String`
+- `Float!`
+- `enum Membership { free, paid, enterprise }`
+- `[String]`
+- `[Membership!]`
+
+**Output Types**: All _neutral types_, objects, unions, interfaces, and lists of _output types_ fall under this category. The fields of an object type may only be other _output types_. For example:
+
+- `String`
+- `enum Membership { free, paid, enterprise }`
+- `type User { id: ID!, membership: Membership! }`
+- `[User]`
+
+**Input Types**: All _neutral types_, input objects and lists of _input types_ fall under this category. The fields of an `input object` type may only be other _input types_
+
+- `String`
+- `enum Membership { free, paid, enterprise }`
+- `input SignupArgs { fullName: String!, membership: Membership! }`
+
+In this library, the compiler will guide you and make sure that you don’t accidentally mix input types and output types
+
 #### Objects
 
-Up until now, we just dealt with simple and self-contained types. However, the true power of GraphQL comes from how it lets us compose simpler types to create more complex types. Let's begin with the `t.object` type factory:
+So far we have only dealt with neutral and self-contained types. However, the true power of GraphQL comes from how it lets us compose simpler types to create more complex types. Let's begin with the our first `output` type factory: `t.object`:
 
 <!-- TODO: Use Email type for a custom scalar example -->
 
@@ -330,19 +361,20 @@ const User = t.object({
     membership: Membership,
   },
 });
+```
 
-/**
- * At compile time, this will resolve to:
- * {
- *   id: string | number;
- *   email: string | undefined | null;
- *   membership: 'free' | 'paid' | 'enterprise';
- * }
- */
+```ts
+/** TypeScript */
+
+type User = {
+  id: string | number;
+  email: string | undefined | null;
+  membership: 'free' | 'paid' | 'enterprise';
+};
 ```
 
 ```graphql
-# And at GraphQL runtime, it will correspond to:
+# GraphQL
 
 type User {
   id: ID!
@@ -378,33 +410,26 @@ const Person = t.object({
     pets: t.list(Animal),
   },
 });
+```
 
-/**
- * At compile time, this will resolve to:
- * {
- *   id: string | number;
- *   favoriteFoods: Array<string>;
- *   pets: Array<{
- *     id: string | number;
- *     name: string | null | undefined;
- *     age: Int;
- *     species: string;
- *   }>
- * }
- */
+```ts
+/** TypeScript */
+type Person = {
+  id: string | number;
+  favoriteFoods: Array<string>;
+  pets: Array<{
+    id: string | number;
+    name: string | null | undefined;
+    age: Int;
+    species: string;
+  }>;
+};
 ```
 
 ```graphql
-# And at GraphQL runtime, it will correspond to:
+# GraphQL:
 
-type Animal {
-  id: ID!
-  name: String
-  age: Int!
-  species: String!
-}
-
-type User {
+type Person {
   id: ID!
   favoriteFoods: [String!]!
   pets: [Animal!]!
@@ -460,27 +485,28 @@ const User = t.object({
     bestFriend: BestFriend,
   }
 });
+```
 
-/**
- * At compile time, this will resolve to:
- * {
- *   id: string | number;
- *   email: string;
- *   bestFriend: {
- *     id: string | number;
- *     name: string;
- *     species: string;
- *   } | {
- *     id: string | number;
- *     fullName: string;
- *   }
- * }
- */
-
+```ts
+/** TypeScript */
+type User = {
+  id: string | number;
+  email: string;
+  bestFriend:
+    | {
+        id: string | number;
+        name: string;
+        species: string;
+      }
+    | {
+        id: string | number;
+        fullName: string;
+      };
+};
 ```
 
 ```graphql
-# And at GraphQL runtime, it will correspond to:
+# GraphQL
 
 type Animal {
   id: ID!
@@ -548,17 +574,17 @@ const Pet = t.interface({
     }
   }
 })
+```
 
-/**
- * At compile time, this will resolve to:
- * {
- *   species: string;
- * }
- */
+```ts
+/** TypeScript */
+type Pet = {
+  species: string;
+};
 ```
 
 ```graphql
-# And at GraphQL runtime, it will correspond to:
+# GraphQL
 
 interface Pet {
   species: String!
