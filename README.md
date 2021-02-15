@@ -6,6 +6,9 @@
   <a href="#" target="_blank">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
+  <a href="https://github.com/mechanical-turk/statically-typed-graphql/graphs/commit-activity" target="_blank">
+    <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
+  </a>
 
 </p>
 
@@ -26,14 +29,16 @@ npm install @statically-typed-graphql/core
 
 ⚠️ `graphql` is a peer dependency
 
+## Examples
+
+Go to the [examples](https://github.com/mechanical-turk/statically-typed-graphql/tree/master/packages/examples) directory to see a demo
+
 ## Quickstart
 
 ```ts
 import { t, SchemaBuilder } from '@statically-typed-graphql/core';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-
-/** 1. Create your own types  */
 
 const Membership = t.enum({
   name: 'Membership',
@@ -53,19 +58,15 @@ const Animal = t.object({
   },
 });
 
-/** 2. Compose and reuse your types to create new, more complex ones */
-
 const User = t.object({
   name: 'User',
   fields: {
     id: t.id,
-    fullName: t.string.nullable, // every type can be made nullable
-    membership: Membership, // using a user-made type
-    pets: t.list(Animal), // making a list from a user-made type
+    fullName: t.string.nullable,
+    membership: Membership,
+    pets: t.list(Animal),
   },
 });
-
-/** 3. Using your new types, create your resolvers */
 
 const schemaBuilder = new SchemaBuilder();
 
@@ -76,14 +77,10 @@ schemaBuilder.query('user', {
   },
   resolve: async (_, args, context) => {
     return {
-      id: args.id, // types automatically enforced for args.
-      fullName: () => 'John Johnson', // for object fields, you can also return thunks
-      membership: 'enterprise' as const, // enum values are type literals
+      id: args.id,
+      fullName: () => 'John Johnson',
+      membership: 'enterprise' as const,
       pets: async () => [
-        /**
-         * object fields can also return async thunks. this is useful for
-         * potentially expensive computations.
-         */
         {
           name: 'Lulu',
           id: 'cat-1',
@@ -109,14 +106,12 @@ schemaBuilder.mutation('signup', {
   },
 });
 
-// can also add optional field resolvers.
 schemaBuilder.fieldResolvers(User, {
   fullName: async (root) => {
     return 'overriding fullname';
   },
 });
 
-/** 4. Create and use your new graphQL schema. **/
 const schema = schemaBuilder.getSchema();
 
 const apolloServer = new ApolloServer({
@@ -135,17 +130,15 @@ app.listen({ port: PORT }, () => {
 });
 ```
 
-<!-- TODO: add images  -->
-
 ## Deep Dive
 
 ### Motivation
 
-GraphQL backends usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL backends create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first backends on the other hand implement the resolvers first and have the typedefs generated / derived from the code. Both approaches have their pros and cons. This library falls somewhere in the middle, but it's closer to the code-first camp.
+GraphQL backends usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL backends create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first backends on the other hand implement the resolvers first and have the typedefs derived from the code. Both approaches have their pros and cons. This library falls somewhere in the middle, but it's closer to the code-first camp.
 
 The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. Developers can't simply rely on the compiler to make sure that their code will match the generated schema, so they have to resort to other means such as decorators and other runtime checks. But it doesn't have to be that way. As it turns out, this is a perfect job for the compiler.
 
-> tl;dr: Type-safety is concerned with compile-time whereas GraphQL schemas are concerned with runtime. What we need is a unified approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what this library is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
+> tl;dr: Type-safety is concerned with compile time whereas GraphQL schemas are concerned with runtime. What we need is a **unified** approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what this library is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
 
 ### Philosophy
 
@@ -600,6 +593,20 @@ type Cat implements Pet {
   isDomesticated: Boolean!
 }
 ```
+
+## Roadmap
+
+💡 Coming soon
+
+## Acknowledgements
+
+This library stands on the shoulders of 2 giants:
+
+1. [type-graphql](https://github.com/MichalLytek/type-graphql): This is arguably the strongest code-first GraphQL solution for TypeScript. The author is very friendly and helpful, and has managed to create and maintain a great community. I urge you to check them out and go say hi.
+
+2. [io-ts](https://github.com/gcanti/io-ts): The techniques I’ve found in this library have truly opened my mind to the limitless potential of TypeScript. In many ways, `io-ts` is the library that convinced me that this library was possible.
+
+In a way, this library is `type-graphql` in substance and `io-ts` in form.
 
 ## Author
 
