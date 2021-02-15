@@ -12,9 +12,10 @@ import {
 } from './OutputFieldsMap';
 import { ResolveTypeOf } from '../../Resolver';
 
-type InternalResolveTypeOfInterfaceInternalType<
+type UnknownResolveTypeOfInterfaceInternalType<
   I extends InterfaceInternalType<any, any, any>
 > = ResolveTypeOf<I['implementors'][number]>;
+
 export type InternalResolveTypeOfInterfaceType<
   R extends InterfaceType<any, any, any, any>
 > = OutputFieldsMapResolveType<R['internalType']['fields']>;
@@ -50,7 +51,7 @@ export class InterfaceInternalType<
   public readonly implementors: I;
   public readonly description?: string;
   public readonly resolveType: (
-    r: InternalResolveTypeOfInterfaceInternalType<
+    r: UnknownResolveTypeOfInterfaceInternalType<
       InterfaceInternalType<N, M, I>
     >,
   ) => Promisable<Unthunked<I>[number]['name']>;
