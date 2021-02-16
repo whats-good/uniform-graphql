@@ -1,5 +1,5 @@
 {
-  "name": "@statically-typed-graphql/root",
+  "name": "@whatsgood/graphql-ts-root",
   "private": false,
   "devDependencies": {
     "lerna": "3.22.1",

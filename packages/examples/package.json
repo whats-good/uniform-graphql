@@ -1,11 +1,11 @@
 {
-  "name": "@statically-typed-graphql/examples",
+  "name": "@whatsgood/graphql-ts-examples",
   "private": false,
   "version": "0.1.1",
-  "description": "Usage examples for @statically-typed-graphql",
+  "description": "Usage examples for @whatsgood/graphql-ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mechanical-turk/statically-typed-graphql"
+    "url": "https://github.com/whats-good/graphql-ts"
   },
   "main": "build/index.js",
   "author": "Kerem Kazan",
@@ -18,7 +18,7 @@
     "start": "ts-node ./src/index.ts"
   },
   "dependencies": {
-    "@statically-typed-graphql/core": "^0.1.1",
+    "@whatsgood/graphql-ts": "^0.1.1",
     "apollo-server-express": "2.19.0",
     "body-parser": "1.19.0",
     "express": "4.17.1",

@@ -1,4 +1,4 @@
-<h1 align="center">Welcome to @statically-typed-graphql 👋</h1>
+<h1 align="center">Welcome to graphql-ts 👋</h1>
 <p>
   <!-- TODO: add docs and enable this <a href="this is the project documentation url" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
@@ -6,7 +6,7 @@
   <a href="#" target="_blank">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
-  <a href="https://github.com/mechanical-turk/statically-typed-graphql/graphs/commit-activity" target="_blank">
+  <a href="https://github.com/whats-good/graphql-ts/graphs/commit-activity" target="_blank">
     <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
   </a>
 
@@ -25,19 +25,19 @@
 # Install
 
 ```sh
-npm install @statically-typed-graphql/core
+npm install @whatsgood/graphql-ts
 ```
 
 ⚠️ `graphql` is a peer dependency
 
 # Examples
 
-Go to the [examples](https://github.com/mechanical-turk/statically-typed-graphql/tree/master/packages/examples) directory to see a demo
+Go to the [examples](https://github.com/whats-good/graphql-ts/tree/master/packages/examples) directory to see a demo
 
 # Quickstart
 
 ```ts
-import { t, SchemaBuilder } from '@statically-typed-graphql/core';
+import { t, SchemaBuilder } from '@whatsgood/graphql-ts';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 
@@ -193,7 +193,7 @@ const User = new GraphQLObjectType({
 ```ts
 /** Non-null-first: Things are non-nullable by default, unless explicitly made nullable */
 
-import { t } from '@statically-typed-graphql/core';
+import { t } from '@whatsgood/graphql-ts';
 
 const User = t.object({
   name: 'User',
@@ -257,7 +257,7 @@ The first step in our workflow is creating the `unified types` that will serve a
 
 #### Built-in Scalars
 
-`@statically-typed-graphql` ships with 5 built-in scalars:
+`@graphql-ts` ships with 5 built-in scalars:
 
 |             | TypeScript         | GraphQL    |
 | ----------- | ------------------ | ---------- |
