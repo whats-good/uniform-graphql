@@ -27,6 +27,15 @@ const Membership = t.enum({
   },
 });
 
+const SignupArgs = t.inputObject({
+  name: 'SignupArgs',
+  fields: {
+    membership: Membership,
+    email: t.string,
+    fullName: t.string.nullable,
+  },
+});
+
 const Animal = t.object({
   name: 'Animal',
   fields: {
@@ -71,13 +80,13 @@ schemaBuilder.query('user', {
 schemaBuilder.mutation('signup', {
   type: User,
   args: {
-    email: t.string,
+    signup: SignupArgs,
   },
   resolve: (_, args, context) => {
     return {
       id: 'newly signedup user id',
-      fullName: 'newly signed up user name',
-      membership: 'free' as const,
+      fullName: args.signup.fullName || 'newly signed up user name',
+      membership: args.signup.membership,
       pets: [],
     };
   },

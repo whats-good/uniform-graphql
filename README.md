@@ -305,7 +305,7 @@ enum Membership {
 
 GraphQL makes a clear distinction between input and output types. Input types are concerned with the arguments to our resolvers, and output types are concerned with what we return from our resolvers. Certain types such as scalars can appear both as an input or an output type. However, many input and output types are mutually exclusive.
 
-**Neutral Types**: All scalars, enums, and lists of _neutral types_ fall under this category. For example:
+_Neutral Types_: All scalars, enums, and lists of _neutral types_ fall under this category. For example:
 
 - `String`
 - `Float!`
@@ -313,14 +313,14 @@ GraphQL makes a clear distinction between input and output types. Input types ar
 - `[String]`
 - `[Membership!]`
 
-**Output Types**: All _neutral types_, objects, unions, interfaces, and lists of _output types_ fall under this category. The fields of an object type may only be other _output types_. For example:
+_Output Types_: All _neutral types_, objects, unions, interfaces, and lists of _output types_ fall under this category. The fields of an object type may only be other _output types_. For example:
 
 - `String`
 - `enum Membership { free, paid, enterprise }`
 - `type User { id: ID!, membership: Membership! }`
 - `[User]`
 
-**Input Types**: All _neutral types_, input objects and lists of _input types_ fall under this category. The fields of an `input object` type may only be other _input types_
+_Input Types_: All _neutral types_, input objects and lists of _input types_ fall under this category. The fields of an `input object` type may only be other _input types_
 
 - `String`
 - `enum Membership { free, paid, enterprise }`
@@ -424,6 +424,61 @@ type Person {
   favoriteFoods: [String!]!
   pets: [Animal!]!
 }
+```
+
+#### Input Objects
+
+With `t.object` out of the way, let’s move on to `t.inputObject`. Use this type factory to create objects to be used inside resolver arguments:
+
+```ts
+/** Creating an input object from neutral types */
+const ProfileArgs = t.inputObject({
+  name: 'SignupArgs',
+  fields: {
+    fullName: t.string.nullable,
+    membership: Membership,
+    email: t.string,
+  },
+});
+
+/** Creating an input object from another input type */
+const UpdateProfileArgs = t.inputObject({
+  name: 'UpdateProfileArgs',
+  fields: {
+    userId: t.id,
+    profile: ProfileArgs,
+  },
+});
+```
+
+```ts
+/** TypeScript */
+
+type ProfileArgs = {
+  fullName: string | null | undefined;
+  membership: Membership;
+  email: string;
+};
+
+type UpdateProfileArgs = {
+  userId: string | number;
+  profile: ProfileArgs;
+};
+```
+
+```graphql
+# GraphQL:
+
+type ProfileArgs {
+  fullName: String;
+  membership: !Membership;
+  email: !String;
+};
+
+type UpdateProfileArgs {
+  userId: !ID;
+  profile: !ProfileArgs;
+};
 ```
 
 #### Unions
