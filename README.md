@@ -22,7 +22,7 @@
 
 ⚠️ Disclaimer: This is a very young and unstable library. We’re still at `v0`. We have a pretty robust core, but everything is subject to change.
 
-## Install
+# Install
 
 ```sh
 npm install @statically-typed-graphql/core
@@ -30,11 +30,11 @@ npm install @statically-typed-graphql/core
 
 ⚠️ `graphql` is a peer dependency
 
-## Examples
+# Examples
 
 Go to the [examples](https://github.com/mechanical-turk/statically-typed-graphql/tree/master/packages/examples) directory to see a demo
 
-## Quickstart
+# Quickstart
 
 ```ts
 import { t, SchemaBuilder } from '@statically-typed-graphql/core';
@@ -129,9 +129,22 @@ app.listen({ port: PORT }, () => {
 });
 ```
 
-## Deep Dive
+## Recommended TSConfig
 
-### Motivation
+```json
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": ["es2018", "esnext.asynciterable"],
+    "strict": true
+  }
+}
+```
+
+# Deep Dive
+
+## Motivation
 
 GraphQL backends usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL backends create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first backends on the other hand implement the resolvers first and have the typedefs derived from the code. Both approaches have their pros and cons. This library falls somewhere in the middle, but it's closer to the code-first camp.
 
@@ -139,9 +152,9 @@ The biggest issue with the currently available code-first approaches emerges dur
 
 > tl;dr: Type-safety is concerned with compile time whereas GraphQL schemas are concerned with runtime. What we need is a **unified** approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what this library is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
 
-### Philosophy
+## Philosophy
 
-#### End-to-End Type Safety
+### End-to-End Type Safety
 
 On a GraphQL backend, the most common tasks are:
 
@@ -152,7 +165,7 @@ On a GraphQL backend, the most common tasks are:
 
 This library is built with compile time type-safety front and center, making it very hard for you to experience type errors at runtime. You will find a simple, streamlined approach that will guide you end-to-end through the tasks listed above.
 
-#### Non-Null First
+### Non-Null First
 
 In GraphQL, types are `null-first`, which means they are gonna be nullable unless explicitly wrapped with a `GraphQLNonNull` type. In `TypeScript` on the other hand, types are `non-null-first`: non-nullable by default unless they are explicitly made nullable. This tension is something that few code-first approaches acknowledge and solve for, which results in schema-code mismatches and general developer pain.
 
@@ -200,7 +213,7 @@ type User {
 }
 ```
 
-#### Composability
+### Composability
 
 One of GraphQL's main benefits is the reusability and composability of types. You can create an `enum` type, which you use in an `object` type, which you use in a `list` type, which you use in an `interface` type, which you use in another `object` type, which you use in a `union` type and so on.
 
@@ -226,7 +239,7 @@ type Animal {
 }
 ```
 
-#### Unified Type System
+### Unified Type System
 
 No need to maintain two separate type systems for GraphQL and TypeScript while trying to keep them in sync. Once you create your unified types, all will be taken care of. You will never need to manually type out function parameter types or return types. Everything is inferred from your unified types; all you need to do is to fill in the blanks.
 
@@ -238,7 +251,7 @@ _Example 1_: The compiler is complaining because the `resolve` function is incor
 
 _Example 2_: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL backend, we don't need to manually write any `TypeScript` types for our resolvers. This inclues the resolver function arguments and the return type.
 
-### Types
+## Types
 
 The first step in our workflow is creating the `unified types` that will serve as the building blocks for our backend. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
 
@@ -254,7 +267,7 @@ The first step in our workflow is creating the `unified types` that will serve a
 | `t.id`      | `string \| number` | `ID!`      |
 | `t.boolean` | `boolean`          | `Boolean!` |
 
-#### Nullability
+### Nullability
 
 All types, including user-made ones, will have a `.nullable` property, which will make a type nullable both at runtime for `GraphQL` and compile time for `TypeScript`. For example:
 
@@ -266,13 +279,13 @@ All types, including user-made ones, will have a `.nullable` property, which wil
 | `t.id.nullable`      | `string \| number \| null \| undefined` | `ID`      |
 | `t.boolean.nullable` | `boolean \| null \| undefined`          | `Boolean` |
 
-#### Custom Scalars
+### Custom Scalars
 
 Use the `t.scalar` type factory to create any custom unified scalars, which will carry both runtime and compile time type information just like any other type in our system.
 
 <!-- TODO: nail the custom scalars -->
 
-#### Enums
+### Enums
 
 Use the `t.enum` type factory to crate unified enums:
 
@@ -301,7 +314,7 @@ enum Membership {
 }
 ```
 
-#### Input & Output Types
+### Input & Output Types
 
 GraphQL makes a clear distinction between input and output types. Input types are concerned with the arguments to our resolvers, and output types are concerned with what we return from our resolvers. Certain types such as scalars can appear both as an input or an output type. However, many input and output types are mutually exclusive.
 
@@ -328,7 +341,7 @@ _Input Types_: All _neutral types_, input objects and lists of _input types_ fal
 
 In this library, the compiler will guide you and make sure that you don’t accidentally mix input types and output types
 
-#### Objects
+### Objects
 
 So far we have only dealt with neutral and self-contained types. However, the true power of GraphQL comes from how it lets us compose simpler types to create more complex types. Let's begin with the our first `output` type factory: `t.object`:
 
@@ -375,7 +388,7 @@ type User {
 }
 ```
 
-#### Lists
+### Lists
 
 Use the `t.list` type factory to take an existing type and derive a list from it.
 
@@ -426,7 +439,7 @@ type Person {
 }
 ```
 
-#### Input Objects
+### Input Objects
 
 With `t.object` out of the way, let’s move on to `t.inputObject`. Use this type factory to create objects to be used inside resolver arguments:
 
@@ -481,7 +494,7 @@ input UpdateProfileArgs {
 };
 ```
 
-#### Unions
+### Unions
 
 Use the `t.union` type factory to combine multiple object types into a union.
 
@@ -573,7 +586,7 @@ type User {
 }
 ```
 
-#### Interfaces
+### Interfaces
 
 Use the `t.interface` type factory to create unified interface types.
 
@@ -646,19 +659,6 @@ type Cat implements Pet {
 }
 ```
 
-### Recommended TSConfig
-
-```json
-{
-  "compilerOptions": {
-    "target": "es2018",
-    "module": "commonjs",
-    "lib": ["es2018", "esnext.asynciterable"],
-    "strict": true // This one isn’t required, but it's highly recommended to experience the type-safety features.
-  }
-}
-```
-
 ## Roadmap
 
 - Stabilize the `t.scalar` type factory
@@ -668,8 +668,7 @@ type Cat implements Pet {
 - Design a logo (open to suggestions)
 - Argument validation
 - Remove lodash and become `0 dependency`
-
-💡 Coming soon
+- Enable query building through the object syntax: `t.query({ currentUser: ..., todos: ...})` instead of `t.query('currentUser', ...)`
 
 ## Acknowledgements
 
