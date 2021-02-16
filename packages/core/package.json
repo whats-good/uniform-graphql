@@ -1,7 +1,7 @@
 {
   "name": "@statically-typed-graphql/core",
   "private": false,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Create code-first graphql backends in TypeScript with zero type-safety compromise",
   "repository": {
     "type": "git",
