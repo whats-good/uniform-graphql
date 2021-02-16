@@ -1,7 +1,7 @@
 {
   "name": "@whatsgood/graphql-ts-examples",
   "private": false,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Usage examples for @whatsgood/graphql-ts",
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
     "start": "ts-node ./src/index.ts"
   },
   "dependencies": {
-    "@whatsgood/graphql-ts": "^0.1.1",
+    "@whatsgood/graphql-ts": "^0.1.2",
     "apollo-server-express": "2.19.0",
     "body-parser": "1.19.0",
     "express": "4.17.1",
