@@ -469,13 +469,13 @@ type UpdateProfileArgs = {
 ```graphql
 # GraphQL:
 
-type ProfileArgs {
+input ProfileArgs {
   fullName: String;
   membership: !Membership;
   email: !String;
 };
 
-type UpdateProfileArgs {
+input UpdateProfileArgs {
   userId: !ID;
   profile: !ProfileArgs;
 };
