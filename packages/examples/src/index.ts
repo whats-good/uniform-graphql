@@ -56,7 +56,6 @@ schemaBuilder.query('user', {
   resolve: async (_, args, context) => {
     return {
       id: args.id,
-      fullName: () => 'John Johnson',
       membership: 'enterprise' as const,
       pets: async () => [
         {

@@ -74,11 +74,26 @@ export type TypeOfOutputFieldsMap<M extends OutputFieldsMap> = {
   [K in keyof M]: ExternalTypeOf<TypeInOutputMapValue<Unthunked<M[K]>>>;
 };
 
-export type NullableKeysOfOutputFieldMap<M extends OutputFieldsMap> = keyof { [ K in keyof M as TypeInOutputMapValue<Unthunked<M[K]>>['isNullable'] extends true ? K : never ] : null };
-export type NonNullableKeysOfOutputFieldMap<M extends OutputFieldsMap> = keyof { [ K in keyof M as TypeInOutputMapValue<Unthunked<M[K]>>['isNullable'] extends true ? never : K ] : null };
+export type NonNullableKeysOfOutputFieldMap<M extends OutputFieldsMap> = {
+  [K in keyof M]: TypeInOutputMapValue<
+    Unthunked<M[K]>
+  >['isNullable'] extends true
+    ? never
+    : K;
+}[keyof M];
 
-export type OutputFieldsMapResolveType<M extends OutputFieldsMap> = {
-  [K in keyof M]: Thunkable<
+export type OptionalResolverFields<M extends OutputFieldsMap> = {
+  [K in keyof M]?: Thunkable<
     Promisable<ResolveTypeOf<TypeInOutputMapValue<Unthunked<M[K]>>>>
   >;
 };
+
+export type RequiredResolverFields<M extends OutputFieldsMap> = {
+  [K in NonNullableKeysOfOutputFieldMap<M>]: Thunkable<
+    Promisable<ResolveTypeOf<TypeInOutputMapValue<Unthunked<M[K]>>>>
+  >;
+};
+
+export type OutputFieldsMapResolveType<
+  M extends OutputFieldsMap
+> = OptionalResolverFields<M> & RequiredResolverFields<M>;

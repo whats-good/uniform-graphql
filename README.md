@@ -375,8 +375,6 @@ type User {
 }
 ```
 
-<!-- TODO: let resolvers of object type omit the nullable fields -->
-
 #### Lists
 
 Use the `t.list` type factory to take an existing type and derive a list from it.
