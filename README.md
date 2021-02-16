@@ -12,7 +12,7 @@
 
 </p>
 
-> Create code-first graphql backends in TypeScript with zero type-safety compromises.
+> Create code-first graphql apis in TypeScript with end-to-end type safety.
 
 <!-- ### 🏠 [Homepage](this is the project homepage)
 
@@ -146,7 +146,7 @@ app.listen({ port: PORT }, () => {
 
 ## Motivation
 
-GraphQL backends usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL backends create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first backends on the other hand implement the resolvers first and have the typedefs derived from the code. Both approaches have their pros and cons. This library falls somewhere in the middle, but it's closer to the code-first camp.
+GraphQL apis usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL apis create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first apis on the other hand implement the resolvers first and have the typedefs derived from the code. Both approaches have their pros and cons. This library falls somewhere in the middle, but it's closer to the code-first camp.
 
 The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. Developers can't simply rely on the compiler to make sure that their code will match the generated schema, so they have to resort to other means such as decorators and other runtime checks. But it doesn't have to be that way. As it turns out, this is a perfect job for the compiler.
 
@@ -156,7 +156,7 @@ The biggest issue with the currently available code-first approaches emerges dur
 
 ### End-to-End Type Safety
 
-On a GraphQL backend, the most common tasks are:
+While building a GraphQL api, the most common tasks are:
 
 - Creating GraphQL types
 - Composing said GraphQL types to create more complex types
@@ -249,11 +249,11 @@ _Example 1_: The compiler is complaining because the `resolve` function is incor
 
 ![Args types in TypeScript](https://i.ibb.co/BnzKQDW/inferred-args-type.png)
 
-_Example 2_: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL backend, we don't need to manually write any `TypeScript` types for our resolvers. This inclues the resolver function arguments and the return type.
+_Example 2_: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL api, we don't need to manually write any `TypeScript` types for our resolvers. This inclues the resolver function arguments and the return type.
 
 ## Types
 
-The first step in our workflow is creating the `unified types` that will serve as the building blocks for our backend. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
+The first step in our workflow is creating the `unified types` that will serve as the building blocks for our api. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
 
 #### Built-in Scalars
 
@@ -669,6 +669,7 @@ type Cat implements Pet {
 - Argument validation
 - Remove lodash and become `0 dependency`
 - Enable query building through the object syntax: `t.query({ currentUser: ..., todos: ...})` instead of `t.query('currentUser', ...)`
+- Subscriptions support
 
 ## Acknowledgements
 
