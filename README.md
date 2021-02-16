@@ -287,7 +287,7 @@ Use the `t.scalar` type factory to create any custom unified scalars, which will
 
 ### Enums
 
-Use the `t.enum` type factory to crate unified enums:
+Use the `t.enum` type factory to create unified enums:
 
 ```ts
 const Membership = t.enum({
@@ -343,7 +343,7 @@ In `graphql-ts`, the type system will guide you and make sure that you don’t a
 
 ### Objects
 
-So far we have only dealt with neutral and self-contained types. However, the true power of GraphQL comes from how it lets us compose simpler types to create more complex types. Let's begin with the our first `output` type factory: `t.object`:
+So far we have only dealt with neutral and self-contained types. However, the true power of GraphQL comes from how it lets us compose simpler types to create more complex types. Let's begin with our first `output` type factory: `t.object`:
 
 <!-- TODO: Use Email type for a custom scalar example -->
 
