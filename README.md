@@ -155,7 +155,7 @@ GraphQL apis usually fall under two schools of thought: `schema-first` vs `code-
 
 The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. Developers can't simply rely on the compiler to make sure that their code will match the generated schema, so they have to resort to other means such as decorators and other runtime checks. But it doesn't have to be that way. As it turns out, this is a perfect job for the compiler.
 
-> tl;dr: Type-safety is concerned with compile time whereas GraphQL schemas are concerned with runtime. What we need is a **unified** approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what `uniform-graphql` is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
+> tl;dr: Type-safety is concerned with compile time whereas GraphQL schemas are concerned with runtime. What we need is a **uniform** approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what `uniform-graphql` is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
 
 ## Philosophy
 
@@ -244,9 +244,9 @@ type Animal {
 }
 ```
 
-### Unified Type System
+### Uniform Type System
 
-No need to maintain two separate type systems for GraphQL and TypeScript while trying to keep them in sync. Once you create your unified types, all will be taken care of. You will never need to manually type out function parameter types or return types. Everything is inferred from your unified types; all you need to do is to fill in the blanks.
+No need to maintain two separate type systems for GraphQL and TypeScript while trying to keep them in sync. Once you create your `uniform` types, all will be taken care of. You will never need to manually type out function parameter types or return types. Everything is inferred from your `uniform` types; all you need to do is to fill in the blanks.
 
 ![Code autocompletion for resolvers](https://i.ibb.co/Wvg8Mkp/autocomplete-enum.png)
 
@@ -258,7 +258,7 @@ _Example 2_: When we hover over `args.id`, we see that it's a union type between
 
 ## Types
 
-The first step in our workflow is creating the `unified types` that will serve as the building blocks for our api. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
+The first step in our workflow is creating the `uniform types` that will serve as the building blocks for our api. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
 
 #### Built-in Scalars
 
@@ -286,13 +286,13 @@ All types, including user-made ones, will have a `.nullable` property, which wil
 
 ### Custom Scalars
 
-Use the `t.scalar` type factory to create any custom unified scalars, which will carry both runtime and compile time type information just like any other type in our system.
+Use the `t.scalar` type factory to create any custom scalars, which will carry both runtime and compile time type information just like any other type in our system.
 
 <!-- TODO: nail the custom scalars -->
 
 ### Enums
 
-Use the `t.enum` type factory to create unified enums:
+Use the `t.enum` type factory to create enums:
 
 ```ts
 const Membership = t.enum({
@@ -593,7 +593,7 @@ type User {
 
 ### Interfaces
 
-Use the `t.interface` type factory to create unified interface types.
+Use the `t.interface` type factory to create interface types.
 
 ```ts
 const Dog = t.object({
@@ -873,7 +873,7 @@ type T4 = Promisable<{
 }>;
 ```
 
-> As you can see, there are many ways to resolve the same type. Luckily, you will **never** have to write out these types by hand. In fact, you will **never** need to write out any types while coding your resolvers. All will be automatically derived from your unified types. All you need to do is to fill in the blanks.
+> As you can see, there are many ways to resolve the same type. Luckily, you will **never** have to write out these types by hand. In fact, you will **never** need to write out any types while coding your resolvers. All will be automatically derived from your `uniform` types. All you need to do is to fill in the blanks.
 
 ## Roadmap
 
