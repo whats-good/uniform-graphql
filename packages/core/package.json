@@ -1,11 +1,11 @@
 {
-  "name": "@whatsgood/graphql-ts",
+  "name": "@whatsgood/uniform-graphql",
   "private": false,
   "version": "0.1.2",
   "description": "Create code-first graphql backends in TypeScript with zero type-safety compromise",
   "repository": {
     "type": "git",
-    "url": "https://github.com/whats-good/graphql-ts"
+    "url": "https://github.com/whats-good/uniform-graphql"
   },
   "main": "build/index.js",
   "author": "Kerem Kazan",

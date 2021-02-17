@@ -1,11 +1,11 @@
 {
-  "name": "@whatsgood/graphql-ts-examples",
+  "name": "@whatsgood/uniform-graphql-examples",
   "private": false,
   "version": "0.1.2",
-  "description": "Usage examples for @whatsgood/graphql-ts",
+  "description": "Usage examples for @whatsgood/uniform-graphql",
   "repository": {
     "type": "git",
-    "url": "https://github.com/whats-good/graphql-ts"
+    "url": "https://github.com/whats-good/uniform-graphql"
   },
   "main": "build/index.js",
   "author": "Kerem Kazan",
@@ -18,7 +18,7 @@
     "start": "ts-node ./src/index.ts"
   },
   "dependencies": {
-    "@whatsgood/graphql-ts": "^0.1.2",
+    "@whatsgood/uniform-graphql": "^0.1.2",
     "apollo-server-express": "2.19.0",
     "body-parser": "1.19.0",
     "express": "4.17.1",
