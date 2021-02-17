@@ -12,15 +12,27 @@
 
 </p>
 
-> Create code-first graphql apis in TypeScript with end-to-end type safety.
+Code-first GraphQL apis in TypeScript with end-to-end type safety.
+
+✅ Uniform type system: write once in `TypeScript`, get `GraphQL` schema for free.
+
+✅ Code-first by default, but can be partially used as schema-first.
+
+✅ No code generation. Your code becomes instantly usable.
+
+✅ Sophisticated type system adjusted to the complexities of `GraphQL`.
+
+✅ Single source of truth for your api.
+
+✅ No manual typecasting.
+
+✅ No decorators, no runtime type checking.
+
+⚠️ Disclaimer: This is a very young and unstable library. We’re still at `v0`. We have a pretty robust core, but everything is subject to change.
 
 <!-- ### 🏠 [Homepage](this is the project homepage)
 
 ### ✨ [Demo](this is the project demo url) -->
-
-<!-- // TODO: copy the readme to the core package -->
-
-⚠️ Disclaimer: This is a very young and unstable library. We’re still at `v0`. We have a pretty robust core, but everything is subject to change.
 
 # Install
 
@@ -659,6 +671,8 @@ type Cat implements Pet {
 }
 ```
 
+## Resolvers
+
 ## Roadmap
 
 - Stabilize the `t.scalar` type factory
@@ -670,6 +684,7 @@ type Cat implements Pet {
 - Remove lodash and become `0 dependency`
 - Enable query building through the object syntax: `t.query({ currentUser: ..., todos: ...})` instead of `t.query('currentUser', ...)`
 - Subscriptions support
+- Enable schema-first features: mock an api without implementing it.
 
 ## Acknowledgements
 
