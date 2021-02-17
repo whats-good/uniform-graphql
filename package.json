@@ -1,9 +1,7 @@
 {
   "name": "@whatsgood/uniform-graphql-root",
   "private": false,
-  "scripts": {
-    "propagate-readme": "cp ./README.md ./packages/core/README.md"
-  },
+  "scripts": {},
   "devDependencies": {
     "lerna": "3.22.1",
     "@typescript-eslint/eslint-plugin": "4.6.1",
