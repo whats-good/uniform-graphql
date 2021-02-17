@@ -805,7 +805,7 @@ schemaBuilder.query('user', {
 });
 ```
 
-While this resolver is correctly implemented, it will always pull the `expensive` field, even if the end-user isn’t requesting it. In scenarios like this, we can use `GraphQL`'s deferred resolution feature to avoid doing unnecessary computations. We will harness the power of `thunk`s. A thunk is a function with no arguments, but once called, it will return some wrapped value:
+While this resolver is correctly implemented, it will always pull the `expensive` field, even if the end-user isn’t requesting it. In scenarios like this, we can use `GraphQL`'s deferred resolution feature to avoid doing unnecessary computations. We will harness the power of `thunks`. A `thunk` is a function with no parameters, but once called, it will return some wrapped value:
 
 ```ts
 //...
@@ -820,13 +820,60 @@ schemaBuilder.query('user', {
     return {
       id: user.id,
       fullName: user.fullName,
-      expensiveField: () => {
+      expensiveField: async () => {
+        /**
+         * here, we're deferring the computation of
+         * "expensiveField" throuah an async thunk, so
+         * that it’s only computed when it's necessary.
+         */
         return expensiveThingsStore.findByUserId(args.id);
       },
     };
   },
 });
 ```
+
+### Resolve Function Return Types
+
+GraphQL resolve function return types are pretty complex. Let’s go over a few steps to understand how they work. We will attempt to understand the return type of our resolve function for the `"user"` query from above. We will start simple and gradually arrive at the correct type:
+
+```ts
+type Promisable<T> = T | Promise<T>; // represents T when it may or may not be wrapped in a promise
+
+type Thunk<T> = () => T; // a thunk is a no-param function that wraps a value
+
+type Thunkable<T> = T | Thunk<T>; // represents T when it may or may not be wrapped inside a thunk
+
+// Let’s start with a simple attempt:
+type T1 = {
+  id: string | number;
+  fullName?: string | null | undefined;
+  expensiveField: string;
+};
+
+// This is a slightly more sophisticated type that acknowledges that the result may or may not be a promise
+type T2 = Promisable<{
+  id: string | number;
+  fullName?: string | null | undefined;
+  expensiveField: string;
+}>;
+
+// Almost there. We now cover how the object fields may or may not be thunks
+type T3 = Promisable<{
+  id: Thunkable<string | number>;
+  fullName?: Thunkable<string | null | undefined>;
+  expensiveField: Thunkable<string>;
+}>;
+
+// All thunks may or may not return promises. With that, we have the fully realized return type for our resolver
+type T4 = Promisable<{
+  id: Thunkable<Promisable<string | number>>;
+  fullName?: Thunkable<Promisable<string | null | undefined>>;
+  expensiveField: Thunkable<Promisable<string>>;
+}>;
+```
+
+> As you can see, there are many ways to resolve the same type. Luckily, you will **never** have to write out these types by hand. In fact, you will **never** need to write out any types while coding your resolvers. All will be automatically derived from your unified types. All you need to do is to fill in the blanks.
 
 ## Roadmap
 
