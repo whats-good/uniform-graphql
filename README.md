@@ -666,6 +666,168 @@ type Cat implements Pet {
 
 ## Resolvers
 
+Once you have all your uniform types, you can start building your query and mutation resolvers.
+
+### Schema Builder
+
+Your first step here is initializing your `SchemaBuilder`. This is the object that will stitch all your resolvers and types together to finally give you a `GraphQLSchema`, which you can use in any way you want.
+
+You can initialize your schema builder with a generic type for the GraphQLContext object. In the example below, the context has a `currentUser` object.
+
+```ts
+import { t, SchemaBuilder } from '@whatsgood/uniform-graphql';
+
+type MyGraphQLContext = {
+  currentUser?: {
+    id: string;
+    email: string;
+  };
+};
+
+const schemaBuilder = new SchameBuilder<MyGraphQLContext>();
+```
+
+### Your First Query Resolver
+
+Once you have your `SchemaBuilder`, you can start building queries and mutations. You will use the uniform types you've built. The library will guide you and help you with what you are allowed to return from your resolvers, how you can use the arguments, and the GraphQL context object.
+
+Let’s begin with a simple example: A resolver that simply returns the number `100`.
+
+```ts
+schemaBuilder.query('oneHundred', {
+  type: t.int,
+  resolve: () => {
+    return 100;
+  },
+});
+```
+
+If we served `schemaBuilder.getSchema()`, we would get a fully functional GraphQL Api with the following typedefs:
+
+```graphql
+type Query {
+  oneHundred: Int!
+}
+```
+
+### Arguments
+
+Resolvers become more interesting when they change their behaviors based on user input. Here's a simple example with arguments:
+
+```ts
+schemaBuilder.query('ping', {
+  type: t.string,
+  args: { myNumber: t.int },
+  resolve: (_, args) => {
+    return `Your number is: ${args.myNumber}`;
+  },
+});
+```
+
+Here we have a resolver that returns a string, based on the integer input of its user. The library will make sure that all arguments passed and all resolver return types match exactly to the uniform types. For example, this would be an invalid resolver:
+
+```ts
+/** Invalid resolver example: 1 */
+schemaBuilder.query('ping', {
+  type: t.string,
+  args: { myNumber: t.int },
+  resolve: (_, args) => {
+    return `Your number is: ${args.someOtherNumber}`; // using an arg that doesnt exist
+  },
+});
+
+/** Invalid resolver example: 2 */
+schemaBuilder.query('ping', {
+  type: t.string,
+  args: { myNumber: t.int },
+  resolve: (_, args) => {
+    return 100; // returning a number for a string type
+  },
+});
+
+/** Invalid resolver example: 3 */
+schemaBuilder.query('ping', {
+  type: t.string,
+  args: { myNumber: t.int },
+  resolve: (_, args) => {
+    const a = args.myNumber.length; // args.myNumber is of type number, where .length doesnt exist
+  },
+});
+```
+
+### Async Resolvers
+
+`uniform-graphql` allows async resolvers for any and all types. For example:
+
+```ts
+//...
+
+schemaBuilder.query('numLoggedInUsers', {
+  type: t.int,
+  args: { myNumber: t.int },
+  resolve: async (_, args) => {
+    const usersStore = new UsersStore(); // some way of accessing a database
+    return usersStore.getNumLoggedInUsers();
+  },
+});
+```
+
+### Resolving Object Types
+
+GraphQL provides a ton of flexibility when it comes to resolving object types. We can enjoy all this flexibility in a completely typesafe manner. Let’s begin with a `User` type:
+
+```ts
+//...
+
+const User = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    fullName: t.string.nullable,
+    expensiveField: t.string, // this field is expensive to pull from the DB and serve. If possible, we’d like to avoid pulling it.
+  },
+});
+
+schemaBuilder.query('user', {
+  type: User,
+  args: { id: t.id },
+  resolve: async (_, args) => {
+    const usersStore = new UsersStore();
+    const expensiveThingsStore = new ExpensiveThingsStore();
+    const user = await usersStore.findById(args.id);
+    const expensiveThing = await expensiveThingsStore.findByUserId(args.id);
+    return {
+      id: user.id,
+      fullName: user.fullName,
+      expensiveField: expensiveThing,
+    };
+  },
+});
+```
+
+While this resolver is correctly implemented, it will always pull the `expensive` field, even if the end-user isn’t requesting it. In scenarios like this, we can use `GraphQL`'s deferred resolution feature to avoid doing unnecessary computations. We will harness the power of `thunk`s. A thunk is a function with no arguments, but once called, it will return some wrapped value:
+
+```ts
+//...
+
+schemaBuilder.query('user', {
+  type: User,
+  args: { id: t.id },
+  resolve: async (_, args) => {
+    const usersStore = new UsersStore();
+    const expensiveThingsStore = new ExpensiveThingsStore();
+    const user = await usersStore.findById(args.id);
+    return {
+      id: user.id,
+      fullName: user.fullName,
+      expensiveField: () => {
+        return expensiveThingsStore.findByUserId(args.id);
+      },
+    };
+  },
+});
+```
+
 ## Roadmap
 
 - Stabilize the `t.scalar` type factory
