@@ -1,7 +1,9 @@
 {
   "name": "@whatsgood/uniform-graphql-root",
   "private": false,
-  "scripts": {},
+  "scripts": {
+    "prep": "cd ./packages/core && npm run prep"
+  },
   "devDependencies": {
     "lerna": "3.22.1",
     "@typescript-eslint/eslint-plugin": "4.6.1",
