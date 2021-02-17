@@ -724,7 +724,7 @@ schemaBuilder.query('ping', {
 });
 ```
 
-Here we have a resolver that returns a string, based on the integer input of its user. The library will make sure that all arguments passed and all resolver return types match exactly to the uniform types. For example, this would be an invalid resolver:
+Here we have a resolver that returns a string, based on the integer input of its user. The library will make sure that all arguments passed and all resolver return types match exactly to the uniform types. For example, these would be invalid.
 
 ```ts
 /** Invalid resolver example: 1 */
@@ -766,8 +766,7 @@ schemaBuilder.query('numLoggedInUsers', {
   type: t.int,
   args: { myNumber: t.int },
   resolve: async (_, args) => {
-    const usersStore = new UsersStore(); // some way of accessing a database
-    return usersStore.getNumLoggedInUsers();
+    return usersStore.getNumLoggedInUsers(); // some way of accessing a database
   },
 });
 ```
@@ -784,7 +783,9 @@ const User = t.object({
   fields: {
     id: t.id,
     fullName: t.string.nullable,
-    expensiveField: t.string, // this field is expensive to pull from the DB and serve. If possible, we’d like to avoid pulling it.
+    expensiveField: t.string,
+    // This field is expensive to pull from the DB.
+    // If possible, we’d like to avoid pulling it.
   },
 });
 
@@ -792,8 +793,6 @@ schemaBuilder.query('user', {
   type: User,
   args: { id: t.id },
   resolve: async (_, args) => {
-    const usersStore = new UsersStore();
-    const expensiveThingsStore = new ExpensiveThingsStore();
     const user = await usersStore.findById(args.id);
     const expensiveThing = await expensiveThingsStore.findByUserId(args.id);
     return {
@@ -805,7 +804,7 @@ schemaBuilder.query('user', {
 });
 ```
 
-While this resolver is correctly implemented, it will always pull the `expensive` field, even if the end-user isn’t requesting it. In scenarios like this, we can use `GraphQL`'s deferred resolution feature to avoid doing unnecessary computations. We will harness the power of `thunks`. A `thunk` is a function with no parameters, but once called, it will return some wrapped value:
+While this resolver is correctly implemented, it will always pull the `expensive` field, even if the end-user doesn’t request it. In scenarios like this, we can use `GraphQL`'s deferred resolution feature to avoid doing unnecessary computations. We will harness the power of `thunks`. A `thunk` is a function with no parameters, but once called, it will return some wrapped value:
 
 ```ts
 //...
@@ -823,7 +822,7 @@ schemaBuilder.query('user', {
       expensiveField: async () => {
         /**
          * here, we're deferring the computation of
-         * "expensiveField" throuah an async thunk, so
+         * "expensiveField" through an async thunk, so
          * that it’s only computed when it's necessary.
          */
         return expensiveThingsStore.findByUserId(args.id);
@@ -873,7 +872,7 @@ type T4 = Promisable<{
 }>;
 ```
 
-> As you can see, there are many ways to resolve the same type. Luckily, you will **never** have to write out these types by hand. In fact, you will **never** need to write out any types while coding your resolvers. All will be automatically derived from your `uniform` types. All you need to do is to fill in the blanks.
+> As you can see, there are many ways to resolve the same type. Luckily, you will **never** have to write out these types by hand. In fact, you will **never** need to write out any types while coding your resolvers. All will be automatically derived from your `uniform` types.
 
 ## Roadmap
 
