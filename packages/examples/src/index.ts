@@ -1,6 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import { t, SchemaBuilder } from '@whatsgood/graphql-ts';
+import { t, SchemaBuilder } from '@whatsgood/uniform-graphql';
 // import { SchemaBuilder } from './SchemaBuilder';
 // import { unthunk } from './utils';
 // import { Resolver } from './Resolver';

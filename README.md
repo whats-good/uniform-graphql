@@ -1,4 +1,4 @@
-<h1 align="center">Welcome to graphql-ts 👋</h1>
+<h1 align="center">Welcome to uniform-graphql 👋</h1>
 <p>
   <!-- TODO: add docs and enable this <a href="this is the project documentation url" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
@@ -6,7 +6,7 @@
   <a href="#" target="_blank">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
-  <a href="https://github.com/whats-good/graphql-ts/graphs/commit-activity" target="_blank">
+  <a href="https://github.com/whats-good/uniform-graphql/graphs/commit-activity" target="_blank">
     <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
   </a>
 
@@ -25,19 +25,19 @@
 # Install
 
 ```sh
-npm install @whatsgood/graphql-ts
+npm install @whatsgood/uniform-graphql
 ```
 
 ⚠️ `graphql` is a peer dependency
 
 # Examples
 
-Go to the [examples](https://github.com/whats-good/graphql-ts/tree/master/packages/examples) directory to see a demo
+Go to the [examples](https://github.com/whats-good/uniform-graphql/tree/master/packages/examples) directory to see a demo
 
 # Quickstart
 
 ```ts
-import { t, SchemaBuilder } from '@whatsgood/graphql-ts';
+import { t, SchemaBuilder } from '@whatsgood/uniform-graphql';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 
@@ -146,11 +146,11 @@ app.listen({ port: PORT }, () => {
 
 ## Motivation
 
-GraphQL apis usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL apis create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first apis on the other hand implement the resolvers first and have the typedefs derived from the code. Both approaches have their pros and cons. `graphql-ts` falls somewhere in the middle, but it's closer to the code-first camp.
+GraphQL apis usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL apis create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first apis on the other hand implement the resolvers first and have the typedefs derived from the code. Both approaches have their pros and cons. `uniform-graphql` falls somewhere in the middle, but it's closer to the code-first camp.
 
 The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. Developers can't simply rely on the compiler to make sure that their code will match the generated schema, so they have to resort to other means such as decorators and other runtime checks. But it doesn't have to be that way. As it turns out, this is a perfect job for the compiler.
 
-> tl;dr: Type-safety is concerned with compile time whereas GraphQL schemas are concerned with runtime. What we need is a **unified** approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what `graphql-ts` is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
+> tl;dr: Type-safety is concerned with compile time whereas GraphQL schemas are concerned with runtime. What we need is a **unified** approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what `uniform-graphql` is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
 
 ## Philosophy
 
@@ -163,13 +163,13 @@ While building a GraphQL api, the most common tasks are:
 - Implementing query & mutation resolvers that work on said types
 - Implementing field resolvers on the object types
 
-`graphql-ts` is built with compile time type-safety front and center, making it very hard for you to experience type errors at runtime. You will find a simple, streamlined approach that will guide you end-to-end through the tasks listed above.
+`uniform-graphql` is built with compile time type-safety front and center, making it very hard for you to experience type errors at runtime. You will find a simple, streamlined approach that will guide you end-to-end through the tasks listed above.
 
 ### Non-Null First
 
 In GraphQL, types are `null-first`, which means they are nullable unless explicitly wrapped with a `GraphQLNonNull` type. In `TypeScript` on the other hand, types are `non-null-first`: non-nullable by default unless they are explicitly made nullable. This tension is something that few code-first approaches acknowledge and solve for, which results in schema-code mismatches and general developer pain.
 
-In `graphql-ts`, we side with `TypeScript` when it comes to nullability, because we are a code-first library and we want to play nicely with our programming language. This is why everything is non-nullable unless they are explicitly made nullable.
+In `uniform-graphql`, we side with `TypeScript` when it comes to nullability, because we are a code-first library and we want to play nicely with our programming language. This is why everything is non-nullable unless they are explicitly made nullable.
 
 ```ts
 /** Null-first: Things are nullable by default, unless explicitly made non-nullable */
@@ -193,7 +193,7 @@ const User = new GraphQLObjectType({
 ```ts
 /** Non-null-first: Things are non-nullable by default, unless explicitly made nullable */
 
-import { t } from '@whatsgood/graphql-ts';
+import { t } from '@whatsgood/uniform-graphql';
 
 const User = t.object({
   name: 'User',
@@ -217,7 +217,7 @@ type User {
 
 One of GraphQL's main benefits is the reusability and composability of types. You can create an `enum` type, which you use in an `object` type, which you use in a `list` type, which you use in an `interface` type, which you use in another `object` type, which you use in a `union` type and so on.
 
-In `graphql-ts`, you are able to infinitely compose and reuse your types. This includes [self referential](https://en.wikipedia.org/wiki/Recursive_data_type) and [mutually recursive](https://en.wikipedia.org/wiki/Recursive_data_type) types, while always adhering to our core principle of end-to-end type safety. Keep on reading to see how we handle such use cases.
+In `uniform-graphql`, you are able to infinitely compose and reuse your types. This includes [self referential](https://en.wikipedia.org/wiki/Recursive_data_type) and [mutually recursive](https://en.wikipedia.org/wiki/Recursive_data_type) types, while always adhering to our core principle of end-to-end type safety. Keep on reading to see how we handle such use cases.
 
 ```graphql
 # Self referential type
@@ -257,7 +257,7 @@ The first step in our workflow is creating the `unified types` that will serve a
 
 #### Built-in Scalars
 
-`@graphql-ts` ships with 5 built-in scalars:
+`uniform-graphql` ships with 5 built-in scalars:
 
 |             | TypeScript         | GraphQL    |
 | ----------- | ------------------ | ---------- |
@@ -339,7 +339,7 @@ _Input Types_: All _neutral types_, input objects and lists of _input types_ fal
 - `enum Membership { free, paid, enterprise }`
 - `input SignupArgs { fullName: String!, membership: Membership! }`
 
-In `graphql-ts`, the type system will guide you and make sure that you don’t accidentally mix input types and output types.
+In `uniform-graphql`, the type system will guide you and make sure that you don’t accidentally mix input types and output types.
 
 ### Objects
 
@@ -673,7 +673,7 @@ type Cat implements Pet {
 
 ## Acknowledgements
 
-`graphql-ts` stands on the shoulders of 2 giants:
+`uniform-graphql` stands on the shoulders of 2 giants:
 
 1. [type-graphql](https://github.com/MichalLytek/type-graphql): This is arguably the strongest code-first GraphQL solution for TypeScript. The author is very friendly and helpful, and has managed to create and maintain a great community. I urge you to go check them out and say hi.
 
