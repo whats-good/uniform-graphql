@@ -14,19 +14,14 @@
 
 > Code-first GraphQL apis in TypeScript with complete & robust end-to-end type safety.
 
-- [x] Uniform type system: write once in `TypeScript`, get `GraphQL` schema for free.
+- 🤝 Uniform type system: write once in `TypeScript`, get `GraphQL` schema for free.
+- 👨‍💻 Code-first by default, but can be partially used as schema-first.
+- 🚀 No code generation. Your code becomes instantly usable.
+- 🔬 Sophisticated type system adjusted to the complexities of `GraphQL`.
+- 💡 Single source of truth for your api.
+- 😌 No manual typecasting, no decorators, no runtime type checking.
 
-- [x] Code-first by default, but can be partially used as schema-first.
-
-- [x] No code generation. Your code becomes instantly usable.
-
-- [x] Sophisticated type system adjusted to the complexities of `GraphQL`.
-
-- [x] Single source of truth for your api.
-
-- [x] No manual typecasting, no decorators, no runtime type checking.
-
-- ⚠️︎ Disclaimer: This is a very young and unstable library. We’re still at `v0`. We have a pretty robust core, but everything is subject to change.
+⚠️ Disclaimer: This is a very young and unstable library. We’re still at `v0`. We have a pretty robust core, but everything is subject to change.
 
 <!-- ### 🏠 [Homepage](this is the project homepage)
 
