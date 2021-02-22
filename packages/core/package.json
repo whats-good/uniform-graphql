@@ -24,8 +24,6 @@
   ],
   "scripts": {
     "clean": "rm -rf ./build",
-    "prep": "npm run build && npm run propagate-readme",
-    "propagate-readme": "cp ../../README.md ./README.md",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint '*/**/*.{ts,tsx}'",
     "build": "npm run clean && npm run rebuild",
