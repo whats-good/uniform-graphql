@@ -2,7 +2,7 @@
   "name": "@whatsgood/uniform-graphql",
   "private": false,
   "version": "0.2.3",
-  "description": "Create code-first graphql backends in TypeScript with zero type-safety compromise",
+  "description": "Code-first GraphQL apis in TypeScript with complete & robust end-to-end type safety",
   "repository": {
     "type": "git",
     "url": "https://github.com/whats-good/uniform-graphql"
