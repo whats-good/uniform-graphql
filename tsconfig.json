@@ -1,18 +1,3 @@
 {
-  "compilerOptions": {
-    "target": "es2018",
-    "module": "commonjs",
-    "lib": ["es2018", "esnext.asynciterable"],
-    "alwaysStrict": true, 
-    "strict": true,
-    "preserveConstEnums": true,
-    "skipLibCheck": true,
-    "importHelpers": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "removeComments": false,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "esModuleInterop": true 
-  },
+  "extends": "./tsconfig-base.json",
 }
