@@ -1,0 +1,22 @@
+{
+  "name": "uniform-graphql-documentation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "uniform-graphql Documentation",
+  "author": "Kerem Kazan",
+  "keywords": [
+    "gatsby"
+  ],
+  "scripts": {
+    "develop": "gatsby develop",
+    "start": "gatsby develop",
+    "build": "gatsby build",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean"
+  },
+  "dependencies": {
+    "gatsby": "^2.32.3",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  }
+}
