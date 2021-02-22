@@ -12,4 +12,4 @@ export async function docs(): Promise<void> {
   await execa('cp', ['-a', './packages/website/public', './docs']);
 }
 
-export const publish = series(readme, websiteTasks.build, docs);
+export const prepublish = series(readme, websiteTasks.build, docs);
