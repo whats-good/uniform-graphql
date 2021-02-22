@@ -1,0 +1,62 @@
+---
+title: Input Objects
+description: Learn how to create docs using Rocket Docs.
+---
+
+<!-- TODO: update the description -->
+
+<!-- TODO: break the text blocks and make them more readable -->
+<!-- TODO: codeblock all technical terms -->
+
+With `t.object` out of the way, let’s move on to `t.inputObject`. Use this type factory to create objects to be used inside resolver arguments:
+
+```ts
+/** Creating an input object from neutral types */
+const ProfileArgs = t.inputObject({
+  name: 'SignupArgs',
+  fields: {
+    fullName: t.string.nullable,
+    membership: Membership,
+    email: t.string,
+  },
+});
+
+/** Creating an input object from another input type */
+const UpdateProfileArgs = t.inputObject({
+  name: 'UpdateProfileArgs',
+  fields: {
+    userId: t.id,
+    profile: ProfileArgs,
+  },
+});
+```
+
+```ts
+/** TypeScript */
+
+type ProfileArgs = {
+  fullName: string | null | undefined;
+  membership: Membership;
+  email: string;
+};
+
+type UpdateProfileArgs = {
+  userId: string | number;
+  profile: ProfileArgs;
+};
+```
+
+```graphql
+# GraphQL:
+
+input ProfileArgs {
+  fullName: String;
+  membership: !Membership;
+  email: !String;
+};
+
+input UpdateProfileArgs {
+  userId: !ID;
+  profile: !ProfileArgs;
+};
+```

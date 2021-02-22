@@ -4,7 +4,7 @@ module.exports = {
     defaultTitle: `UniformGraphQL`,
     siteTitleShort: `UniformGraphQL`,
     siteDescription: `Code-first GraphQL apis in TypeScript with complete & robust end-to-end type safety.`,
-    siteUrl: `https://rocketdocs.netlify.com`,
+    siteUrl: `https://rocketdocs.netlify.com`, //TODO: update with actual site url
     siteAuthor: `Kerem Kazan`,
     siteImage: `/banner.png`,
     siteLanguage: `en`,

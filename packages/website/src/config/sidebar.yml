@@ -2,8 +2,34 @@
 
 - label: 'Introduction'
   link: '/'
-- label: 'Getting started'
-  link: '/getting-started'
+- label: 'Quickstart'
+  link: '/quickstart'
+- label: Deep Dive
+  items:
+    - label: 'Motivation'
+      link: '/deep-dive/motivation'
+    - label: 'Philosophy'
+      link: '/deep-dive/philosophy'
+- label: Types
+  items:
+    - label: 'Introduction'
+      link: '/types/introduction'
+    - label: 'Built-in Scalars'
+      link: '/types/built-in-scalars'
+    - label: 'Custom Scalars'
+      link: '/types/custom-scalars'
+    - label: 'Nullability'
+      link: '/types/nullability'
+    - label: 'Enums'
+      link: '/types/enums'
+    - label: 'Input & Output Types'
+      link: '/types/input-and-output-types'
+    - label: 'Objects'
+      link: '/types/objects'
+    - label: 'Lists'
+      link: '/types/lists'
+    - label: 'Input Objects'
+      link: '/types/input-objects'
 - label: Usage
   items:
     - label: 'Creating docs'
@@ -12,13 +38,7 @@
       link: '/usage/navigation'
     - label: 'Shadowing'
       link: '/usage/shadowing'
-- label: More
-  items:
-    - label: FAQ
-      link: /faq
-    - label: Changelog
-      link: /changelog
 - label: Community
   items:
     - label: 'Github'
-      link: https://github.com/rocketseat/gatsby-themes
+      link: https://github.com/whats-good/uniform-graphql

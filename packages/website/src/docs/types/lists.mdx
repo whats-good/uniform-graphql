@@ -1,0 +1,53 @@
+---
+title: Lists
+description: Learn how to create docs using Rocket Docs.
+---
+
+Use the `t.list` type factory to take an existing type and derive a list from it.
+
+```ts
+// Creating a custom object type to be used inside a list in another type:
+const Animal = t.object({
+  name: 'Animal',
+  fields: {
+    id: t.id,
+    name: t.string.nullable,
+    age: t.int,
+    species: t.string,
+  },
+});
+
+// Now, we'll use the Animal type within a list:
+const Person = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    favoriteFoods: t.list(t.string),
+    pets: t.list(Animal),
+  },
+});
+```
+
+```ts
+/** TypeScript */
+type Person = {
+  id: string | number;
+  favoriteFoods: Array<string>;
+  pets: Array<{
+    id: string | number;
+    name: string | null | undefined;
+    age: Int;
+    species: string;
+  }>;
+};
+```
+
+```graphql
+# GraphQL:
+
+type Person {
+  id: ID!
+  favoriteFoods: [String!]!
+  pets: [Animal!]!
+}
+```

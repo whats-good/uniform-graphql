@@ -1,0 +1,110 @@
+---
+title: Philosophy
+description: Learn how to create docs using Rocket Docs.
+---
+
+<!-- TODO: update the description -->
+
+<!-- TODO: break the text blocks and make them more readable -->
+<!-- TODO: codeblock all technical terms -->
+
+<!-- TODO: make the images 100% length, because they look off with respect to the other content -->
+
+<!-- TODO: find a better way to annotate images -->
+
+## End-to-End Type Safety
+
+While building a GraphQL api, the most common tasks are:
+
+- Creating GraphQL types
+- Composing said GraphQL types to create more complex types
+- Implementing query & mutation resolvers that work on said types
+- Implementing field resolvers on the object types
+
+`uniform-graphql` is built with compile time type-safety front and center, making it very hard for you to experience type errors at runtime. You will find a simple, streamlined approach that will guide you end-to-end through the tasks listed above.
+
+## Non-Null First
+
+In GraphQL, types are `null-first`, which means they are nullable unless explicitly wrapped with a `GraphQLNonNull` type. In `TypeScript` on the other hand, types are `non-null-first`: non-nullable by default unless they are explicitly made nullable. This tension is something that few code-first approaches acknowledge and solve for, which results in schema-code mismatches and general developer pain.
+
+In `uniform-graphql`, we side with `TypeScript` when it comes to nullability, because we are a code-first library and we want to play nicely with our programming language. This is why everything is non-nullable unless they are explicitly made nullable.
+
+```ts
+/** Null-first: Things are nullable by default, unless explicitly made non-nullable */
+
+import {
+  GraphQLID,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString,
+} from 'graphql';
+
+const User = new GraphQLObjectType({
+  name: 'User',
+  fields: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    fullName: { type: GraphQLString },
+  },
+});
+```
+
+```ts
+/** Non-null-first: Things are non-nullable by default, unless explicitly made nullable */
+
+import { t } from '@whatsgood/uniform-graphql';
+
+const User = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    fullName: t.string.nullable,
+  },
+});
+```
+
+```graphql
+# Both codes result with the same typedef:
+
+type User {
+  id: ID!
+  fullName: String
+}
+```
+
+## Composability
+
+One of GraphQL's main benefits is the reusability and composability of types. You can create an `enum` type, which you use in an `object` type, which you use in a `list` type, which you use in an `interface` type, which you use in another `object` type, which you use in a `union` type and so on.
+
+In `uniform-graphql`, you are able to infinitely compose and reuse your types. This includes [self referential](https://en.wikipedia.org/wiki/Recursive_data_type) and [mutually recursive](https://en.wikipedia.org/wiki/Recursive_data_type) types, while always adhering to our core principle of end-to-end type safety. Keep on reading to see how we handle such use cases.
+
+```graphql
+# Self referential type
+type User {
+  id: ID!
+  friends: [User]! # type A refers to itself
+}
+
+# Mutually recursive types
+
+type Person {
+  id: ID!
+  pets: [Animal]! # type A refers to type B
+}
+
+type Animal {
+  id: ID!
+  owner: Person! # type B refers to type A
+}
+```
+
+## Uniform Type System
+
+No need to maintain two separate type systems for GraphQL and TypeScript while trying to keep them in sync. Once you create your `uniform` types, all will be taken care of. You will never need to manually type out function parameter types or return types. Everything is inferred from your `uniform` types; all you need to do is to fill in the blanks.
+
+![Code autocompletion for resolvers](https://i.ibb.co/Wvg8Mkp/autocomplete-enum.png)
+
+_Example 1_: The compiler is complaining because the `resolve` function is incorrectly implemented. When we ask for hints on the `membership` field, we are shown that we need to return one of the listed type literals.
+
+![Args types in TypeScript](https://i.ibb.co/BnzKQDW/inferred-args-type.png)
+
+_Example 2_: When we hover over `args.id`, we see that it's a union type between `string` and `number`. All this type information comes directly through the library. While developing our GraphQL api, we don't need to manually write any `TypeScript` types for our resolvers. This inclues the resolver function arguments and the return type.

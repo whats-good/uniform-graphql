@@ -1,0 +1,15 @@
+---
+title: Motivation
+description: Learn how to create docs using Rocket Docs.
+---
+
+<!-- TODO: update the description -->
+
+<!-- TODO: break the text blocks and make them more readable -->
+<!-- TODO: codeblock all technical terms -->
+
+GraphQL apis usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL apis create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first apis on the other hand implement the resolvers first and have the typedefs derived from the code. Both approaches have their pros and cons. `uniform-graphql` falls somewhere in the middle, but it's closer to the code-first camp.
+
+The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. Developers can't simply rely on the compiler to make sure that their code will match the generated schema, so they have to resort to other means such as decorators and other runtime checks. But it doesn't have to be that way. As it turns out, this is a perfect job for the compiler.
+
+> tl;dr: Type-safety is concerned with compile time whereas GraphQL schemas are concerned with runtime. What we need is a **uniform** approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what `uniform-graphql` is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
