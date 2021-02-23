@@ -4,6 +4,10 @@
   "scripts": {
     "prep": "cd ./packages/core && npm run prep"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/whats-good/uniform-graphql"
+  },
   "devDependencies": {
     "@types/gulp": "4.0.8",
     "@typescript-eslint/eslint-plugin": "4.6.1",

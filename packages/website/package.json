@@ -3,6 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/whats-good/uniform-graphql"
+  },
   "dependencies": {
     "@rocketseat/gatsby-theme-docs": "^2.2.4",
     "gatsby": "^2.25.3",

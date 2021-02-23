@@ -1,10 +1,14 @@
+const SITE_URL = `http://uniform-graphql.whatsgood.dog/`; //TODO: update to https
+const SITE_LONG_NAME = 'UniformGraphQL Documentation';
+const SITE_SHORT_NAME = 'UniformGraphQL';
+
 module.exports = {
   siteMetadata: {
-    siteTitle: `UniformGraphQL`,
-    defaultTitle: `UniformGraphQL`,
-    siteTitleShort: `UniformGraphQL`,
+    siteTitle: SITE_LONG_NAME,
+    defaultTitle: SITE_LONG_NAME,
+    siteTitleShort: SITE_SHORT_NAME,
     siteDescription: `Code-first GraphQL apis in TypeScript with complete & robust end-to-end type safety.`,
-    siteUrl: `https://rocketdocs.netlify.com`, //TODO: update with actual site url
+    siteUrl: SITE_URL,
     siteAuthor: `Kerem Kazan`,
     siteImage: `/banner.png`,
     siteLanguage: `en`,
@@ -17,15 +21,15 @@ module.exports = {
       options: {
         configPath: `src/config`,
         docsPath: `src/docs`,
-        githubUrl: `https://github.com/rocketseat/gatsby-themes`,
-        baseDir: `examples/gatsby-theme-docs`,
+        githubUrl: `https://github.com/whats-good/uniform-graphql`,
+        baseDir: `packages/website`,
       },
     },
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: `Rocketseat Gatsby Themes`,
-        short_name: `RS Gatsby Themes`,
+        name: SITE_LONG_NAME,
+        short_name: SITE_SHORT_NAME,
         start_url: `/`,
         background_color: `#ffffff`,
         display: `standalone`,
@@ -36,14 +40,14 @@ module.exports = {
     {
       resolve: `gatsby-plugin-google-analytics`,
       options: {
-        // trackingId: ``,
+        // trackingId: ``, // TODO: add a tracking ID for google analytics
       },
     },
     `gatsby-plugin-remove-trailing-slashes`,
     {
       resolve: `gatsby-plugin-canonical-urls`,
       options: {
-        siteUrl: `https://rocketdocs.netlify.com`,
+        siteUrl: SITE_URL,
       },
     },
     `gatsby-plugin-offline`,
