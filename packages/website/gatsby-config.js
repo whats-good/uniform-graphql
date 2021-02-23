@@ -10,7 +10,7 @@ module.exports = {
     siteDescription: `Code-first GraphQL apis in TypeScript with complete & robust end-to-end type safety.`,
     siteUrl: SITE_URL,
     siteAuthor: `Kerem Kazan`,
-    siteImage: `/banner.png`,
+    siteImage: `/logo.png`, // TODO: design a better banner
     siteLanguage: `en`,
     themeColor: `#8257E6`,
     basePath: `/`,
