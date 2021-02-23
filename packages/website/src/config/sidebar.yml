@@ -6,26 +6,41 @@
   link: '/why-uniform-graphql'
 - label: 'Get Started'
   link: '/get-started'
+# - label: 'Tutorial'
+#   items:
+#     - label: '0. Introduction'
+#       link: '/tutorial/introduction'
+#     - label: '1. Types'
+#       link: '/tutorial/types'
+#     - label: '2. Resolvers'
+#       link: '/tutorial/resolvers'
+#     - label: '3. '
+#       link: '/tutorial/resolvers'
+- label: Resolvers
+  link: '/resolvers'
+
 - label: Types
   items:
     - label: 'Scalars'
       link: '/types/scalars'
-    - label: 'Nullability'
-      link: '/types/nullability'
     - label: 'Enums'
       link: '/types/enums'
-    - label: 'Input & Output Types'
-      link: '/types/input-and-output-types'
     - label: 'Objects'
       link: '/types/objects'
+    - label: 'Input Objects'
+      link: '/types/input-objects'
     - label: 'Lists'
       link: '/types/lists'
     - label: 'Interfaces'
       link: '/types/interfaces'
     - label: 'Unions'
       link: '/types/unions'
-    - label: 'Input Objects'
-      link: '/types/input-objects'
+- label: Further Reading
+  items:
+    - label: 'Nullability'
+      link: '/further-reading/nullability'
+    - label: 'Input & Output Types'
+      link: '/further-reading/input-and-output-types'
 - label: Community
   items:
     - label: 'Github'
