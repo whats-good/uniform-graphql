@@ -2,12 +2,10 @@
 
 - label: 'Introduction'
   link: '/'
-- label: 'Quickstart'
-  link: '/quickstart'
-- label: 'Motivation'
-  link: '/motivation'
-- label: 'Philosophy'
-  link: '/philosophy'
+- label: 'Why UniformGraphQL?'
+  link: '/why-uniform-graphql'
+- label: 'Get Started'
+  link: '/get-started'
 - label: Types
   items:
     - label: 'Built-in Scalars'
