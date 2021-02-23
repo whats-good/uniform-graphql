@@ -12,6 +12,7 @@ export async function readme(): Promise<void> {
 export async function docs(): Promise<void> {
   await execa('rm', ['-rf', './docs']);
   await execa('cp', ['-a', './packages/website/public', './docs']);
+  await execa('cp', ['./CNAME', './docs/CNAME']);
 }
 
 export const prepublish = series(
