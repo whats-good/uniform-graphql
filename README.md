@@ -181,7 +181,6 @@ app.listen({ port: PORT }, () => {
 
 👤 **Kerem Kazan**
 
-- Website: http://whatsgood.dog <!-- TODO: make this https, and actually put something up there  -->
 - Twitter: [@MechanicalKazan](https://twitter.com/MechanicalKazan)
 - Github: [@mechanical-turk](https://github.com/mechanical-turk)
 - LinkedIn: [@keremkazan](https://linkedin.com/in/keremkazan)
