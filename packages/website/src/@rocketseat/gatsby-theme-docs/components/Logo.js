@@ -1,3 +1,3 @@
 import React from 'react';
 
-export default () => <div>UniformGraphQL</div>;
+export default () => <img style={{ width: '100%' }} src="/logo.png" />;
