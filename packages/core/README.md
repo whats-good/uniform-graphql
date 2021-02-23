@@ -1,4 +1,9 @@
-<h1 align="center">Welcome to Uniform GraphQL 👋</h1>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/whats-good/uniform-graphql/master/packages/website/static/logo.png">
+</p>
+
+# UniformGraphQL
+
 <p>
   <a href="https://www.npmjs.com/package/@whatsgood/uniform-graphql" target="_blank">
     <img alt="Version" src="https://img.shields.io/npm/v/@whatsgood/uniform-graphql.svg">
