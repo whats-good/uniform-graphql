@@ -4,8 +4,8 @@
 <url> <loc>http://uniform-graphql.whatsgood.dog/get-started</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>http://uniform-graphql.whatsgood.dog/resolvers</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>http://uniform-graphql.whatsgood.dog/why-uniform-graphql</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
-<url> <loc>http://uniform-graphql.whatsgood.dog/types/enums</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>http://uniform-graphql.whatsgood.dog/types/input-objects</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
+<url> <loc>http://uniform-graphql.whatsgood.dog/types/enums</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>http://uniform-graphql.whatsgood.dog/types/interfaces</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>http://uniform-graphql.whatsgood.dog/types/lists</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>http://uniform-graphql.whatsgood.dog/types/objects</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
