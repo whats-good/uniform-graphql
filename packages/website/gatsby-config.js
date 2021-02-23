@@ -25,6 +25,17 @@ module.exports = {
         baseDir: `packages/website`,
       },
     },
+    {
+      resolve: `gatsby-plugin-manifest`,
+      options: {
+        name: SITE_LONG_NAME,
+        short_name: SITE_SHORT_NAME,
+        start_url: `/`,
+        background_color: `#ffffff`,
+        display: `standalone`,
+        icon: `static/favicon.png`,
+      },
+    },
     `gatsby-plugin-sitemap`,
     {
       resolve: `gatsby-plugin-google-analytics`,
