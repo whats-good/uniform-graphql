@@ -12,8 +12,6 @@
       link: '/deep-dive/philosophy'
 - label: Types
   items:
-    - label: 'Introduction'
-      link: '/types/introduction'
     - label: 'Built-in Scalars'
       link: '/types/built-in-scalars'
     - label: 'Custom Scalars'
@@ -30,14 +28,6 @@
       link: '/types/lists'
     - label: 'Input Objects'
       link: '/types/input-objects'
-- label: Usage
-  items:
-    - label: 'Creating docs'
-      link: '/usage/creating-docs'
-    - label: 'Navigation'
-      link: '/usage/navigation'
-    - label: 'Shadowing'
-      link: '/usage/shadowing'
 - label: Community
   items:
     - label: 'Github'
