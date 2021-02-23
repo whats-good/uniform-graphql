@@ -21,7 +21,7 @@
 
 > Code-first GraphQL apis in TypeScript with complete & robust end-to-end type safety.
 
-🏠 Docs: [http://uniform-graphql.whatsgood.dog](http://uniform-graphql.whatsgood.dog)
+🏠 Docs: [https://uniform-graphql.whatsgood.dog](http://uniform-graphql.whatsgood.dog)
 
 ## Features
 
