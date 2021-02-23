@@ -8,10 +8,8 @@
   link: '/get-started'
 - label: Types
   items:
-    - label: 'Built-in Scalars'
-      link: '/types/built-in-scalars'
-    - label: 'Custom Scalars'
-      link: '/types/custom-scalars'
+    - label: 'Scalars'
+      link: '/types/scalars'
     - label: 'Nullability'
       link: '/types/nullability'
     - label: 'Enums'
@@ -22,6 +20,10 @@
       link: '/types/objects'
     - label: 'Lists'
       link: '/types/lists'
+    - label: 'Interfaces'
+      link: '/types/interfaces'
+    - label: 'Unions'
+      link: '/types/unions'
     - label: 'Input Objects'
       link: '/types/input-objects'
 - label: Community

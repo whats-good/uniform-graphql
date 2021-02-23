@@ -1,5 +1,5 @@
 ---
-title: Built-in Scalars
+title: Scalars
 description: Learn how to create docs using Rocket Docs.
 ---
 
@@ -7,6 +7,8 @@ description: Learn how to create docs using Rocket Docs.
 
 <!-- TODO: break the text blocks and make them more readable -->
 <!-- TODO: codeblock all technical terms -->
+
+## Built-In Scalars
 
 The first step in our workflow is creating the `uniform types` that will serve as the building blocks for our api. These will serve two purposes: GraphQL schema generation, and compile time type safety for our resolvers. Let's begin with the built-in scalars.
 
@@ -19,3 +21,9 @@ The first step in our workflow is creating the `uniform types` that will serve a
 | `t.int`     | `number`           | `Int!`     |
 | `t.id`      | `string \| number` | `ID!`      |
 | `t.boolean` | `boolean`          | `Boolean!` |
+
+## Custom Scalars
+
+<!-- TODO: nail the custom scalars -->
+
+Use the `t.scalar` type factory to create custom scalars, which will carry both runtime and compile time type information just like any other type in our system.
