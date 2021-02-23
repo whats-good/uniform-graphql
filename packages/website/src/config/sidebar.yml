@@ -4,12 +4,10 @@
   link: '/'
 - label: 'Quickstart'
   link: '/quickstart'
-- label: Deep Dive
-  items:
-    - label: 'Motivation'
-      link: '/deep-dive/motivation'
-    - label: 'Philosophy'
-      link: '/deep-dive/philosophy'
+- label: 'Motivation'
+  link: '/motivation'
+- label: 'Philosophy'
+  link: '/philosophy'
 - label: Types
   items:
     - label: 'Built-in Scalars'
