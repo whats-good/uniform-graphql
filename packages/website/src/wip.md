@@ -32,8 +32,6 @@ npm install @whatsgood/uniform-graphql
 
 Go to the [examples](https://github.com/whats-good/uniform-graphql/tree/master/packages/examples) directory to see a demo
 
-# Quickstart
-
 ## Recommended TSConfig
 
 ```json
@@ -46,36 +44,6 @@ Go to the [examples](https://github.com/whats-good/uniform-graphql/tree/master/p
   }
 }
 ```
-
-# Deep Dive
-
-## Motivation
-
-## Philosophy
-
-## Types
-
-#### Built-in Scalars
-
-### Nullability
-
-### Custom Scalars
-
-### Enums
-
-### Input & Output Types
-
-### Objects
-
-### Lists
-
-### Input Objects
-
-### Unions
-
-### Interfaces
-
-## Resolvers
 
 ## Roadmap
 

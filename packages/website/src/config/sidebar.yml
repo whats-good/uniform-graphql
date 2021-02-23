@@ -6,18 +6,10 @@
   link: '/why-uniform-graphql'
 - label: 'Get Started'
   link: '/get-started'
-# - label: 'Tutorial'
-#   items:
-#     - label: '0. Introduction'
-#       link: '/tutorial/introduction'
-#     - label: '1. Types'
-#       link: '/tutorial/types'
-#     - label: '2. Resolvers'
-#       link: '/tutorial/resolvers'
-#     - label: '3. '
-#       link: '/tutorial/resolvers'
-- label: Resolvers
-  link: '/resolvers'
+- label: 'Tutorial'
+  items:
+    - label: 1. Resolvers
+      link: '/resolvers'
 
 - label: Types
   items:
