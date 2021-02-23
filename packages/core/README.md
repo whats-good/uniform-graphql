@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/whats-good/uniform-graphql/master/packages/website/static/logo.png">
+  <img src="https://raw.githubusercontent.com/whats-good/uniform-graphql/master/packages/website/static/logo_transparent.png">
 </p>
 
 # UniformGraphQL
