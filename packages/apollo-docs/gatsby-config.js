@@ -1,16 +1,21 @@
-const themeOptions = require('gatsby-theme-apollo-docs/theme-options');
-
 module.exports = {
-  pathPrefix: '/docs',
   plugins: [
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
-        ...themeOptions,
+        pathPrefix: '/docs',
+        siteName: 'Uniform GraphQL Docs',
+        // gaTrackingId: 'UA-74643563-13', // TODO: fix
+        // algoliaApiKey: '768e823959d35bbd51e4b2439be13fb7', // TODO: fix
+        // algoliaIndexName: 'apollodata', TODO: fix
+        baseUrl: 'https://uniform-graphql.whatsgood.dog',
+        twitterHandle: 'MechanicalKazan',
+        baseDir: 'docs',
+        contentDir: 'source',
         root: __dirname,
-        subtitle: 'Apollo Basics',
+        // subtitle: 'Apollo Basics',
         description: 'How to use the Apollo GraphQL platform',
-        githubRepo: 'apollographql/apollo',
+        githubRepo: 'whats-good/uniform-graphql',
         spectrumPath: '/',
         sidebarCategories: {
           null: ['index', 'intro/platform', 'intro/benefits'],
