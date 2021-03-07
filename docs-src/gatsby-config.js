@@ -10,7 +10,7 @@ module.exports = {
         // algoliaIndexName: 'apollodata', TODO: fix
         baseUrl: 'https://uniform-graphql.whatsgood.dog',
         twitterHandle: 'MechanicalKazan',
-        baseDir: 'docs',
+        baseDir: 'docs-src',
         contentDir: 'source',
         root: __dirname,
         description: 'How to use the Uniform GraphQL Library',
