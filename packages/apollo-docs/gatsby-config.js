@@ -28,6 +28,10 @@ module.exports = {
             'types/interfaces',
             'types/unions',
           ],
+          'Further Reading': [
+            'further-reading/nullability',
+            'further-reading/input-and-output-types',
+          ],
         },
       },
     },
