@@ -6,19 +6,16 @@ import { ReactComponent as FederationIcon } from '../assets/federation.svg';
 import { IconSatellite3 } from '@apollo/space-kit/icons/IconSatellite3';
 import { IconSchema } from '@apollo/space-kit/icons/IconSchema';
 import { ReactComponent as ReactLogo } from '../assets/react-logo.svg';
-import {
-  NavItemsContext,
-  NavItemDescription
-} from 'gatsby-theme-apollo-docs';
+import { NavItemsContext, NavItemDescription } from 'gatsby-theme-apollo-docs';
 import { colors } from '@apollo/space-kit/colors';
 import { size } from 'polished';
 import { MenuWrapper, MenuItem } from './menu';
 
 function getBoxShadow(opacity, y, blur) {
-  return `rgba(18, 21, 26, ${opacity}) 0 ${y}px ${blur}px`
+  return `rgba(18, 21, 26, ${opacity}) 0 ${y}px ${blur}px`;
 }
 
-const {indigo} = colors;
+const { indigo } = colors;
 const AppIcon = styled.div({
   ...size('100%'),
   display: 'flex',
@@ -28,32 +25,32 @@ const AppIcon = styled.div({
     getBoxShadow(0.12, 1, 2),
     getBoxShadow(0.1, 2, 4),
     getBoxShadow(0.08, 5, 10),
-    `inset rgba(45, 31, 102, 0.4) 0 -1px 2px`
+    `inset rgba(45, 31, 102, 0.4) 0 -1px 2px`,
   ].toString(),
   borderRadius: 8,
   color: indigo.lighter,
   backgroundImage: `linear-gradient(${[indigo.base, indigo.dark]})`,
   svg: {
     ...size(16),
-    fill: 'currentColor'
-  }
+    fill: 'currentColor',
+  },
 });
 
 const StyledLink = styled.a({
   color: 'inherit',
   textDecoration: 'none',
   ':hover': {
-    textDecoration: 'underline'
-  }
+    textDecoration: 'underline',
+  },
 });
 
 const icons = [
   <ReactLogo />,
-  <AppleLogo style={{paddingBottom: 1}} />,
+  <AppleLogo style={{ paddingBottom: 1 }} />,
   <AndroidLogo />,
   <IconSatellite3 weight="thin" />,
   <FederationIcon />,
-  <IconSchema weight="thin" />
+  <IconSchema weight="thin" />,
 ];
 
 export default function DocsetMenu() {
@@ -65,16 +62,8 @@ export default function DocsetMenu() {
         .map((navItem, index) => (
           <MenuItem
             key={navItem.url}
-            icon={(
-              <AppIcon>
-                {icons[index]}
-              </AppIcon>
-            )}
-            title={(
-              <StyledLink href={navItem.url}>
-                {navItem.title}
-              </StyledLink>
-            )}
+            icon={<AppIcon>{icons[index]}</AppIcon>}
+            title={<StyledLink href={navItem.url}>{navItem.title}</StyledLink>}
           >
             <NavItemDescription>{navItem.description}</NavItemDescription>
           </MenuItem>
