@@ -31,16 +31,16 @@ module.exports = {
             'tutorial/mutations',
             'tutorial/local-state',
           ],
-          'Development Tools': [
-            'devtools/cli',
-            'devtools/editor-plugins',
-            'devtools/apollo-config',
-          ],
-          Resources: [
-            '[Principled GraphQL](https://principledgraphql.com)',
-            'resources/graphql-glossary',
-            'resources/faq',
-          ],
+          // 'Development Tools': [
+          //   'devtools/cli',
+          //   'devtools/editor-plugins',
+          //   'devtools/apollo-config',
+          // ],
+          // Resources: [
+          //   '[Principled GraphQL](https://principledgraphql.com)',
+          //   'resources/graphql-glossary',
+          //   'resources/faq',
+          // ],
         },
       },
     },
