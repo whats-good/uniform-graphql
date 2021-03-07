@@ -30,7 +30,6 @@ const Wrapper = styled.header({
 const InnerWrapper = styled.div({
   display: 'flex',
   alignItems: 'center',
-  // height: HEADER_HEIGHT,
   padding: '0 56px',
   backgroundColor: 'white',
   [breakpoints.md]: {

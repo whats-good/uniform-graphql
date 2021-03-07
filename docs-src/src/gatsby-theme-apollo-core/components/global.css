@@ -1,3 +1,3 @@
 .sidebar > span:first-child {
-  display: none;
+  font-weight: bold !important;
 }

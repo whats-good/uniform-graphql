@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import './global.css';
 
 export default function SEO(props) {
   const { title, description, siteName, twitterCard, children } = props;
