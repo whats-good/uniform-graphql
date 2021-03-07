@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from '@emotion/styled';
+import { ReactComponent as ReactLogo } from '../../../static/logo.svg';
 
 const Wrapper = styled.div({
   display: 'flex',
@@ -9,12 +10,7 @@ const Wrapper = styled.div({
 export default function Logo() {
   return (
     <Wrapper>
-      <img
-        style={{
-          width: '100%',
-        }}
-        src="/logo.svg"
-      />
+      <ReactLogo style={{ width: '100%' }} />
     </Wrapper>
   );
 }

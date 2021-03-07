@@ -1,7 +1,8 @@
 import React from 'react';
+import { ReactComponent as ReactIcon } from '../../../static/icon.svg';
 
 export const MobileLogo = () => (
-  <img
+  <ReactIcon
     style={{
       margin: 0,
       width: 44,
