@@ -15,7 +15,7 @@ export default function Logo() {
         style={{
           width: '100%',
         }}
-        src="/logo-01.svg"
+        src="/logo.svg"
       />
     </Wrapper>
   );

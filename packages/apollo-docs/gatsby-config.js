@@ -3,7 +3,7 @@ module.exports = {
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
-        pathPrefix: '/docs',
+        // pathPrefix: '/docs', // TODO: check if this is necessary
         siteName: 'Uniform GraphQL Docs',
         // gaTrackingId: 'UA-74643563-13', // TODO: fix
         // algoliaApiKey: '768e823959d35bbd51e4b2439be13fb7', // TODO: fix
@@ -13,34 +13,11 @@ module.exports = {
         baseDir: 'docs',
         contentDir: 'source',
         root: __dirname,
-        // subtitle: 'Apollo Basics',
-        description: 'How to use the Apollo GraphQL platform',
+        description: 'How to use the Uniform GraphQL Library',
         githubRepo: 'whats-good/uniform-graphql',
         spectrumPath: '/',
         sidebarCategories: {
-          null: ['index', 'intro/platform', 'intro/benefits'],
-          Tutorial: [
-            'tutorial/introduction',
-            'tutorial/schema',
-            'tutorial/data-source',
-            'tutorial/resolvers',
-            'tutorial/mutation-resolvers',
-            'tutorial/production',
-            'tutorial/client',
-            'tutorial/queries',
-            'tutorial/mutations',
-            'tutorial/local-state',
-          ],
-          // 'Development Tools': [
-          //   'devtools/cli',
-          //   'devtools/editor-plugins',
-          //   'devtools/apollo-config',
-          // ],
-          // Resources: [
-          //   '[Principled GraphQL](https://principledgraphql.com)',
-          //   'resources/graphql-glossary',
-          //   'resources/faq',
-          // ],
+          null: ['index'],
         },
       },
     },
