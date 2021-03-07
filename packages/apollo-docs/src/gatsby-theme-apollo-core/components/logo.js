@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { ApolloIcon } from '@apollo/space-kit/icons/ApolloIcon';
 
 const Wrapper = styled.div({
   display: 'flex',
@@ -10,7 +9,6 @@ const Wrapper = styled.div({
 export default function Logo() {
   return (
     <Wrapper>
-      {/* <StyledApolloIcon /> */}
       <img
         style={{
           width: '100%',
