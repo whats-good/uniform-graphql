@@ -1,6 +1,6 @@
 import execa from 'execa';
 import { series } from 'gulp';
-import * as websiteTasks from './packages/website/gulpfile';
+import * as websiteTasks from './docs-src/gulpfile';
 import * as coreTasks from './packages/core/gulpfile';
 
 // Propagates readme down into the core package
