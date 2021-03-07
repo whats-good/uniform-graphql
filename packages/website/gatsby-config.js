@@ -1,53 +1,38 @@
-const SITE_URL = `http://uniform-graphql.whatsgood.dog/`; //TODO: update to https
-const SITE_LONG_NAME = 'UniformGraphQL Documentation';
-const SITE_SHORT_NAME = 'UniformGraphQL';
-
 module.exports = {
-  siteMetadata: {
-    siteTitle: SITE_LONG_NAME,
-    defaultTitle: SITE_LONG_NAME,
-    siteTitleShort: SITE_SHORT_NAME,
-    siteDescription: `Code-first GraphQL apis in TypeScript with complete & robust end-to-end type safety.`,
-    siteUrl: SITE_URL,
-    siteAuthor: `Kerem Kazan`,
-    siteImage: `/logo.png`, // TODO: design a better banner
-    siteLanguage: `en`,
-    themeColor: `#8257E6`,
-    basePath: `/`,
-  },
   plugins: [
     {
-      resolve: `@rocketseat/gatsby-theme-docs`,
+      resolve: 'gatsby-theme-apollo-docs',
       options: {
-        configPath: `src/config`,
-        docsPath: `src/docs`,
-        githubUrl: `https://github.com/whats-good/uniform-graphql`,
-        baseDir: `packages/website`,
-      },
-    },
-    {
-      resolve: `gatsby-plugin-manifest`,
-      options: {
-        name: SITE_LONG_NAME,
-        short_name: SITE_SHORT_NAME,
-        start_url: `/`,
-        background_color: `#ffffff`,
-        display: `standalone`,
-        icon: `static/favicon_2_transparent.png`,
-      },
-    },
-    `gatsby-plugin-sitemap`,
-    {
-      resolve: `gatsby-plugin-google-analytics`,
-      options: {
-        // trackingId: ``, // TODO: add a tracking ID for google analytics
-      },
-    },
-    `gatsby-plugin-remove-trailing-slashes`,
-    {
-      resolve: `gatsby-plugin-canonical-urls`,
-      options: {
-        siteUrl: SITE_URL,
+        // pathPrefix: '/docs', // TODO: check if this is necessary
+        siteName: 'Uniform GraphQL Docs',
+        // gaTrackingId: 'UA-74643563-13', // TODO: fix
+        // algoliaApiKey: '768e823959d35bbd51e4b2439be13fb7', // TODO: fix
+        // algoliaIndexName: 'apollodata', TODO: fix
+        baseUrl: 'https://uniform-graphql.whatsgood.dog',
+        twitterHandle: 'MechanicalKazan',
+        baseDir: 'docs',
+        contentDir: 'source',
+        root: __dirname,
+        description: 'How to use the Uniform GraphQL Library',
+        githubRepo: 'whats-good/uniform-graphql',
+        spectrumPath: '/',
+        sidebarCategories: {
+          null: ['index', 'get-started', 'why-uniform-graphql'],
+          Tutorial: ['tutorial/resolvers'],
+          Types: [
+            'types/scalars',
+            'types/enums',
+            'types/objects',
+            'types/input-objects',
+            'types/lists',
+            'types/interfaces',
+            'types/unions',
+          ],
+          'Further Reading': [
+            'further-reading/nullability',
+            'further-reading/input-and-output-types',
+          ],
+        },
       },
     },
   ],
