@@ -17,7 +17,17 @@ module.exports = {
         githubRepo: 'whats-good/uniform-graphql',
         spectrumPath: '/',
         sidebarCategories: {
-          null: ['index'],
+          null: ['index', 'get-started', 'why-uniform-graphql'],
+          Tutorial: ['tutorial/resolvers'],
+          Types: [
+            'types/scalars',
+            'types/enums',
+            'types/objects',
+            'types/input-objects',
+            'types/lists',
+            'types/interfaces',
+            'types/unions',
+          ],
         },
       },
     },

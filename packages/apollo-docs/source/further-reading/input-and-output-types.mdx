@@ -1,0 +1,41 @@
+---
+title: Input & Output Types
+description: Learn how to create docs using Rocket Docs.
+---
+
+<!-- TODO: This page should be removed and put into a different subcategory -->
+<!-- TODO: update the description -->
+
+<!-- TODO: break the text blocks and make them more readable -->
+<!-- TODO: codeblock all technical terms -->
+
+GraphQL makes a clear distinction between input and output types. Input types are concerned with the arguments to our resolvers, and output types are concerned with what we return from our resolvers. Certain types such as scalars can appear both as an input or an output type. However, many input and output types are mutually exclusive.
+
+## Neutral Types
+
+All scalars, enums, and lists of _neutral types_ fall under this category. For example:
+
+- `String`
+- `Float!`
+- `enum Membership { free, paid, enterprise }`
+- `[String]`
+- `[Membership!]`
+
+## Output Types
+
+All _neutral types_, objects, unions, interfaces, and lists of _output types_ fall under this category. The fields of an object type may only be other _output types_. For example:
+
+- `String`
+- `enum Membership { free, paid, enterprise }`
+- `type User { id: ID!, membership: Membership! }`
+- `[User]`
+
+## Input Types
+
+All _neutral types_, input objects and lists of _input types_ fall under this category. The fields of an `input object` type may only be other _input types_
+
+- `String`
+- `enum Membership { free, paid, enterprise }`
+- `input SignupArgs { fullName: String!, membership: Membership! }`
+
+In `uniform-graphql`, the type system will guide you and make sure that you don’t accidentally mix input types and output types.

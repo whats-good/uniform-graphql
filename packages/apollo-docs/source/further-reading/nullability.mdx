@@ -1,0 +1,22 @@
+---
+title: Nullability
+description: Learn how to create docs using Rocket Docs.
+---
+
+<!-- TODO: update the description -->
+
+<!-- TODO: break the text blocks and make them more readable -->
+<!-- TODO: codeblock all technical terms -->
+
+<!-- TODO: explain more here -->
+<!-- TODO: remove the codeblocks for these, as they look off -->
+
+All types, including user-made ones, will have a `.nullable` property, which will make a type nullable both at runtime for `GraphQL` and compile time for `TypeScript`. For example:
+
+|                      | TypeScript                              | GraphQL   |
+| -------------------- | --------------------------------------- | --------- |
+| `t.string.nullable`  | `string \| null \| undefined`           | `String`  |
+| `t.float.nullable`   | `number \| null \| undefined`           | `Float`   |
+| `t.int.nullable`     | `number \| null \| undefined`           | `Int`     |
+| `t.id.nullable`      | `string \| number \| null \| undefined` | `ID`      |
+| `t.boolean.nullable` | `boolean \| null \| undefined`          | `Boolean` |

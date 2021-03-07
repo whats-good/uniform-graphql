@@ -1,0 +1,104 @@
+---
+title: 'Get Started'
+description: Learn how to get started with Rocket Docs.
+---
+
+<!-- TODO: update the description -->
+
+<!-- TODO: break the text blocks and make them more readable -->
+<!-- TODO: codeblock all technical terms -->
+
+<!-- TODO: break the code blocks into smaller ones and explain them. -->
+
+```ts
+import { t, SchemaBuilder } from '@whatsgood/uniform-graphql';
+import { ApolloServer } from 'apollo-server-express';
+import express from 'express';
+
+const Membership = t.enum({
+  name: 'Membership',
+  values: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
+
+const Animal = t.object({
+  name: 'Animal',
+  fields: {
+    id: t.id,
+    age: t.integer,
+    name: t.string,
+  },
+});
+
+const User = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    fullName: t.string.nullable,
+    membership: Membership,
+    pets: t.list(Animal),
+  },
+});
+
+const schemaBuilder = new SchemaBuilder();
+
+schemaBuilder.query('user', {
+  type: User,
+  args: {
+    id: t.id,
+  },
+  resolve: async (_, args, context) => {
+    return {
+      id: args.id,
+      fullName: () => 'John Johnson',
+      membership: 'enterprise' as const,
+      pets: async () => [
+        {
+          name: 'Lulu',
+          id: 'cat-1',
+          age: 10,
+        },
+      ],
+    };
+  },
+});
+
+schemaBuilder.mutation('signup', {
+  type: User,
+  args: {
+    email: t.string,
+  },
+  resolve: (_, args, context) => {
+    return {
+      id: 'newly signedup user id',
+      fullName: 'newly signed up user name',
+      membership: 'free' as const,
+      pets: [],
+    };
+  },
+});
+
+schemaBuilder.fieldResolvers(User, {
+  fullName: async (root) => {
+    return 'overriding fullname';
+  },
+});
+
+const apolloServer = new ApolloServer({
+  schema: schemaBuilder.getSchema();
+});
+
+const PORT = 4001;
+
+const app = express();
+apolloServer.applyMiddleware({ app });
+
+app.listen({ port: PORT }, () => {
+  console.log(
+    `🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`,
+  );
+});
+```
