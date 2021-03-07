@@ -3,14 +3,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet';
 
 export default function SEO(props) {
-  const {
-    title,
-    description,
-    siteName,
-    twitterCard,
-    children,
-    favicon,
-  } = props;
+  const { title, description, siteName, twitterCard, children } = props;
   return (
     <Helmet>
       <title>{title}</title>
@@ -20,7 +13,7 @@ export default function SEO(props) {
       <meta name="twitter:card" content={twitterCard} />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      <link rel="icon" href={favicon} />
+      <link rel="icon" href="/favicon.svg" />
       {children}
     </Helmet>
   );
@@ -32,10 +25,4 @@ SEO.propTypes = {
   siteName: PropTypes.string.isRequired,
   twitterCard: PropTypes.string,
   children: PropTypes.node,
-  favicon: PropTypes.string,
-};
-
-SEO.defaultProps = {
-  twitterCard: 'summary',
-  favicon: 'https://apollographql.com/favicon.ico',
 };
