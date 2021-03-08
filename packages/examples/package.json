@@ -14,8 +14,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint '*/**/*.{ts,tsx}'",
     "build": "tsc -p ./tsconfig.json",
-    "debug": "ts-node ./src/index.ts",
-    "start": "ts-node ./src/index.ts"
+    "debug": "ts-node-dev ./src/index.ts",
+    "start": "ts-node-dev --respawn ./src/index.ts"
   },
   "dependencies": {
     "@whatsgood/uniform-graphql": "^0.2.5",
@@ -25,7 +25,7 @@
     "tslib": "2.1.0"
   },
   "devDependencies": {
-    "ts-node": "file:../../node_modules/ts-node",
+    "ts-node-dev": "file:../../node_modules/ts-node",
     "tsd": "file:../../node_modules/tsd",
     "typescript": "file:../../node_modules/typescript"
   }

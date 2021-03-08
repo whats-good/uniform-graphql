@@ -8,7 +8,7 @@ export async function clean(): Promise<void> {
 }
 
 export async function quickBuild(): Promise<void> {
-  await execa('npm', ['run', 'rebuild'], {
+  await execa('tsc', {
     cwd: __dirname,
   });
 }
