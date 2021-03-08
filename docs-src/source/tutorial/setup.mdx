@@ -8,14 +8,14 @@ description: Installing dependencies and configuring your environment.
 
 ## Dependencies
 
-We have `graphql` as a peer dependency, and we recommend installing `tslib` for optimizing bundle sizes and performance. You'll need `TypeScript` to run our library. We also recommend installing `ts-node` to have a more seamless developer experience.
+We have `graphql` as a peer dependency, and we recommend installing `tslib` for optimizing bundle sizes and performance. You'll need `TypeScript` to run our library. We also recommend installing `ts-node-dev` to have a more seamless developer experience.
 
 ```bash
 # Instaling our library and two runtime dependencies:
 npm install @whatsgood/uniform-graphql graphql tslib
 
 # Installing our dev-dependencies:
-npm install --save-dev ts-node typescript
+npm install --save-dev ts-node-dev typescript
 ```
 
 ## Recommended TSConfig
@@ -35,6 +35,39 @@ npm install --save-dev ts-node typescript
     "importHelpers": true,
     "noImplicitReturns": true,
     "noImplicitThis": true
+  }
+}
+```
+
+## GraphQL Server
+
+In this tutorial, you will be building a schema through `Uniform GraphQL`, which you will serve through a `GraphQL` server of your choosing. We recommend `Apollo Server`.
+
+```bash
+# Installing Apollo Server and its peer dependency: express
+npm install apollo-server-express express
+```
+
+## Running Your Server
+
+If you've installed `ts-node-dev`, you will be able to run your server in watch mode, which will keep seemlessly restarting the server process whenever it detects a file change. We recommend adding `ts-node-dev` script to your `package.json`. When you're done, you should have a `package.json` that roughly looks like this:
+
+```json
+{
+  // ...
+  "scripts": {
+    "start": "ts-node-dev --respawn ./src/index.ts"
+  },
+  "dependencies": {
+    "@whatsgood/uniform-graphql": "0.2.5",
+    "apollo-server-express": "2.19.0",
+    "express": "4.17.1",
+    "tslib": "2.1.0",
+    "graphql": "15.5.0"
+  },
+  "devDependencies": {
+    "typescript": "4.2.3",
+    "ts-node-dev": "1.1.6"
   }
 }
 ```
