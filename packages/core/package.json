@@ -8,6 +8,7 @@
     "url": "https://github.com/whats-good/uniform-graphql"
   },
   "main": "build/index.js",
+  "types": "build/index.d.ts",
   "author": "Kerem Kazan",
   "license": "MIT",
   "keywords": [
