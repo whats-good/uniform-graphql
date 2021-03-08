@@ -4,19 +4,16 @@ import { t, SchemaBuilder } from '@whatsgood/uniform-graphql';
 
 const schemaBuilder = new SchemaBuilder();
 
+schemaBuilder.query('hello', {
+  type: t.string,
+  resolve: () => 'world',
+});
+
 schemaBuilder.query('favoriteInteger', {
   type: t.int,
   resolve: () => 999,
 });
 
-/**
- *
- *
- *
- *
- *
- *
- */
 schemaBuilder.query('favoriteFloat', {
   type: t.float,
   resolve: () => 999.999,

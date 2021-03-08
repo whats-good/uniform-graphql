@@ -4,7 +4,7 @@ sidebar_title: '1. Custom Types'
 description: Learn how to create and use your own custom types
 ---
 
-You might have noticed that we are using this `t.string` value to communicate the resolve type of our `hello` query. `Uniform GraphQL` ships with 5 built-in [scalars](/types/scalars) including `t.string`. Let's use them to improve upon our [Hello World](/tutorial/setup/#hello-world) example.
+You might have noticed that we are using this `t.string` value to communicate the resolve type of our `hello` query. That's just one of the many types you can use in `Uniform GraphQL`. Let's use more types to improve upon our [Hello World](/tutorial/setup/#hello-world) example.
 
 ## Type Safety
 
@@ -69,3 +69,43 @@ schemaBuilder.query('anotherIdExample', {
 Copy the lines above into your `index.ts` and navigate to your playground. Go ahead and send a query that covers your entire schema. If what you see matches the screenshot below, proceed to the next step.
 
 ![First Scalars](/screenshots/first-scalars.jpg)
+
+## Nullability
+
+Below are a few example of valid resolver functions for a nullable string. Pay attention to the `.nullable` modifier on `t.string.nullable`. You will keep using this to turn your types into their nullable counterparts.
+
+```ts{4,11,16,23}
+//...
+
+schemaBuilder.query('stringExample', {
+  type: t.string.nullable,
+  resolve: () => {
+    return 'string value';
+  },
+});
+
+schemaBuilder.query('voidExample', {
+  type: t.string.nullable,
+  resolve: () => {},
+});
+
+schemaBuilder.query('nullExample', {
+  type: t.string.nullable,
+  resolve: () => {
+    return null;
+  },
+});
+
+schemaBuilder.query('undefinedExample', {
+  type: t.string.nullable,
+  resolve: () => {
+    return undefined;
+  },
+});
+
+//
+```
+
+If you go to your `GraphQL Playground`, you can see that the nullable fields are correctly carried over to the `GraphQL` schema:
+
+![Nullable Fields](/screenshots/nullable-fields.png)
