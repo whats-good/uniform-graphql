@@ -1,0 +1,40 @@
+---
+title: 'Setup'
+sidebar_title: '0. Setup'
+description: Installing dependencies and configuring your environment.
+---
+
+<!-- TODO: write a friendly intro paragraph -->
+
+## Dependencies
+
+We have `graphql` as a peer dependency, and we recommend installing `tslib` for optimizing bundle sizes and performance. You'll need `TypeScript` to run our library. We also recommend installing `ts-node` to have a more seamless developer experience.
+
+```bash
+# Instaling our library and two runtime dependencies:
+npm install @whatsgood/uniform-graphql graphql tslib
+
+# Installing our dev-dependencies:
+npm install --save-dev ts-node typescript
+```
+
+## Recommended TSConfig
+
+`Uniform-GraphQL` is built with strong type-safety in mind, and assumes that you are fully taking advantage of `TypeScript`'s type system. With that in mind, here's our recommended `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": ["es2018", "esnext.asynciterable"],
+    "alwaysStrict": true,
+    "strict": true,
+    "preserveConstEnums": true,
+    "skipLibCheck": true,
+    "importHelpers": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true
+  }
+}
+```

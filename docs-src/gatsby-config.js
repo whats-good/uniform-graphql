@@ -34,7 +34,7 @@ module.exports = {
         githubRepo: 'whats-good/uniform-graphql',
         sidebarCategories: {
           null: ['index', 'get-started', 'why-uniform-graphql'],
-          Tutorial: ['tutorial/resolvers'],
+          Tutorial: ['tutorial/setup', 'tutorial/resolvers'],
           Types: [
             'types/scalars',
             'types/enums',
