@@ -1,0 +1,162 @@
+---
+title: 'Primitive Types'
+sidebar_title: '1. Primitive Types'
+description: Learn how to create and use primitive types
+---
+
+Primitive types are the simplest building blocks of `GraphQL`. They depend on nothing else, but everything else depends on them. These are [scalars](/types/scalars) and [enums](/types/enums). You might have noticed that we are using this `t.string` value to communicate the resolve type of our `hello` query. That's just one of the many types you can use in `Uniform GraphQL`. Before we dive into the primitives, let's take a step back and see how types are even used in `Uniform GraphQL`:
+
+## Type Safety
+
+```ts
+//...
+
+// This resolver has an error on purpose.
+schemaBuilder.query('favoriteInteger', {
+  type: t.int,
+  resolve: () => {
+    // Returning a String even though the resolve type is Int
+    return '999';
+  },
+});
+
+// ...
+```
+
+This resolver has an **error** on purpose. What do you see when you copy these lines to your `index.ts`?
+What you've just witnessed is the simplest example of how `Uniform GraphQL` helps you with type safety:
+
+![Type Safety First Example](/screenshots/string-to-number-type-mismatch.gif)
+
+## Nullability
+
+Below are a few example of valid resolver functions for a nullable string. Pay attention to the `.nullable` modifier on `t.string.nullable`. You will keep using this to turn your types into their nullable counterparts.
+
+```ts{4,11,16,23}
+//...
+
+schemaBuilder.query('stringExample', {
+  type: t.string.nullable,
+  resolve: () => {
+    return 'string value';
+  },
+});
+
+schemaBuilder.query('voidExample', {
+  type: t.string.nullable,
+  resolve: () => {},
+});
+
+schemaBuilder.query('nullExample', {
+  type: t.string.nullable,
+  resolve: () => {
+    return null;
+  },
+});
+
+schemaBuilder.query('undefinedExample', {
+  type: t.string.nullable,
+  resolve: () => {
+    return undefined;
+  },
+});
+
+//
+```
+
+## Built-in Scalars
+
+Built-in [scalars](/types/scalars) are the simplest types that you can use. You can use them out of the box in `Uniform GraphQL`. Copy the lines below into your `index.ts` and navigate to your playground to observe how your `GraphQL` schema changes. **Don't forget to refresh your browser!**
+
+```ts:title=src/index.ts
+//...
+
+schemaBuilder.query('favoriteInteger', {
+  type: t.int,
+  resolve: () => 999,
+});
+
+schemaBuilder.query('favoriteFloat', {
+  type: t.float,
+  resolve: () => 999.999,
+});
+
+schemaBuilder.query('isLearning', {
+  type: t.boolean,
+  resolve: () => true,
+});
+
+/**
+ * GraphQL spec allows both string and
+ * number values for the ID typedef.
+ */
+
+schemaBuilder.query('idExample', {
+  type: t.id,
+  resolve: () => 'string id',
+});
+
+schemaBuilder.query('anotherIdExample', {
+  type: t.id,
+  resolve: () => 15,
+});
+
+//...
+```
+
+<!-- ## Custom Scalars
+
+TODO: build and document
+ -->
+
+## Enums
+
+The second primitive type in `GraphQL` is [enums](/types/enums). Use these to denote a set of predetermined string literals for your resolvers. Pay attention to the highlighted line. You will need to use the `as const` modifier when resolving enums. Otherwise, values get interpreted as regular strings instead of specific string literals.
+
+```ts{15}:title=src/index.ts
+//...
+
+const Membership = t.enum({
+  name: 'Membership',
+  values: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
+
+schemaBuilder.query('myMembership', {
+  type: Membership,
+  resolve: () => {
+    return 'free' as const;
+  },
+});
+
+//...
+```
+
+## Checkpoint
+
+Once you're done adding all these new resolvers, navigate back to your `GraphQL Playground` and verify that your schema matches the typedefs below. Try changing the returned values from the resolvers and query your API to observe the changes.
+
+```graphql
+enum Membership {
+  free
+  paid
+  enterprise
+}
+
+type Query {
+  hello: String!
+  favoriteInteger: Int!
+  favoriteFloat: Float!
+  isLearning: Boolean!
+  idExample: ID!
+  anotherIdExample: ID!
+  stringExample: String
+  voidExample: String
+  nullExample: String
+  undefinedExample: String
+  myMembership: Membership!
+}
+```

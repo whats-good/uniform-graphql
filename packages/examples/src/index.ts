@@ -60,6 +60,22 @@ schemaBuilder.query('undefinedExample', {
   },
 });
 
+const Membership = t.enum({
+  name: 'Membership',
+  values: {
+    free: null,
+    paid: null,
+    enterprise: null,
+  },
+});
+
+schemaBuilder.query('myMembership', {
+  type: Membership,
+  resolve: () => {
+    return 'free' as const;
+  },
+});
+
 // 3. Build your schema and serve it.
 const start = () => {
   const apolloServer = new ApolloServer({

@@ -36,7 +36,7 @@ module.exports = {
           null: ['index', 'get-started', 'why-uniform-graphql'],
           Tutorial: [
             'tutorial/setup',
-            'tutorial/custom-types',
+            'tutorial/primitive-types',
             'tutorial/resolvers',
           ],
           Types: [
