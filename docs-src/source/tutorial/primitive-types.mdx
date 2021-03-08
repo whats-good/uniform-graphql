@@ -4,7 +4,7 @@ sidebar_title: '1. Primitive Types'
 description: Learn how to create and use primitive types
 ---
 
-Primitive types are the simplest building blocks of `GraphQL`. They depend on nothing else, but everything else depends on them. These are [scalars](/types/scalars) and [enums](/types/enums). You might have noticed that we are using this `t.string` value to communicate the resolve type of our `hello` query. That's just one of the many types you can use in `Uniform GraphQL`. Before we dive into the primitives, let's take a step back and see how types are even used in `Uniform GraphQL`:
+Primitive types are the simplest building blocks of `GraphQL`. They depend on nothing else, but everything else depends on them. These are [scalars](../types/scalars) and [enums](../types/enums). You might have noticed that we are using this `t.string` value to communicate the resolve type of our `hello` query. That's just one of the many types you can use in `Uniform GraphQL`. Before we dive into the primitives, let's take a step back and see how types are even used in `Uniform GraphQL`:
 
 ## Type Safety
 
@@ -66,7 +66,7 @@ schemaBuilder.query('undefinedExample', {
 
 ## Built-in Scalars
 
-Built-in [scalars](/types/scalars) are the simplest types that you can use. You can use them out of the box in `Uniform GraphQL`. Copy the lines below into your `index.ts` and navigate to your playground to observe how your `GraphQL` schema changes. **Don't forget to refresh your browser!**
+Built-in [scalars](../types/scalars) are the simplest types that you can use. You can use them out of the box in `Uniform GraphQL`. Copy the lines below into your `index.ts` and navigate to your playground to observe how your `GraphQL` schema changes. **Don't forget to refresh your browser!**
 
 ```ts:title=src/index.ts
 //...
@@ -111,7 +111,7 @@ TODO: build and document
 
 ## Enums
 
-The second primitive type in `GraphQL` is [enums](/types/enums). Use these to denote a set of predetermined string literals for your resolvers. Pay attention to the highlighted line. You will need to use the `as const` modifier when resolving enums. Otherwise, values get interpreted as regular strings instead of specific string literals.
+The second primitive type in `GraphQL` is [enums](../types/enums). Use these to denote a set of predetermined string literals for your resolvers. Pay attention to the highlighted line. You will need to use the `as const` modifier when resolving enums. Otherwise, values get interpreted as regular strings instead of specific string literals.
 
 ```ts{15}:title=src/index.ts
 //...
