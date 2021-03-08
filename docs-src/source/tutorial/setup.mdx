@@ -97,7 +97,7 @@ const start = () => {
   const app = express();
   apolloServer.applyMiddleware({ app });
 
-  const PORT = 4000;
+  const PORT = 4001;
   app.listen({ port: PORT }, () => {
     const url = `http://localhost:${PORT}${apolloServer.graphqlPath}`;
     console.log(`🚀 Server ready at ${url}`);
@@ -107,7 +107,7 @@ const start = () => {
 start();
 ```
 
-Now from the root of your project, run `npm run start`. If everything worked out, you should now be able to point your browser to [http://localhost:4000/graphql](http://localhost:4000/graphql), and start interacting with your `GraphQL` server through `GraphQL Playground`. From there, run the following query to verify that your server is behaving as expected:
+Now from the root of your project, run `npm run start`. If everything worked out, you should now be able to point your browser to [http://localhost:4001/graphql](http://localhost:4001/graphql), and start interacting with your `GraphQL` server through `GraphQL Playground`. From there, run the following query to verify that your server is behaving as expected:
 
 ```graphql
 query {
