@@ -49,7 +49,9 @@ export type ResolverFn<
   source: S,
   args: TypeOfArgsMap<A>,
   context: C,
-) => Promisable<ResolveTypeOf<R>>;
+) => Promisable<
+  R['isNullable'] extends true ? void | ResolveTypeOf<R> : ResolveTypeOf<R>
+>;
 
 // TODO: when we use deocrators, typechecking & code completion gets reversed.
 // decorators wait for the original code to be typed correctly before wrapping the
