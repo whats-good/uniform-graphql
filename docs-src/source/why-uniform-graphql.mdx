@@ -3,36 +3,31 @@ title: Why Uniform GraphQL
 description: The motivation and philosophy behind Uniform GraphQL
 ---
 
-<!-- TODO: break the text blocks and make them more readable -->
-<!-- TODO: codeblock all technical terms -->
-
-> tl;dr: Type-safety is concerned with compile time whereas GraphQL schemas are concerned with runtime. What we need is a **uniform** approach that is type-safe at compile time while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what `uniform-graphql` is all about: Helping you build code-first GraphQL schemas by delegating all forms of type-safety to the compiler.
+> tl;dr: Type-safety is concerned with compile time whereas GraphQL schemas are concerned with runtime. What we need is a **uniform** approach that is type-safe at compile time, while preserving a runtime type information that carries smoothly to GraphQL schemas. And that's what `uniform-graphql` is all about: Helping you build robust GraphQL schemas - and resolvers - by delegating all forms of type-safety to the compiler.
 
 ## Motivation
 
-GraphQL apis usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first GraphQL apis create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first apis on the other hand implement the resolvers first and have the typedefs derived from the code. Both approaches have their pros and cons. `uniform-graphql` falls somewhere in the middle, but it's closer to the code-first camp.
+`GraphQL` apis usually fall under two schools of thought: `schema-first` vs `code-first`. Schema-first `GraphQL` apis create the typedefs first - including all queries, mutations and subscriptions - and implement the corresponding resolvers after. Code-first apis on the other hand implement the resolvers first and have the typedefs derived from the code. Both approaches have their pros and cons. `Uniform GraphQL` falls somewhere in the middle, but it's closer to the code-first camp.
 
-The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. Developers can't simply rely on the compiler to make sure that their code will match the generated schema, so they have to resort to other means such as decorators and other runtime checks. But it doesn't have to be that way. As it turns out, this is a perfect job for the compiler.
+The biggest issue with the currently available code-first approaches emerges during the schema-generation phase: a non-trivial mismatch between the implemented resolvers and the generated schema. Developers can't simply rely on the compile-time type system to make sure that their code will match the generated schema, so they have to resort to other means such as decorators and other runtime checks. But it doesn't have to be that way. As it turns out, this is a perfect job for the type system of `TypeScript`.
 
 ## End-to-End Type Safety
 
-While building a GraphQL api, the most common tasks are:
+`Uniform GraphQL` is built with compile time type-safety front and center, making it very hard for you to experience type errors at runtime. You will find a simple, streamlined approach that will guide you end-to-end while building your `GraphQL` api. Common examples include:
 
-- Creating GraphQL types
-- Composing said GraphQL types to create more complex types
+- Creating primitive `GraphQL` types
+- Composing said `GraphQL` types to create more complex types
 - Implementing query & mutation resolvers that work on said types
-- Implementing field resolvers on the object types
-
-`uniform-graphql` is built with compile time type-safety front and center, making it very hard for you to experience type errors at runtime. You will find a simple, streamlined approach that will guide you end-to-end through the tasks listed above.
+- Implementing field resolvers on object types
 
 ## Non-Null First
 
-In GraphQL, types are `null-first`, which means they are nullable unless explicitly wrapped with a `GraphQLNonNull` type. In `TypeScript` on the other hand, types are `non-null-first`: non-nullable by default unless they are explicitly made nullable. This tension is something that few code-first approaches acknowledge and solve for, which results in schema-code mismatches and general developer pain.
-
-In `uniform-graphql`, we side with `TypeScript` when it comes to nullability, because we are a code-first library and we want to play nicely with our programming language. This is why everything is non-nullable unless they are explicitly made nullable.
+In `GraphQL`, types are `null-first`, which means they are nullable unless explicitly wrapped with a `GraphQLNonNull` type. In `TypeScript` on the other hand, types are `non-null-first`: non-nullable by default unless they are explicitly made nullable. This tension is something that few code-first approaches acknowledge and solve for, which results in schema-code mismatches and general developer pain.
 
 ```ts
-/** Null-first: Things are nullable by default, unless explicitly made non-nullable */
+/**
+ * In GraphQL, types are nullable unless explicitly made non-nullable.
+ */
 
 import {
   GraphQLID,
@@ -50,8 +45,13 @@ const User = new GraphQLObjectType({
 });
 ```
 
+When it comes to nullability, `Uniform GraphQL` sides with `TypeScript`. We are a code-first library and we want to play nicely with our programming language. This is why everything is non-nullable unless they are explicitly made nullable.
+
 ```ts
-/** Non-null-first: Things are non-nullable by default, unless explicitly made nullable */
+/**
+ * In Uniform GraphQL, types are nullable unless
+ * explicitly made non-nullable.
+ */
 
 import { t } from '@whatsgood/uniform-graphql';
 
@@ -64,6 +64,8 @@ const User = t.object({
 });
 ```
 
+After all is said and done, we still need to create a `GraphQL` schema. Below is the runtime `typedef` of `Uniform GraphQL`. The key point is that both `Uniform GraphQL` and the reference `graphql` library eventually yield the same `typedef`. The difference however, is that `Uniform GraphQL` will also keep your actual resolver implementations compile-time type safe.
+
 ```graphql
 # Both codes result with the same typedef:
 
@@ -75,9 +77,9 @@ type User {
 
 ## Composability
 
-One of GraphQL's main benefits is the reusability and composability of types. You can create an `enum` type, which you use in an `object` type, which you use in a `list` type, which you use in an `interface` type, which you use in another `object` type, which you use in a `union` type and so on.
+One of `GraphQL`'s main benefits is the reusability and composability of types. You can create an `enum` type, which you use in an `object` type, which you use in a `list` type, which you use in an `interface` type, which you use in another `object` type, which you use in a `union` type and so on.
 
-In `uniform-graphql`, you are able to infinitely compose and reuse your types. This includes [self referential](https://en.wikipedia.org/wiki/Recursive_data_type) and [mutually recursive](https://en.wikipedia.org/wiki/Recursive_data_type) types, while always adhering to our core principle of end-to-end type safety. Keep on reading to see how we handle such use cases.
+In `Uniform GraphQL`, you are able to infinitely compose and reuse your types. This includes [self referential](https://en.wikipedia.org/wiki/Recursive_data_type) and [mutually recursive](https://en.wikipedia.org/wiki/Recursive_data_type) types, while always adhering to our core principle of end-to-end type safety. Keep on reading to see how we handle such use cases.
 
 ```graphql
 # Self referential type
@@ -101,7 +103,7 @@ type Animal {
 
 ## Uniform Type System
 
-No need to maintain two separate type systems for GraphQL and TypeScript while trying to keep them in sync. Once you create your `uniform` types, all will be taken care of. You will never need to manually type out function parameter types or return types. Everything is inferred from your `uniform` types; all you need to do is to fill in the blanks.
+No need to maintain two separate type systems for `GraphQL` and `TypeScript` while trying to keep them in sync. Once you create your `uniform` types, all will be taken care of. You will never need to manually type out function parameter types or return types. Everything is inferred from your `uniform` types; all you need to do is to fill in the blanks.
 
 ![Code autocompletion for resolvers](https://i.ibb.co/Wvg8Mkp/autocomplete-enum.png)
 
