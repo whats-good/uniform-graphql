@@ -1,7 +1,7 @@
 ---
 title: 'Setup'
 sidebar_title: '0. Setup'
-description: Installing dependencies and configuring your environment.
+description: Installing dependencies and configuring your project.
 ---
 
 <!-- TODO: write a friendly intro paragraph -->
@@ -22,7 +22,7 @@ npm install --save-dev ts-node-dev typescript
 
 `Uniform-GraphQL` is built with strong type-safety in mind, and assumes that you are fully taking advantage of `TypeScript`'s type system. With that in mind, here's our recommended `tsconfig.json`:
 
-```json
+```json:title=tsconfig.json
 {
   "compilerOptions": {
     "target": "es2018",
@@ -48,11 +48,9 @@ In this tutorial, you will be building a schema through `Uniform GraphQL`, which
 npm install apollo-server-express express
 ```
 
-## Running Your Server
+We recommend adding a `ts-node-dev` script to your `package.json`. This will let you run your server in watch mode, which will keep seemlessly restarting the server process whenever it detects a file change. When you're done, you should have a `package.json` that roughly looks like this:
 
-If you've installed `ts-node-dev`, you will be able to run your server in watch mode, which will keep seemlessly restarting the server process whenever it detects a file change. We recommend adding `ts-node-dev` script to your `package.json`. When you're done, you should have a `package.json` that roughly looks like this:
-
-```json
+```json:title=package.json
 {
   // ...
   "scripts": {
@@ -69,5 +67,50 @@ If you've installed `ts-node-dev`, you will be able to run your server in watch 
     "typescript": "4.2.3",
     "ts-node-dev": "1.1.6"
   }
+}
+```
+
+## Hello World
+
+Let's spin up a very simple `GraphQL` server that has only one query named `hello`, which when run should resolve to `"world"`. Start by creating the file below:
+
+```ts:title=src/index.ts
+import { ApolloServer } from 'apollo-server-express';
+import express from 'express';
+import { t, SchemaBuilder } from '@whatsgood/uniform-graphql';
+
+// 1. Initialize a schema builder.
+const schemaBuilder = new SchemaBuilder();
+
+// 2. Create your first resolver.
+schemaBuilder.query('hello', {
+  type: t.string,
+  resolve: () => 'world',
+});
+
+// 3. Build your schema and serve it.
+const start = () => {
+  const apolloServer = new ApolloServer({
+    schema: schemaBuilder.getSchema(),
+  });
+
+  const app = express();
+  apolloServer.applyMiddleware({ app });
+
+  const PORT = 4000;
+  app.listen({ port: PORT }, () => {
+    const url = `http://localhost:${PORT}${apolloServer.graphqlPath}`;
+    console.log(`🚀 Server ready at ${url}`);
+  });
+};
+
+start();
+```
+
+Now from the root of your project, run `npm run start`. If everything worked out, you should now be able to point your browser to [http://localhost:4000/graphql](http://localhost:4000/graphql), and start interacting with your `GraphQL` server through `GraphQL Playground`. From playground, run the following query to verify that your server is behaving as expected:
+
+```graphql
+query {
+  hello
 }
 ```
