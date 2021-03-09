@@ -53,6 +53,10 @@ module.exports = {
             'further-reading/nullability',
             'further-reading/input-and-output-types',
           ],
+          Community: [
+            '[GitHub](https://github.com/whats-good/uniform-graphql)',
+            '[Gitter](https://gitter.im/UniformGraphQL/community)',
+          ],
         },
       },
     },
