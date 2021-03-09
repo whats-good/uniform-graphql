@@ -76,6 +76,72 @@ schemaBuilder.query('myMembership', {
   },
 });
 
+const Animal = t.object({
+  name: 'Animal',
+  fields: {
+    name: t.string,
+    age: t.int,
+    isDomesticated: t.boolean,
+  },
+});
+
+schemaBuilder.query('myFavoritePet', {
+  type: Animal,
+  resolve: () => {
+    return {
+      age: 4,
+      isDomesticated: true,
+      name: 'Lulu',
+    };
+  },
+});
+
+const User = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    email: t.string,
+    fullName: t.string,
+    age: t.int.nullable,
+    pet: Animal.nullable,
+  },
+});
+
+schemaBuilder.query('currentUser', {
+  type: User.nullable,
+  resolve: () => {
+    return {
+      id: '1',
+      email: 'email@email.com',
+      fullName: 'John Johnson',
+      // age
+      pet: {
+        age: 4,
+        isDomesticated: true,
+        name: 'Lulu',
+      },
+    };
+  },
+});
+
+schemaBuilder.query('activeUsers', {
+  type: t.list(User),
+  resolve: () => {
+    return [
+      {
+        id: '2',
+        email: 'bob@bob.com',
+        fullName: 'Bob Bobson',
+      },
+      {
+        id: '3',
+        email: 'tim@tim.com',
+        fullName: 'Tim Timson',
+      },
+    ];
+  },
+});
+
 // 3. Build your schema and serve it.
 const start = () => {
   const apolloServer = new ApolloServer({

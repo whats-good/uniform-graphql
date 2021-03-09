@@ -37,6 +37,7 @@ module.exports = {
           Tutorial: [
             'tutorial/setup',
             'tutorial/primitive-types',
+            'tutorial/complex-types',
             'tutorial/resolvers',
           ],
           Types: [

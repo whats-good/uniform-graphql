@@ -1,0 +1,146 @@
+---
+title: 'Complex Types'
+sidebar_title: '2. Complex Types'
+description: Combine simple types into complex types
+---
+
+The real value of `Uniform GraphQL` comes from how it lets you mix and match simpler types into more complex types. The fundamental complex types are `Objects`, and `Lists`. Let's see how we can create and utilize them.
+
+## Object
+
+`Objects` are arguably the most important element of any type system, because they let you combine different types into a structured format that can represent complex concepts.
+
+```ts:title=src/index.ts
+//...
+
+const Animal = t.object({
+  name: 'Animal',
+  fields: {
+    name: t.string,
+    age: t.int,
+    isDomesticated: t.boolean,
+  },
+});
+
+schemaBuilder.query('myFavoritePet', {
+  type: Animal,
+  resolve: () => {
+    return {
+      age: 4,
+      isDomesticated: true,
+      name: 'Lulu',
+    };
+  },
+});
+
+//...
+```
+
+In the example above, we combined 3 [scalars](/types/scalars) into one [object](/types/objects) type in a structured manner. However, we can keep building more complex [objects](/types/objects) that have [enums](/types/enums) and other [objects](/types/objects) as their fields.
+
+```ts{9,10,15,21}:title=src/index.ts
+//...
+
+const User = t.object({
+  name: 'User',
+  fields: {
+    id: t.id,
+    email: t.string,
+    fullName: t.string,
+    age: t.int.nullable,
+    pet: Animal.nullable,
+  },
+});
+
+schemaBuilder.query('currentUser', {
+  type: User.nullable,
+  resolve: () => {
+    return {
+      id: '1',
+      email: 'email@email.com',
+      fullName: 'John Johnson',
+      // age
+      pet: {
+        age: 4,
+        isDomesticated: true,
+        name: 'Lulu',
+      },
+    };
+  },
+});
+
+//...
+```
+
+Pay attention to the highlighted lines. You can see that the `.nullable` modifier is at work once again. Since the `age` field is nullable, we are allowed to skip it in our resolver even if it's embedded inside an object field. Note that the resolve type is also `User.nullable`. Simple or complex, we can always keep using the `nullable` modifier in any type we create.
+
+## Lists
+
+Lists are another way of creating complex types from simpler ones. In the example below, we're creating a resolver that returns a list of users. Notice how the list type is constructed, and how the resolver now has to return an array.
+
+```ts{4,6,17}:title=src/index.ts
+//...
+
+schemaBuilder.query('activeUsers', {
+  type: t.list(User),
+  resolve: () => {
+    return [
+      {
+        id: '2',
+        email: 'bob@bob.com',
+        fullName: 'Bob Bobson',
+      },
+      {
+        id: '3',
+        email: 'tim@tim.com',
+        fullName: 'Tim Timson',
+      },
+    ];
+  },
+});
+
+//...
+```
+
+## Checkpoint
+
+If you've been following along, your `GraphQL` schema should roughly look like the snippet bellow. Pay attention to the highlighted line. Since we didn't denote either the list or the object as `.nullable`, the final type is `[User!]!`.
+
+```graphql{35}
+enum Membership {
+  free
+  paid
+  enterprise
+}
+
+type Animal {
+  name: String!
+  age: Int!
+  isDomesticated: Boolean!
+}
+
+type User {
+  id: ID!
+  email: String!
+  fullName: String!
+  age: Int
+  pet: Animal
+}
+
+type Query {
+  hello: String!
+  favoriteInteger: Int!
+  favoriteFloat: Float!
+  isLearning: Boolean!
+  idExample: ID!
+  anotherIdExample: ID!
+  stringExample: String
+  voidExample: String
+  nullExample: String
+  undefinedExample: String
+  myMembership: Membership!
+  myFavoritePet: Animal!
+  currentUser: User
+  activeUsers: [User!]!
+}
+```
