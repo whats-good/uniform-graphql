@@ -158,9 +158,9 @@ app.listen({ port: PORT }, () => {
 
 - Stabilize the `t.scalar` type factory
 - IOC & containers
-- Documentation website
+- ~Documentation website~
 - Write tests (There are none right now)
-- Design a logo (open to suggestions)
+- ~Design a logo (open to suggestions)~
 - Argument validation
 - Remove lodash and become `0 dependency`
 - Enable query building through the object syntax: `t.query({ currentUser: ..., todos: ...})` instead of `t.query('currentUser', ...)`
