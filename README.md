@@ -156,16 +156,16 @@ app.listen({ port: PORT }, () => {
 
 ## Roadmap
 
-- Stabilize the `t.scalar` type factory
-- IOC & containers
-- ~Documentation website~
-- Write tests (There are none right now)
-- ~Design a logo (open to suggestions)~
-- Argument validation
-- Remove lodash and become `0 dependency`
-- Enable query building through the object syntax: `t.query({ currentUser: ..., todos: ...})` instead of `t.query('currentUser', ...)`
-- Subscriptions support
-- Enable schema-first features: mock an api without implementing it.
+- [ ] Stabilize the `t.scalar` type factory
+- [ ] IOC & containers
+- [x] Documentation website
+- [ ] Write tests (There are none right now)
+- [x] Design a logo (open to suggestions)
+- [ ] Argument validation
+- [ ] Remove lodash and become `0 dependency`
+- [ ] Enable query building through the object syntax: `t.query({ currentUser: ..., todos: ...})` instead of `t.query('currentUser', ...)`
+- [ ] Subscriptions support
+- [ ] Enable schema-first features: mock an api without implementing it.
 
 ## Acknowledgements
 
