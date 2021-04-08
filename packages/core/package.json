@@ -1,7 +1,7 @@
 {
   "name": "@whatsgood/uniform-graphql",
   "private": false,
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Code-first GraphQL apis in TypeScript with complete & robust end-to-end type safety",
   "repository": {
     "type": "git",
