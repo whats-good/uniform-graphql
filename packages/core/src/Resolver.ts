@@ -1,4 +1,4 @@
-import { GraphQLFieldConfig } from 'graphql';
+import { GraphQLFieldConfig, GraphQLResolveInfo } from 'graphql';
 import { AnySchemaBuilder, GraphQLContext } from './SchemaBuilder';
 import {
   OutputRealizedType,
@@ -49,6 +49,7 @@ export type ResolverFn<
   source: S,
   args: TypeOfArgsMap<A>,
   context: C,
+  info: GraphQLResolveInfo,
 ) => Promisable<
   R['isNullable'] extends true ? void | ResolveTypeOf<R> : ResolveTypeOf<R>
 >;
