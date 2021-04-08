@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/whats-good/uniform-graphql/master/packages/website/static/logo_transparent.png">
+  <img src="https://raw.githubusercontent.com/whats-good/uniform-graphql/2b55063cc818581d5d5b8497be141f6202a5b58f/docs-src/static/logo.svg">
 </p>
 
 # UniformGraphQL
@@ -156,16 +156,16 @@ app.listen({ port: PORT }, () => {
 
 ## Roadmap
 
-- Stabilize the `t.scalar` type factory
-- IOC & containers
-- Documentation website
-- Write tests (There are none right now)
-- Design a logo (open to suggestions)
-- Argument validation
-- Remove lodash and become `0 dependency`
-- Enable query building through the object syntax: `t.query({ currentUser: ..., todos: ...})` instead of `t.query('currentUser', ...)`
-- Subscriptions support
-- Enable schema-first features: mock an api without implementing it.
+- [ ] Stabilize the `t.scalar` type factory
+- [ ] IOC & containers
+- [x] Documentation website
+- [ ] Write tests (There are none right now)
+- [x] Design a logo (open to suggestions)
+- [ ] Argument validation
+- [ ] Remove lodash and become `0 dependency`
+- [ ] Enable query building through the object syntax: `t.query({ currentUser: ..., todos: ...})` instead of `t.query('currentUser', ...)`
+- [ ] Subscriptions support
+- [ ] Enable schema-first features: mock an api without implementing it.
 
 ## Acknowledgements
 
